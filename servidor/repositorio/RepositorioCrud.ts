@@ -4,76 +4,74 @@ import { StringUteis } from "../uteis/StringUteis";
 import { LiteralServico } from "../literais/LiteralServico";
 import { DbEncVn } from "../modelos/comum/DbEncVn";
 import { ConfigBack } from "../ConfigBack";
+import { model, Model, Schema, Types } from "mongoose";
 
 @injectable()
 class RepositorioCrud<TEntidade extends DbEncVn> {
     protected _configBack: ConfigBack;
-    protected _nomeColecaoRegistrosMock: string;
+    protected _nomeCollection: string;
+    protected _schema: Schema<TEntidade>;
+    protected _modelMongo: Model<TEntidade, {}, {}, {}, any>;
     protected static _bancoMock: Record<string, any[]> = {};
     constructor(
-        @inject(LiteralServico.ConfigBack) configBack: ConfigBack
+        configBack: ConfigBack,
     ) {
         this._configBack = configBack;
-        this._nomeColecaoRegistrosMock = '';
     }
 
-    protected inicializarRegistrosMock(): void {
-        if (RepositorioCrud._bancoMock[this._nomeColecaoRegistrosMock] == undefined) {
-            RepositorioCrud._bancoMock[this._nomeColecaoRegistrosMock] = [];
-        }
+    protected inicializarMongo = (nomeCollection: string, schema: Schema): void => {
+        this._nomeCollection = nomeCollection;
+        this._schema = schema;
+        this._modelMongo = model<TEntidade>(this._nomeCollection, this._schema);
     }
 
-    selectAllAsync(): Promise<TEntidade[]> {
-        return Promise.resolve(RepositorioCrud._bancoMock[this._nomeColecaoRegistrosMock]);
+    selectAll = () => {
+        let query = this._modelMongo.find();
+        return query;
     }
-    selectByIdOrDefaultAsync(id: string): Promise<TEntidade | null> {
-        // console.log('Dump param id = ' + id);
-        const registro = RepositorioCrud._bancoMock[this._nomeColecaoRegistrosMock].find(x => x.id == id);
-        if (registro == undefined) {
-            return Promise.resolve(null);
-        }
-        return Promise.resolve(registro);
+    selectByIdOrDefault = (id: string) => {
+        let query = this._modelMongo.findOne({ id: id });
+        return query;
     }
-    insertAsync(registro: TEntidade): Promise<string> {
-        RepositorioCrud._bancoMock[this._nomeColecaoRegistrosMock].push(registro);
-        return Promise.resolve(registro.id);
+    insert = async (registro: TEntidade): Promise<string> => {
+        const inserido = new this._modelMongo({...registro});
+        inserido.isNew = true;
+        await inserido.save();
+        return inserido.id;
     }
-    updateAsync(registro: TEntidade): Promise<void> {
-        let registroAnterior = RepositorioCrud._bancoMock[this._nomeColecaoRegistrosMock].find(x => x.id == registro.id);
-        if (registroAnterior == undefined) {
+    update = async (registro: TEntidade): Promise<void> => {
+        let alteradoDb = await this.selectByIdOrDefault(registro.id);
+        if (alteradoDb == null) {
             return Promise.reject('Not Found');
         }
-        RepositorioCrud._bancoMock[this._nomeColecaoRegistrosMock] = RepositorioCrud._bancoMock[this._nomeColecaoRegistrosMock].filter(x => x.id != registro.id);
-        RepositorioCrud._bancoMock[this._nomeColecaoRegistrosMock].push({ ...registro });
-        return Promise.resolve();
+        await this._modelMongo.findOneAndUpdate({ id: registro.id }, { ...registro });
     }
-    deleteByIdAsync(id: string): Promise<void> {
-        let registroAnterior = RepositorioCrud._bancoMock[this._nomeColecaoRegistrosMock].find(x => x.id == id);
-        if (registroAnterior == undefined) {
+    deleteById = async (id: string): Promise<void> => {
+        let excluidoDb = await this.selectByIdOrDefault(id);
+        if (excluidoDb == null) {
             return Promise.reject('Not Found');
         }
-        RepositorioCrud._bancoMock[this._nomeColecaoRegistrosMock] = RepositorioCrud._bancoMock[this._nomeColecaoRegistrosMock].filter(x => x.id != id);
-        return Promise.resolve();
+        await this._modelMongo.findOneAndRemove({ id: id });
     }
-    insertLogadoAsync(registro: TEntidade, idDoUsuarioLogado: string): Promise<string> {
-        registro.idUsuarioFezInclusao = idDoUsuarioLogado;
+    insertPorOperador = async (registro: TEntidade, idUsuarioOperador: string): Promise<string> => {
+        registro.idUsuarioFezInclusao = idUsuarioOperador;
         registro.horaInclusao = new Date();
         registro.idUsuarioFezUltimaAtualizacao = '';
         registro.horaUltimaAtualizacao = null;
-        RepositorioCrud._bancoMock[this._nomeColecaoRegistrosMock].push(registro);
-        return Promise.resolve(registro.id);
+        const inserido = new this._modelMongo({...registro});
+        inserido.isNew = true;
+        await inserido.save();
+        return inserido.id;
     }
-    updateLogadoAsync(registro: TEntidade, idDoUsuarioLogado: string): Promise<void> {
-        let registroAnterior = RepositorioCrud._bancoMock[this._nomeColecaoRegistrosMock].find(x => x.id == registro.id);
-        if (registroAnterior == undefined) {
+    updatePorOperador = async (registro: TEntidade, idUsuarioOperador: string): Promise<void> => {
+        let alteradoDb = await this.selectByIdOrDefault(registro.id);
+        if (alteradoDb == null) {
             return Promise.reject('Not Found');
         }
         let registroAtual = { ...registro };
-        registroAtual.idUsuarioFezUltimaAtualizacao = idDoUsuarioLogado;
+        registroAtual.idUsuarioFezUltimaAtualizacao = idUsuarioOperador;
         registroAtual.horaUltimaAtualizacao = new Date();
-        RepositorioCrud._bancoMock[this._nomeColecaoRegistrosMock] = RepositorioCrud._bancoMock[this._nomeColecaoRegistrosMock].filter(x => x.id != registro.id);
-        RepositorioCrud._bancoMock[this._nomeColecaoRegistrosMock].push(registroAtual);
-        return Promise.resolve();
+        await this._modelMongo.findOneAndUpdate({ id: registro.id }, { ...registroAtual });
     }
 }
 

@@ -33,6 +33,14 @@ class AutorizacaoController {
                 MdExcecao.enviarExcecao(req, res, exc);
             }
         });
+        this.router.post('/entrarUsuarioGoogle', async (req, res) => {
+            try {
+                const usuarioLogado = await this.entrarUsuarioGoogle(req.body);
+                res.send(usuarioLogado);
+            } catch (exc) {
+                MdExcecao.enviarExcecao(req, res, exc);
+            }
+        });
         this.router.post('/cadastrarUsuarioEncVn', async (req, res) => {
             try {
                 const usuarioLogado = await this.cadastrarUsuarioEncVn(req.body);
@@ -63,14 +71,18 @@ class AutorizacaoController {
             ex.problema = 'Os campos ' + StringUteis.listarEmPt(camposNulos) + ' são obrigatórios';
             throw ex;
         }
-        const usuarioDb = await this._usuarioRepositorio.selectByEmailOrDefaultAsync(loginUsuario.email);
+        const totalUsuarios = await this._usuarioRepositorio.selectAll();
+        console.table(totalUsuarios);
+        const usuarioDb = await this._usuarioRepositorio.selectByEmailOrDefault(loginUsuario.email);
         // console.table(usuarioDb);
+        console.log('        if usuario = null');
         if (usuarioDb == null) {
             let ex = new MdExcecao();
             ex.codigoExcecao = 404;
             ex.problema = 'Login ou senha inválidos';
             throw ex;
         }
+        console.log('        if (usuarioDb.eUsuarioGoogle) {')
         if (usuarioDb.eUsuarioGoogle) {
             let ex = new MdExcecao();
             ex.codigoExcecao = 400;
@@ -99,7 +111,7 @@ class AutorizacaoController {
 
     // post
     entrarUsuarioGoogle = async (usuarioGoogle: IUsuarioGoogle): Promise<MdUsuarioLogado> => {
-        const usuarioDb = await this._usuarioRepositorio.selectByEmailOrDefaultAsync(usuarioGoogle.email);
+        const usuarioDb = await this._usuarioRepositorio.selectByEmailOrDefault(usuarioGoogle.email);
         // console.table(usuarioDb);
         if (usuarioDb == null) {
             return await this.criarUsuarioGoogle(usuarioGoogle);
@@ -130,9 +142,9 @@ class AutorizacaoController {
         usuarioInsert.email = usuarioGoogle.email;
         usuarioInsert.senha = ''; // não é necessário preencher, porque o email e senha são informados durante login com Google
         usuarioInsert.eSuperuser = false;
-        usuarioInsert.eUsuarioGoogle = false;
+        usuarioInsert.eUsuarioGoogle = true;
         // console.table(usuarioInsert);
-        await this._usuarioRepositorio.insertLogadoAsync(usuarioInsert, usuarioInsert.id);
+        await this._usuarioRepositorio.insertPorOperador(usuarioInsert, usuarioInsert.id);
         const token = jsonwebtoken.sign({ id: usuarioInsert.id }, this._configBack.salDoJwt, {
             expiresIn: 20 * 30 // expira em 20 min
         });
@@ -164,13 +176,18 @@ class AutorizacaoController {
             ex.problema = 'Os campos ' + StringUteis.listarEmPt(camposNulos) + ' são obrigatórios';
             throw ex;
         }
-        const usuarioDb = await this._usuarioRepositorio.selectByEmailOrDefaultAsync(cadastroUsuario.email);
+        console.log('ablubububub');
+        
+        const usuarioDb = await this._usuarioRepositorio.selectByEmailOrDefault(cadastroUsuario.email);
+        console.log('select by email usuariodb');
+        
         if (usuarioDb != null) {
             let ex = new MdExcecao();
             ex.codigoExcecao = 400;
             ex.problema = 'Email já cadastrado';
             throw ex;
         }
+        
         const salt = await bcrypt.genSalt(10);
         const senhaCrypt = await bcrypt.hash(cadastroUsuario.senha, salt);
         const usuarioInsert = new DbUsuario();
@@ -181,7 +198,8 @@ class AutorizacaoController {
         usuarioInsert.eSuperuser = false;
         usuarioInsert.eUsuarioGoogle = false;
         // console.table(usuarioInsert);
-        await this._usuarioRepositorio.insertLogadoAsync(usuarioInsert, usuarioInsert.id);
+        console.table(usuarioInsert);
+        await this._usuarioRepositorio.insertPorOperador(usuarioInsert, usuarioInsert.id);
         const token = jsonwebtoken.sign({ id: usuarioInsert.id }, this._configBack.salDoJwt, {
             expiresIn: 20 * 30 // expira em 20 min
         });
