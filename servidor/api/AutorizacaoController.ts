@@ -33,6 +33,14 @@ class AutorizacaoController {
                 MdExcecao.enviarExcecao(req, res, exc);
             }
         });
+        this.router.post('/entrarUsuarioGoogle', async (req, res) => {
+            try {
+                const usuarioLogado = await this.entrarUsuarioGoogle(req.body);
+                res.send(usuarioLogado);
+            } catch (exc) {
+                MdExcecao.enviarExcecao(req, res, exc);
+            }
+        });
         this.router.post('/cadastrarUsuarioEncVn', async (req, res) => {
             try {
                 const usuarioLogado = await this.cadastrarUsuarioEncVn(req.body);
@@ -63,14 +71,18 @@ class AutorizacaoController {
             ex.problema = 'Os campos ' + StringUteis.listarEmPt(camposNulos) + ' são obrigatórios';
             throw ex;
         }
+        const totalUsuarios = await this._usuarioRepositorio.selectAllAsync();
+        console.table(totalUsuarios);
         const usuarioDb = await this._usuarioRepositorio.selectByEmailOrDefaultAsync(loginUsuario.email);
         // console.table(usuarioDb);
+        console.log('        if usuario = null');
         if (usuarioDb == null) {
             let ex = new MdExcecao();
             ex.codigoExcecao = 404;
             ex.problema = 'Login ou senha inválidos';
             throw ex;
         }
+        console.log('        if (usuarioDb.eUsuarioGoogle) {')
         if (usuarioDb.eUsuarioGoogle) {
             let ex = new MdExcecao();
             ex.codigoExcecao = 400;
@@ -130,7 +142,7 @@ class AutorizacaoController {
         usuarioInsert.email = usuarioGoogle.email;
         usuarioInsert.senha = ''; // não é necessário preencher, porque o email e senha são informados durante login com Google
         usuarioInsert.eSuperuser = false;
-        usuarioInsert.eUsuarioGoogle = false;
+        usuarioInsert.eUsuarioGoogle = true;
         // console.table(usuarioInsert);
         await this._usuarioRepositorio.insertLogadoAsync(usuarioInsert, usuarioInsert.id);
         const token = jsonwebtoken.sign({ id: usuarioInsert.id }, this._configBack.salDoJwt, {
