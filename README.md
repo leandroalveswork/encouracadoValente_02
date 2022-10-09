@@ -9,6 +9,7 @@ Node.js instalado
 
 > 1. Servidor
 
+- Insira o .env do /servidor, compartilhado no Whatsapp
 - Novo terminal
 - Navegar para /<pasta_projeto>/servidor
 - Digite os comandos:
@@ -21,6 +22,7 @@ npm run dev
 
 > 2. Cliente
 
+- Insira o .env do /cliente, compartilhado no Whatsapp
 - Novo terminal
 - Navegar para /<pasta_projeto>/cliente
 - Digite os comandos:
