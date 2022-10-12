@@ -4,9 +4,11 @@ import { useState } from "react";
 import { useNavigate } from 'react-router-dom';
 import GoogleAuthBotao from '../../components/GoogleAuthBotao';
 import "./Entrar.css";
-import EncVnAuthProvedor from "../../integracao/EncVnAuthProvedor";
 import { PostCadastroUsuario } from "../../modelos/importarBack/PostCadastroUsuario";
 import { PostLoginUsuario } from "../../modelos/importarBack/PostLoginUsuario";
+import ClientRest from "../../integracao/ClientRest";
+import { MdUsuarioLogado } from "../../modelos/importarBack/MdUsuarioLogado";
+import UserState from "../../integracao/UserState";
 
 const EncVnTextField = styled(TextField)({
     '& input + fieldset': {
@@ -16,13 +18,12 @@ const EncVnTextField = styled(TextField)({
     }
 });
 
-interface PropsEntrar {
-    encVnAuthProvedor: EncVnAuthProvedor
-}
-
-const Entrar = (props: PropsEntrar) => {
+const Entrar = () => {
 
     const navigate = useNavigate();
+
+    const clientRest = new ClientRest();
+    const userState = new UserState();
 
     const [erroEstaAberto, setErroEstaAberto] = useState(false);
     const [problemaErro, setProblemaErro] = useState('');
@@ -43,8 +44,9 @@ const Entrar = (props: PropsEntrar) => {
         let loginUsuario = new PostLoginUsuario();
         loginUsuario.email = email;
         loginUsuario.senha = senha;
-        let respostaLogin = await props.encVnAuthProvedor.entrarUsuarioEncVn(loginUsuario);
+        const respostaLogin = await clientRest.callPost<MdUsuarioLogado>('/api/autorizacao/entrarUsuarioEncVn', loginUsuario, new MdUsuarioLogado());
         if (respostaLogin.eOk) {
+            userState.localStorageUser = respostaLogin.body;
             navigate('/');
         } else {
             setProblemaErro(_ => respostaLogin.problema);
@@ -74,8 +76,9 @@ const Entrar = (props: PropsEntrar) => {
         cadastroUsuario.nome = nomeCadastro;
         cadastroUsuario.email = emailCadastro;
         cadastroUsuario.senha = senhaCadastro;
-        let respostaCadastro = await props.encVnAuthProvedor.cadastrarUsuarioEncVn(cadastroUsuario);
+        const respostaCadastro = await clientRest.callPost<MdUsuarioLogado>('/api/autorizacao/cadastrarUsuarioEncVn', cadastroUsuario, new MdUsuarioLogado());
         if (respostaCadastro.eOk) {
+            userState.localStorageUser = respostaCadastro.body;
             navigate('/');
         } else {
             setProblemaErro(_ => respostaCadastro.problema);
@@ -105,7 +108,7 @@ const Entrar = (props: PropsEntrar) => {
                                         <EncVnTextField label="Email" variant="outlined" className="mt-4" sx={{ width: 350 }} onChange={ev => handleChangeEmail(ev.target.value)} value={email} />
                                         <EncVnTextField label="Senha" type="password" variant="outlined" className="mt-4" sx={{ width: 350 }} onChange={ev => handleChangeSenha(ev.target.value)} value={senha} />
                                         <Button variant="contained" size="medium" className="mt-4" sx={{ width: 200 }} onClick={() => handleClickEntrarUsuarioEncVn()}>Entrar</Button>
-                                        <GoogleAuthBotao encVnAuthProvedor={props.encVnAuthProvedor} />
+                                        <GoogleAuthBotao />
                                     </div>
                                 </CardContent>
                                 <CardActions>

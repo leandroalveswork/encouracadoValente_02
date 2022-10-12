@@ -13,15 +13,16 @@ import { DbUsuario } from "../modelos/DbUsuario";
 import { ConfigBack } from "../ConfigBack";
 import { UsuarioRepositorio } from "../repositorio/UsuarioRepositorio";
 import { IUsuarioGoogle } from "../modelos/IUsuarioGoogle";
+import { ControllerBase } from "./ControllerBase";
 
 @injectable()
-class AutorizacaoController {
-    private _configBack: ConfigBack
+class AutorizacaoController extends ControllerBase {
     private _usuarioRepositorio: UsuarioRepositorio
     constructor(
         @inject(LiteralServico.ConfigBack) configBack: ConfigBack,
         @inject(LiteralServico.UsuarioRepositorio) usuarioRepositorio: UsuarioRepositorio
     ) {
+        super(configBack);
         this._configBack = configBack;
         this._usuarioRepositorio = usuarioRepositorio;
         this.router = Router();
@@ -51,8 +52,6 @@ class AutorizacaoController {
         });
     }
 
-    router: Router;
-
     // codifique as actions:
 
     // post
@@ -75,14 +74,14 @@ class AutorizacaoController {
         console.table(totalUsuarios);
         const usuarioDb = await this._usuarioRepositorio.selectByEmailOrDefault(loginUsuario.email);
         // console.table(usuarioDb);
-        console.log('        if usuario = null');
+        // console.log('        if usuario = null');
         if (usuarioDb == null) {
             let ex = new MdExcecao();
             ex.codigoExcecao = 404;
             ex.problema = 'Login ou senha inválidos';
             throw ex;
         }
-        console.log('        if (usuarioDb.eUsuarioGoogle) {')
+        // console.log('        if (usuarioDb.eUsuarioGoogle) {')
         if (usuarioDb.eUsuarioGoogle) {
             let ex = new MdExcecao();
             ex.codigoExcecao = 400;
@@ -125,6 +124,7 @@ class AutorizacaoController {
         const token = jsonwebtoken.sign({ id: usuarioDb.id }, this._configBack.salDoJwt, {
             expiresIn: 20 * 30 // expira em 20 min
         });
+        const username = this._configBack;  
         let usuarioLogado = new MdUsuarioLogado();
         usuarioLogado.id = usuarioDb.id;
         usuarioLogado.token = token;
@@ -176,10 +176,10 @@ class AutorizacaoController {
             ex.problema = 'Os campos ' + StringUteis.listarEmPt(camposNulos) + ' são obrigatórios';
             throw ex;
         }
-        console.log('ablubububub');
+        // console.log('ablubububub');
         
         const usuarioDb = await this._usuarioRepositorio.selectByEmailOrDefault(cadastroUsuario.email);
-        console.log('select by email usuariodb');
+        // console.log('select by email usuariodb');
         
         if (usuarioDb != null) {
             let ex = new MdExcecao();

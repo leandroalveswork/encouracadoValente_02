@@ -1,29 +1,29 @@
 import { Button, Dialog, DialogActions, DialogContent, DialogContentText, Icon } from "@mui/material";
-import CancelOutlinedIcon from '@mui/icons-material/CancelOutlined';
-interface PropsErro {
+import CheckCircleOutlineOutlinedIcon from '@mui/icons-material/CheckCircleOutlineOutlined';
+interface PropsSucesso {
     estaAberto: boolean
     onFechar: () => void
-    problema: string
+    mensagem: string
 }
 
-const ErroModal = (propsErro: PropsErro) => {
+const SucessoModal = (props: PropsSucesso) => {
     return (
         <Dialog
-            open={propsErro.estaAberto}
-            onClose={propsErro.onFechar}
+            open={props.estaAberto}
+            onClose={props.onFechar}
             aria-labelledby="alert-dialog-title"
             aria-describedby="alert-dialog-description"
         >
         <DialogContent>
           <div className="d-flex">
-            <CancelOutlinedIcon color="error" className="me-3" />
+            <CheckCircleOutlineOutlinedIcon color="success" className="me-3" />
             <DialogContentText id="alert-dialog-description">
-              {propsErro.problema}
+              {props.mensagem}
             </DialogContentText>
           </div>
         </DialogContent>
         <DialogActions>
-          <Button onClick={propsErro.onFechar} autoFocus>
+          <Button onClick={props.onFechar} autoFocus>
             OK
           </Button>
         </DialogActions>
@@ -31,4 +31,4 @@ const ErroModal = (propsErro: PropsErro) => {
     )
 }
 
-export default ErroModal;
+export default SucessoModal;

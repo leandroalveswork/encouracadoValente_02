@@ -11,19 +11,25 @@ import { MediadorWs } from './mediador_ws/MediadorWs';
 import { UsuarioRepositorio } from './repositorio/UsuarioRepositorio';
 import { AutorizacaoController } from './api/AutorizacaoController';
 import mongoose from 'mongoose';
+import { TemaRepositorio } from './repositorio/TemaRepositorio';
+import { TemaController } from './api/TemaController';
 
 const iocProvedor = new Container();
 iocProvedor.bind<ConfigBack>(LiteralServico.ConfigBack).to(ConfigBack).inSingletonScope();
 iocProvedor.bind<MediadorWs>(LiteralServico.MediadorWs).to(MediadorWs).inRequestScope();
+
 iocProvedor.bind<UsuarioRepositorio>(LiteralServico.UsuarioRepositorio).to(UsuarioRepositorio).inRequestScope();
+iocProvedor.bind<TemaRepositorio>(LiteralServico.TemaRepositorio).to(TemaRepositorio).inRequestScope();
+
 iocProvedor.bind<AutorizacaoController>(LiteralServico.AutorizacaoController).to(AutorizacaoController).inRequestScope();
+iocProvedor.bind<TemaController>(LiteralServico.TemaController).to(TemaController).inRequestScope();
 
 const app = express();
 
 const configBack = iocProvedor.get<ConfigBack>(LiteralServico.ConfigBack);
 const mediadorWs = iocProvedor.get<MediadorWs>(LiteralServico.MediadorWs);
 const autorizacaoController = iocProvedor.get<AutorizacaoController>(LiteralServico.AutorizacaoController);
-
+const temaController = iocProvedor.get<TemaController>(LiteralServico.TemaController);
 
 
 mongoose.connect(configBack.conexaoMongodb, { dbName: 'EncVn' })
@@ -35,12 +41,13 @@ mongoose.connect(configBack.conexaoMongodb, { dbName: 'EncVn' })
     app.use(express.json());
     
     app.use('/api/autorizacao', autorizacaoController.router);
+    app.use('/api/tema', temaController.router);
     // _gerenciadorRequisicoesApi.useTodasRouters(app);
     // app.use(ExControllerMiddleware.middleware);
     
     const portaDoHost = parseInt(configBack.hostDoBackend?.substring(configBack.hostDoBackend.indexOf(':') + 1));
     const server = app.listen(portaDoHost, () => {
-      console.log('Servidor esta rodando em http://' + configBack.hostDoBackend);
+      console.log('🚀 Servidor escutando na url: http://' + configBack.hostDoBackend);
     });
     
     const getWsServer = (server: Server, path = '/room') => new WebSocketServer({ server, path });
@@ -49,7 +56,7 @@ mongoose.connect(configBack.conexaoMongodb, { dbName: 'EncVn' })
       mediadorWs.prepararUserWebSocket(ws, req);
       ws.on('message', (dados: RawData, naoEBinario: boolean) => { mediadorWs.reencaminharOutroClient(wsServer, ws, req, dados, naoEBinario); })
       ws.on('error', (error) => console.error(error))
-      ws.on('close', () => console.log('conexão fechou'))
+      ws.on('close', () => console.log('🔌😢 Um cliente se desconectou do Websocket!'))
       // _gerenciadorConnecWs.onConnection(wsServer, ws, req);
     });
   });

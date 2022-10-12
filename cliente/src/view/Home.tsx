@@ -1,11 +1,10 @@
-import EncVnAuthProvedor from '../integracao/EncVnAuthProvedor'
-import {IUsuarioAutenticadoProps} from '../interfaces/IUsuarioAutenticado'
+import UserState from '../integracao/UserState';
 
 const Home = () => {
-    const encVnAuthProvedor = new EncVnAuthProvedor();
+    const userState = new UserState();
     return (
         <>
-            <h1>{`Olá usuário: ${encVnAuthProvedor.usuarioLogado?.nome ?? 'indefinido'}`}</h1>
+            <h1>{`Olá usuário: ${userState.localStorageUser?.nome ?? 'indefinido'}`}</h1>
         </>
     )
 }

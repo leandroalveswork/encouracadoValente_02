@@ -2,7 +2,6 @@ import { useEffect } from "react"
 import { useParams } from "react-router"
 import useWebSocket from "react-use-websocket"
 import PosicaoContainer from "../components/PosicaoContainer"
-import EncVnAuthProvedor from "../integracao/EncVnAuthProvedor"
 import './css/TelaJogo.css'
 
 export interface TelaJogoProps {
@@ -11,8 +10,6 @@ export interface TelaJogoProps {
 
 const TelaJogo = ({backendUrl} : TelaJogoProps) => {
     
-    const encVnAuthProvedor = new EncVnAuthProvedor();
-
     const posicoesJaMarcadas: Array<string> = []
     const {roomId} = useParams()
 
