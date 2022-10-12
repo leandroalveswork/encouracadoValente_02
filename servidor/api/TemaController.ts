@@ -21,6 +21,7 @@ import { MdDetalheTema } from "../modelos/MdDetalheTema";
 import { MdResumoTema } from "../modelos/MdResumoTema";
 import { PutTema } from "../modelos/PutTema";
 import { UtilUrl } from "../UtilUrl";
+import { table } from "console";
 
 @injectable()
 class TemaController extends ControllerBase {
@@ -53,14 +54,22 @@ class TemaController extends ControllerBase {
         });
         this.router.get('/detalharPorId', async (req, res) => {
             try {
+                // console.log('inicio detalhe');
+                
                 const idUsuarioLogado = await this.obterIdUsuarioLogado(req);
                 const idTema = UtilUrl.obterParamPorKey(req.url ?? '', 'id');
-                if (idTema == undefined) {
+                if (idTema == undefined || idTema == '') {
                     let ex = new MdExcecao();
                     ex.codigoExcecao = 400;
                     ex.problema = 'Formato da url incorreta';
                     throw ex;
                 }
+                // console.log(req.url);
+                
+                // console.log(idTema);
+                
+                // console.log('   idTema detalhe');
+                
                 const temaDetalhado = await this.detalharPorId(idTema);
                 res.send(temaDetalhado);
             } catch (exc) {
@@ -80,7 +89,7 @@ class TemaController extends ControllerBase {
             try {
                 const idUsuarioLogado = await this.obterIdUsuarioLogado(req);
                 const idTema = UtilUrl.obterParamPorKey(req.url ?? '', 'id');
-                if (idTema == undefined) {
+                if (idTema == undefined || idTema == '') {
                     let ex = new MdExcecao();
                     ex.codigoExcecao = 400;
                     ex.problema = 'Formato da url incorreta';
@@ -88,6 +97,7 @@ class TemaController extends ControllerBase {
                 }
                 const temaDetalhado = await this.detalharPorId(idTema);
                 await this.excluirPorId(idTema);
+                res.send();
             } catch (exc) {
                 MdExcecao.enviarExcecao(req, res, exc);
             }
@@ -144,12 +154,15 @@ class TemaController extends ControllerBase {
     // get
     detalharPorId = async (id: string): Promise<MdDetalheTema> => {
         const temaDb = await this._temaRepositorio.selectByIdOrDefault(id);
+        // table(temaDb);
         if (temaDb == null) {
             let ex = new MdExcecao();
             ex.codigoExcecao = 404;
             ex.problema = 'Tema não encontrado.';
             throw ex;
         }
+        // console.log('tema selected');
+        
         let temaDetalhado = new MdDetalheTema();
         temaDetalhado.id = temaDb.id;
         temaDetalhado.nome = temaDb.nome;

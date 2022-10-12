@@ -11,6 +11,7 @@ import Entrar from './view/auth/Entrar';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import IndexLoja from './view/loja/IndexLoja';
 import AdicionarTema from './view/loja/AdicionarTema';
+import DetalheTema from './view/loja/DetalheTema';
 
 function App() {
   const router =
@@ -19,6 +20,7 @@ function App() {
         <Route path="/auth/entrar" element={<Entrar />} />,
         <Route path="/loja" element={<IndexLoja />} />,
         <Route path="/loja/adicionarTema" element={<AdicionarTema />} />,
+        <Route path="/loja/detalheTema" element={<DetalheTema />} />,
         <Route path="/" element={<Home />} />,
         <Route path="/game/:roomId" element={<TelaJogo backendUrl={`ws://${process.env.REACT_APP_url_do_servidor_backend as string}/room`} />} />,
       ]))

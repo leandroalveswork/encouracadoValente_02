@@ -6,6 +6,7 @@ import SucessoModal from '../../components/sucessoModal/SucessoModal';
 import ClientRest from '../../integracao/ClientRest';
 import UserState from '../../integracao/UserState';
 import { PostNovoTema } from '../../modelos/importarBack/PostNovoTema';
+import { UtilNumber } from '../../util/UtilNumber';
 
 const EncVnTextField = styled(TextField)({
     '& input + fieldset': {
@@ -27,7 +28,7 @@ const AdicionarTema = () => {
     const [erroEstaAberto, setErroEstaAberto] = useState(false);
     const [problemaErro, setProblemaErro] = useState('');
 
-    const [sucessoEstaAberto, setSucessoEstaAberto] = useState(false);
+    const [sucessoAdicaoEstaAberto, setSucessoAdicaoEstaAberto] = useState(false);
 
     const formatarPreco = (precoRaw: number | null): string => {
         if (precoRaw == null) {
@@ -37,32 +38,7 @@ const AdicionarTema = () => {
     }
 
     let precoAsFormatado = formatarPreco(preco);
-    useEffect(() => {
-        precoAsFormatado = formatarPreco(preco);
-    }, [preco]);
-
-    const handleChangePreco = (arg: string) => {
-        try {
-            try {
-                const argAsFloat = parseFloat(arg);
-                setPreco(_ => argAsFloat);
-            } catch (exc) {
-                const argCulturaBr = arg.split('').map(iChr => {
-                    if (iChr == ',') {
-                        return '.';
-                    }
-                    if (iChr == '.') {
-                        return ',';
-                    }
-                    return iChr;
-                }).join('');
-                const argCulturaBrAsFloat = parseFloat(argCulturaBr);
-                setPreco(_ => argCulturaBrAsFloat);
-            }
-        } catch (exc) {
-            setPreco(_ => null);
-        }
-    }
+    // useEffect(() => { precoAsFormatado = formatarPreco(preco) }, [preco]);
 
     const handleClickSalvar = async () => {
         let novoTema = new PostNovoTema();
@@ -71,7 +47,7 @@ const AdicionarTema = () => {
         novoTema.descricao = descricao;
         let rAdicao = await clientRest.callPostAutorizado<string>('/api/tema/adicionar', novoTema, '');
         if (rAdicao.eOk) {
-            setSucessoEstaAberto(_ => true);
+            setSucessoAdicaoEstaAberto(_ => true);
         } else {
             setProblemaErro(_ => rAdicao.problema);
             setErroEstaAberto(_ => true);
@@ -85,7 +61,7 @@ const AdicionarTema = () => {
             
             <div className="row g-0">
                 <EncVnTextField label="Nome" variant="outlined" className="mt-4" sx={{ width: 350 }} onChange={ev => setNome(_ => ev.target.value)} value={nome} />
-                <EncVnTextField label="Preço" type="number" variant="outlined" className="mt-4" sx={{ width: 350 }} onChange={ev => handleChangePreco(ev.target.value)} value={precoAsFormatado} />
+                <EncVnTextField label="Preço" type="number" variant="outlined" className="mt-4" sx={{ width: 350 }} onChange={ev => setPreco(_ => UtilNumber.parseFloatOrDefault(ev.target.value))} value={precoAsFormatado} />
             </div>
             <div className="row g-0">
                 <EncVnTextField multiline rows={4} label="Descrição" variant="outlined" className="mt-4" sx={{ width: 350 }} onChange={ev => setDescricao(_ => ev.target.value)} value={descricao} />
@@ -99,8 +75,8 @@ const AdicionarTema = () => {
                 </div>
 
             </div>
+            <SucessoModal estaAberto={sucessoAdicaoEstaAberto} onFechar={() => navigate('/loja')} mensagem='Tema adicionado com sucesso!' />
             <ErroModal estaAberto={erroEstaAberto} onFechar={() => setErroEstaAberto(_ => false)} problema={problemaErro} />
-            <SucessoModal estaAberto={sucessoEstaAberto} onFechar={() => navigate('/loja')} mensagem='Tema adicionado com sucesso!' />
         </>
     )
 }
