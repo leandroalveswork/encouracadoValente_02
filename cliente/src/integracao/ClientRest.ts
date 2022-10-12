@@ -16,7 +16,7 @@ class ClientRest {
             return rCompleto;
         }
         const bodyAsString = await r.text();
-        console.log(bodyAsString);
+        // console.log(bodyAsString);
         if (typeof resExemplo == 'string') {
             rCompleto.body = ('' + bodyAsString) as TRes;
             return rCompleto;

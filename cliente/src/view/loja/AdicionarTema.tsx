@@ -37,9 +37,7 @@ const AdicionarTema = () => {
     }
 
     let precoAsFormatado = formatarPreco(preco);
-    useEffect(() => {
-        precoAsFormatado = formatarPreco(preco);
-    }, [preco]);
+    useEffect(() => { precoAsFormatado = formatarPreco(preco) }, [preco]);
 
     const handleChangePreco = (arg: string) => {
         try {
