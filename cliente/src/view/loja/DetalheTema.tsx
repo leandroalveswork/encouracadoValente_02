@@ -98,7 +98,7 @@ const DetalheTema = () => {
     return (
         <>
             <span>{`Olá usuário: ${userState.localStorageUser?.nome ?? 'indefinido'}`}</span>
-            <h1>Adicionar Tema</h1>
+            <h1>{eAlteracao ? 'Alterar Tema' : 'Detalhes Tema'}</h1>
             
             <div className="row g-0">
                 <EncVnTextField label="Nome" variant="outlined" className="mt-4" sx={{ width: 350 }} onChange={ev => setNome(_ => ev.target.value)} value={nome} disabled={!eAlteracao} />
