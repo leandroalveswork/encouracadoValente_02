@@ -96,9 +96,7 @@ const Entrar = () => {
                 <div className='titulo-wrapper'>
                     <h1>ENCOURAÇADO VALENTE</h1>
                 </div>
-                <div className="row g-0">
-                    <div className="col-6">
-                    </div>
+                <div className="d-flex justify-content-center">
                     <div className="col-6 pe-3">
                         {eTelaEntrar ?
                             <Card>
