@@ -69,6 +69,8 @@ class RepositorioCrud<TEntidade extends DbEncVn> {
             return Promise.reject('Not Found');
         }
         let registroAtual = { ...registro };
+        registroAtual.idUsuarioFezInclusao = alteradoDb.idUsuarioFezInclusao;
+        registroAtual.horaInclusao = alteradoDb.horaInclusao;
         registroAtual.idUsuarioFezUltimaAtualizacao = idUsuarioOperador;
         registroAtual.horaUltimaAtualizacao = new Date();
         await this._modelMongo.findOneAndUpdate({ id: registro.id }, { ...registroAtual });

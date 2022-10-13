@@ -92,7 +92,7 @@ const DetalheTema = () => {
         } else {
             searchParams.append('eAlteracao', 'S');
         }
-        window.location.href = window.location.href.split('?')[0] + '?' + searchParams.toString();
+        navigate(window.location.href.split('?')[0] + '?' + searchParams.toString());
     }
 
     return (

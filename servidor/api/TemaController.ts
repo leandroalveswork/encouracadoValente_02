@@ -22,17 +22,23 @@ import { MdResumoTema } from "../modelos/MdResumoTema";
 import { PutTema } from "../modelos/PutTema";
 import { UtilUrl } from "../UtilUrl";
 import { table } from "console";
+import { NavioTemaRepositorio } from "../repositorio/NavioTemaRepositorio";
+import { DbNavioTema } from "../modelos/DbNavioTema";
+import { MdDetalheNavioTema } from "../modelos/MdDetalheNavioTema";
 
 @injectable()
 class TemaController extends ControllerBase {
     private _temaRepositorio: TemaRepositorio
+    private _navioTemaRepositorio: NavioTemaRepositorio
     constructor(
         @inject(LiteralServico.ConfigBack) configBack: ConfigBack,
-        @inject(LiteralServico.TemaRepositorio) temaRepositorio: TemaRepositorio
+        @inject(LiteralServico.TemaRepositorio) temaRepositorio: TemaRepositorio,
+        @inject(LiteralServico.NavioTemaRepositorio) navioTemaRepositorio: NavioTemaRepositorio
     ) {
         super(configBack);
         this._configBack = configBack;
         this._temaRepositorio = temaRepositorio;
+        this._navioTemaRepositorio = navioTemaRepositorio;
         this.router = Router();
         this.router.post('/adicionar', async (req, res) => {
             try {
@@ -95,7 +101,7 @@ class TemaController extends ControllerBase {
                     ex.problema = 'Formato da url incorreta';
                     throw ex;
                 }
-                const temaDetalhado = await this.detalharPorId(idTema);
+                // const temaDetalhado = await this.detalharPorId(idTema);
                 await this.excluirPorId(idTema);
                 res.send();
             } catch (exc) {
@@ -125,12 +131,29 @@ class TemaController extends ControllerBase {
             ex.problema = 'Os campos ' + StringUteis.listarEmPt(camposNulos) + ' são obrigatórios';
             throw ex;
         }
+        if (novoTema.naviosTema.length == 0) {
+            let ex = new MdExcecao();
+            ex.codigoExcecao = 400;
+            ex.problema = 'É obrigatório preencher pelo menos um navio para adicionar um tema.';
+            throw ex;
+        }
         let insertTema = new DbTema();
         insertTema.id = StringUteis.gerarNovoIdDe24Caracteres();
         insertTema.nome = novoTema.nome;
         insertTema.preco = novoTema.preco ?? 0;
         insertTema.descricao = novoTema.descricao;
+        let lInsertNaviosTema: DbNavioTema[] = [];
+        for (let iNovoNavioTema of novoTema.naviosTema) {
+            let navioTemaParaPush = new DbNavioTema();
+            navioTemaParaPush.id = StringUteis.gerarNovoIdDe24Caracteres();
+            navioTemaParaPush.idTema = insertTema.id;
+            navioTemaParaPush.imagemNavio = iNovoNavioTema.imagemNavio;
+            navioTemaParaPush.nomePersonalizado = iNovoNavioTema.nomePersonalizado;
+            navioTemaParaPush.tamnQuadrados = iNovoNavioTema.tamnQuadrados;
+            lInsertNaviosTema.push(navioTemaParaPush);
+        }
         await this._temaRepositorio.insertPorOperador(insertTema, idUsuarioLogado);
+        await this._navioTemaRepositorio.insertMuitosNaviosTema(lInsertNaviosTema, idUsuarioLogado);
         return insertTema.id;
     }
 
@@ -162,12 +185,21 @@ class TemaController extends ControllerBase {
             throw ex;
         }
         // console.log('tema selected');
+        const naviosTemaDb = await this._navioTemaRepositorio.selectMuitosNaviosTemaByTemaId(id);
         
         let temaDetalhado = new MdDetalheTema();
         temaDetalhado.id = temaDb.id;
         temaDetalhado.nome = temaDb.nome;
         temaDetalhado.preco = temaDb.preco;
         temaDetalhado.descricao = temaDb.descricao;
+        for (let iNavioTemaDb of naviosTemaDb) {
+            let navioTemaParaPush = new MdDetalheNavioTema();
+            navioTemaParaPush.id = iNavioTemaDb.id;
+            navioTemaParaPush.imagemNavio = iNavioTemaDb.imagemNavio;
+            navioTemaParaPush.nomePersonalizado = iNavioTemaDb.nomePersonalizado;
+            navioTemaParaPush.tamnQuadrados = iNavioTemaDb.tamnQuadrados;
+            temaDetalhado.naviosTema.push(navioTemaParaPush);
+        }
         return temaDetalhado;
     }
 
@@ -190,6 +222,12 @@ class TemaController extends ControllerBase {
             ex.problema = 'Os campos ' + StringUteis.listarEmPt(camposNulos) + ' são obrigatórios';
             throw ex;
         }
+        if (tema.naviosTema.length == 0) {
+            let ex = new MdExcecao();
+            ex.codigoExcecao = 400;
+            ex.problema = 'É obrigatório preencher pelo menos um navio para alterar um tema.';
+            throw ex;
+        }
         const temaDb = await this._temaRepositorio.selectByIdOrDefault(tema.id);
         if (temaDb == null) {
             let ex = new MdExcecao();
@@ -202,7 +240,18 @@ class TemaController extends ControllerBase {
         updateTema.nome = tema.nome;
         updateTema.preco = tema.preco ?? 0;
         updateTema.descricao = tema.descricao;
+        let lNaviosAtualizados: DbNavioTema[] = [];
+        for (let iNavioTema of tema.naviosTema) {
+            let navioTemaParaPush = new DbNavioTema();
+            navioTemaParaPush.id = StringUteis.gerarNovoIdDe24Caracteres();
+            navioTemaParaPush.idTema = iNavioTema.id;
+            navioTemaParaPush.imagemNavio = iNavioTema.imagemNavio;
+            navioTemaParaPush.nomePersonalizado = iNavioTema.nomePersonalizado;
+            navioTemaParaPush.tamnQuadrados = iNavioTema.tamnQuadrados;
+            lNaviosAtualizados.push(navioTemaParaPush);
+        }
         await this._temaRepositorio.updatePorOperador(updateTema, idUsuarioLogado);
+        await this._navioTemaRepositorio.updateMuitosNaviosTemaByTemaId(updateTema.id, lNaviosAtualizados, idUsuarioLogado);
     }
 
     // autorizado
@@ -216,6 +265,7 @@ class TemaController extends ControllerBase {
             throw ex;
         }
         await this._temaRepositorio.deleteById(id);
+        await this._navioTemaRepositorio.deleteMuitosNaviosTemaByTemaId(id);
     }
 }
 

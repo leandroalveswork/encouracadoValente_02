@@ -13,6 +13,7 @@ import { AutorizacaoController } from './api/AutorizacaoController';
 import mongoose from 'mongoose';
 import { TemaRepositorio } from './repositorio/TemaRepositorio';
 import { TemaController } from './api/TemaController';
+import { NavioTemaRepositorio } from './repositorio/NavioTemaRepositorio';
 
 const iocProvedor = new Container();
 iocProvedor.bind<ConfigBack>(LiteralServico.ConfigBack).to(ConfigBack).inSingletonScope();
@@ -20,6 +21,7 @@ iocProvedor.bind<MediadorWs>(LiteralServico.MediadorWs).to(MediadorWs).inRequest
 
 iocProvedor.bind<UsuarioRepositorio>(LiteralServico.UsuarioRepositorio).to(UsuarioRepositorio).inRequestScope();
 iocProvedor.bind<TemaRepositorio>(LiteralServico.TemaRepositorio).to(TemaRepositorio).inRequestScope();
+iocProvedor.bind<NavioTemaRepositorio>(LiteralServico.NavioTemaRepositorio).to(NavioTemaRepositorio).inRequestScope();
 
 iocProvedor.bind<AutorizacaoController>(LiteralServico.AutorizacaoController).to(AutorizacaoController).inRequestScope();
 iocProvedor.bind<TemaController>(LiteralServico.TemaController).to(TemaController).inRequestScope();

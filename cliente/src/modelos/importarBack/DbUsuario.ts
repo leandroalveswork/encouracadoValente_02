@@ -7,9 +7,11 @@ export class DbUsuario extends DbEncVn {
         this.email = '';
         this.senha = '';
         this.eSuperuser = false;
+        this.eUsuarioGoogle = false;
     }
     nome: string
     email: string
     senha: string
     eSuperuser: boolean
+    eUsuarioGoogle: boolean
 }

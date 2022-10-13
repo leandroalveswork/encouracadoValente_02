@@ -7,6 +7,7 @@ const LiteralServico = {
     // repositorios
     UsuarioRepositorio: Symbol.for('UsuarioRepositorio'),
     TemaRepositorio: Symbol.for('TemaRepositorio'),
+    NavioTemaRepositorio: Symbol.for('NavioTemaRepositorio'),
 
     // controllers de api
     AutorizacaoController: Symbol.for('AutorizacaoController'),
