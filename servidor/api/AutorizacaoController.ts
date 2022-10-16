@@ -122,7 +122,7 @@ class AutorizacaoController extends ControllerBase {
             throw ex;
         }
         const token = jsonwebtoken.sign({ id: usuarioDb.id }, this._configBack.salDoJwt, {
-            expiresIn: 20 * 30 // expira em 20 min
+            expiresIn: 20 * 60 * 50 // expira em 20 * 50 minutos
         });
         const username = this._configBack;  
         let usuarioLogado = new MdUsuarioLogado();

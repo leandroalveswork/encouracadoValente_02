@@ -30,10 +30,10 @@ const PreparacaoJogo = () => {
                 <Typography textAlign="center" style={{ fontFamily: "bungee", color: "black" }}>É HORA DE PREPARAR A SUA ESTRATÉGIA</Typography>
                 <div style={{ alignContent: 'center', paddingLeft: '5%' }}>
                     <PosicaoContainer handlePosicaoOnClick={() => { }} idPrefix='user' clickable={false} />
-                    <Draggable >
-                        <span>
+                    <Draggable>
+                        <div>
                             <img ref={barcoPequenoRef} style={{ height: '30px' }} src="/assets/barco_pequeno.png" onClick={() => handleOnClickBarco(barcoPequenoRef)} />
-                        </span>
+                        </div>
                     </Draggable>
                     <Button onClick={handleOnClickRotacionar}>Rotacionar</Button>
                 </div>

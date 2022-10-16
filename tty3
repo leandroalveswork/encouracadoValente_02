@@ -1,0 +1,11 @@
+[90m[main 2022-10-14T17:26:01.803Z][0m update#setState idle
+[90m[main 2022-10-14T17:26:03.628Z][0m Starting extension host with pid 4134 (fork() took 10 ms).
+[90m[main 2022-10-14T17:26:31.821Z][0m update#setState checking for updates
+[90m[main 2022-10-14T17:26:31.894Z][0m update#setState available for download
+[90m[main 2022-10-14T17:26:39.150Z][0m Extension host with pid 4134 exited with code: 0, signal: null.
+[90m[main 2022-10-14T17:26:55.771Z][0m update#setState idle
+[90m[main 2022-10-14T17:26:57.667Z][0m Starting extension host with pid 5199 (fork() took 8 ms).
+[90m[main 2022-10-14T17:27:23.142Z][0m Extension host with pid 5199 exited with code: null, signal: SIGINT.
+[90m[main 2022-10-14T17:27:23.262Z][0m Starting extension host with pid 5720 (fork() took 9 ms).
+[90m[main 2022-10-14T17:27:23.427Z][0m Waiting for extension host with pid 5720 to exit.
+[90m[main 2022-10-14T17:27:23.585Z][0m Extension host with pid 5720 exited with code: 0, signal: null.
