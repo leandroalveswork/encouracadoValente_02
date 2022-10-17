@@ -8,7 +8,6 @@ import DirectionsBoatFilledOutlinedIcon  from '@mui/icons-material/DirectionsBoa
 import MenuIcon from '@mui/icons-material/Menu';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import UserState from '../integracao/UserState';
-import { isNullishCoalesce } from "typescript";
 
 const theme = createTheme({
 palette: {
@@ -41,6 +40,13 @@ const Header = () => {
         setAnchorElUser(null);
     };
 
+    const logOut = () => {
+        localStorage.removeItem('user');
+        localStorage.clear();
+
+        window.location.reload()
+    }
+
     //const pages = [{label: 'Home', href: ''}, {label: 'Entrar', href: 'auth/entrar'}, {label: 'Loja', href: 'loja'}, {label: 'Sala de jogo', href: 'game/123'}];
     //const settings = [{label: 'Perfil', href: 'perfil'}, {label: loggedIn ? 'Logout' : 'Entrar', href: 'auth/entrar'}];
 
@@ -55,19 +61,12 @@ const Header = () => {
 
     const defineSettings = () => {
         if (loggedIn) {
-            return [{ label: 'Perfil', href: 'perfil', onclick: () => {} }, {label: 'Logout', href: 'auth/entrar', onclick: logOut}];
+            return [{ label: 'Perfil', href: 'perfil', onclick: () => {} }, {label: 'Logout', href: 'auth/entrar', onclick: logOut }];
         }
 
         return [{ label: 'Login', href: 'auth/entrar', onclick: () => {} }];;
     }
-    const settings = defineSettings();
-
-    const logOut = () => {
-        localStorage.removeItem('user');
-        localStorage.clear();
-
-        window.location.reload()
-    }
+    const settings = defineSettings();    
 
     return (
         <ThemeProvider theme={theme}>    
