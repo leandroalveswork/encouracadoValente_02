@@ -28,6 +28,8 @@ const GoogleAuthBotao = () => {
         if (respostaApi.eOk) {
             userState.localStorageUser = respostaApi.body;
             navigate('/')
+
+            window.location.reload()
         }
     }
 
