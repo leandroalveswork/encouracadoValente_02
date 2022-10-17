@@ -147,9 +147,9 @@ class TemaController extends ControllerBase {
             let navioTemaParaPush = new DbNavioTema();
             navioTemaParaPush.id = StringUteis.gerarNovoIdDe24Caracteres();
             navioTemaParaPush.idTema = insertTema.id;
-            navioTemaParaPush.imagemNavio = iNovoNavioTema.imagemNavio;
-            navioTemaParaPush.nomePersonalizado = iNovoNavioTema.nomePersonalizado;
             navioTemaParaPush.tamnQuadrados = iNovoNavioTema.tamnQuadrados;
+            navioTemaParaPush.nomePersonalizado = iNovoNavioTema.nomePersonalizado;
+            navioTemaParaPush.urlImagemNavio = iNovoNavioTema.urlImagemNavio;
             lInsertNaviosTema.push(navioTemaParaPush);
         }
         await this._temaRepositorio.insertPorOperador(insertTema, idUsuarioLogado);
@@ -195,9 +195,9 @@ class TemaController extends ControllerBase {
         for (let iNavioTemaDb of naviosTemaDb) {
             let navioTemaParaPush = new MdDetalheNavioTema();
             navioTemaParaPush.id = iNavioTemaDb.id;
-            navioTemaParaPush.imagemNavio = iNavioTemaDb.imagemNavio;
-            navioTemaParaPush.nomePersonalizado = iNavioTemaDb.nomePersonalizado;
             navioTemaParaPush.tamnQuadrados = iNavioTemaDb.tamnQuadrados;
+            navioTemaParaPush.nomePersonalizado = iNavioTemaDb.nomePersonalizado;
+            navioTemaParaPush.urlImagemNavio = iNavioTemaDb.urlImagemNavio;
             temaDetalhado.naviosTema.push(navioTemaParaPush);
         }
         return temaDetalhado;
@@ -244,10 +244,10 @@ class TemaController extends ControllerBase {
         for (let iNavioTema of tema.naviosTema) {
             let navioTemaParaPush = new DbNavioTema();
             navioTemaParaPush.id = StringUteis.gerarNovoIdDe24Caracteres();
-            navioTemaParaPush.idTema = iNavioTema.id;
-            navioTemaParaPush.imagemNavio = iNavioTema.imagemNavio;
-            navioTemaParaPush.nomePersonalizado = iNavioTema.nomePersonalizado;
+            navioTemaParaPush.idTema = tema.id;
             navioTemaParaPush.tamnQuadrados = iNavioTema.tamnQuadrados;
+            navioTemaParaPush.nomePersonalizado = iNavioTema.nomePersonalizado;
+            navioTemaParaPush.urlImagemNavio = iNavioTema.urlImagemNavio;
             lNaviosAtualizados.push(navioTemaParaPush);
         }
         await this._temaRepositorio.updatePorOperador(updateTema, idUsuarioLogado);

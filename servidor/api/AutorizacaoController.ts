@@ -1,4 +1,4 @@
-import { Router } from "express";
+import { Request, Router } from "express";
 import { inject, injectable, postConstruct } from "inversify";
 import "reflect-metadata";
 import { LiteralServico } from "../literais/LiteralServico";
@@ -14,6 +14,7 @@ import { ConfigBack } from "../ConfigBack";
 import { UsuarioRepositorio } from "../repositorio/UsuarioRepositorio";
 import { IUsuarioGoogle } from "../modelos/IUsuarioGoogle";
 import { ControllerBase } from "./ControllerBase";
+import { PutUpdateUsuario } from "../modelos/PutUpdateUsuario";
 
 @injectable()
 class AutorizacaoController extends ControllerBase {
@@ -50,9 +51,43 @@ class AutorizacaoController extends ControllerBase {
                 MdExcecao.enviarExcecao(req, res, exc);
             }
         });
+        this.router.put('/updateUsuario', async (req, res) => {
+            try {
+                const idUsuarioLogado = await this.obterIdUsuarioLogado(req);
+                const novoUsuario = await this.updateUsuario(req.body, idUsuarioLogado)
+                res.send({message: "Usuario alterado com sucesso", data: novoUsuario});
+            } catch (exc) {
+                MdExcecao.enviarExcecao(req, res, exc);
+            }
+        });
     }
 
     // codifique as actions:
+
+
+    updateUsuario = async(novoUsuario: PutUpdateUsuario, idUsuarioLogado: string): Promise<void> => {
+
+        if (novoUsuario.nome.length <= 2) {
+            let ex = new MdExcecao();
+            ex.codigoExcecao = 400;
+            ex.problema = 'O nome deve possuir mais do que 2 caracteres';
+            throw ex;
+        }
+        
+        const usuarioDb = await this._usuarioRepositorio.selectByIdOrDefault(idUsuarioLogado);
+        if (usuarioDb == null) {
+            let ex = new MdExcecao();
+            ex.codigoExcecao = 404;
+            ex.problema = 'Usuario não encontrado.';
+            throw ex;
+        }
+        let newUser = new DbUsuario()
+        newUser = usuarioDb
+        // Adicionar novos campos para serem trocados
+        newUser.nome = novoUsuario.nome
+        await this._usuarioRepositorio.updatePorOperador(newUser, usuarioDb.id)
+        //return newUser
+    }
 
     // post
     entrarUsuarioEncVn = async (loginUsuario: PostLoginUsuario): Promise<MdUsuarioLogado> => {

@@ -5,15 +5,16 @@ export interface PosicaoProps {
     onClick: (event: any) => void;
     clickable: boolean;
     idPrefix: string;
+    color?: string;
 }
 
-export const Posicao = ({idPosicao, onClick, clickable, idPrefix}: PosicaoProps) => {
+export const Posicao = ({idPosicao, onClick, clickable, idPrefix, color = '#DFF4FF'}: PosicaoProps) => {
     return <div
     id={`${idPrefix}-${idPosicao}`}
     className='posicao'
     key={`${idPrefix}-${idPosicao}`}
-    style={{ cursor: clickable ? 'pointer' : 'default' }}
-    onClick={clickable ? onClick : undefined}>{idPosicao[0]}-{idPosicao[1]}</div>
+    style={{ cursor: clickable ? 'pointer' : 'default', backgroundColor: color }}
+    onClick={clickable ? onClick : undefined}></div>
 }
 
 export default Posicao

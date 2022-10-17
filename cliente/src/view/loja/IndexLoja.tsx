@@ -74,16 +74,15 @@ const IndexLoja = () => {
     }
     
     return (
-        <>
-            <span>{`Olá usuário: ${userState.localStorageUser?.nome ?? 'indefinido'}`}</span>
-            <h1>Loja</h1>
+        <div>
+            <span style={{color: "white"}}>{`Olá usuário: ${userState.localStorageUser?.nome ?? 'indefinido'}`}</span>
+            <h1 style={{color: 'white'}}>Loja</h1>
             {lTemas.length > 0 && <>
-                <div className="row">
+                <div className="row" >
                     {temasPaginados.map(iResumoTema => {
                         return (<div className='col-6' key={iResumoTema.id}>
                             <Card>
-
-                                <CardContent>
+                                <CardContent >
                                     <h3 className="subtitulo">{iResumoTema.nome}</h3>
                                     <span>{iResumoTema.descricao}</span>
                                 </CardContent>
@@ -101,7 +100,7 @@ const IndexLoja = () => {
                     <Pagination variant='outlined' color='primary' count={qtPaginas} page={pagina} onChange={(ev, pgn) => setPagina(_ => pgn)} />
                 </div>
             </>}
-            {lTemas.length == 0 && <span>Nenhum tema adicionado ainda.</span>}
+            {lTemas.length == 0 && <span style={{color: 'white'}}>Nenhum tema adicionado ainda.</span>}
             <div className="d-flex justify-content-end pt-4">
                 <Button size="medium" onClick={() => navigate('/loja/adicionarTema')}>Adicionar tema</Button>
             </div>
@@ -110,7 +109,7 @@ const IndexLoja = () => {
                 mensagem='Deseja excluir este tema? Isso causará a exclusão dos navios deste tema.' />
             <SucessoModal estaAberto={sucessoExclusaoEstaAberto} onFechar={() => window.location.reload()} mensagem='Tema excluído com sucesso!' />
             <ErroModal estaAberto={erroEstaAberto} onFechar={() => setErroEstaAberto(_ => false)} problema={problemaErro} />
-        </>
+        </div>
     )
 }
 

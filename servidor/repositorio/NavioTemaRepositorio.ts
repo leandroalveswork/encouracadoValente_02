@@ -21,9 +21,9 @@ class NavioTemaRepositorio extends RepositorioCrud<DbNavioTema> {
             idUsuarioFezUltimaAtualizacao: String,
             horaUltimaAtualizacao: Date,
             idTema: { type: String, required: true },
-            imagemNavio: { type: Number, required: true },
+            tamnQuadrados: { type: Number, required: true },
             nomePersonalizado: { type: String, required: true },
-            tamnQuadrados: { type: Number, required: true }
+            urlImagemNavio: { type: String, required: true }
         });
         this.inicializarMongo('NavioTema', schema);
     }
@@ -56,7 +56,7 @@ class NavioTemaRepositorio extends RepositorioCrud<DbNavioTema> {
         let lNaviosTemaDb = await this.selectMuitosNaviosTemaByTemaId(idTema);
         let lNaviosParaSalvar: HydratedDocument<DbNavioTema, {}, unknown>[] = [];
         for (let iNavioTema of naviosAtualizados) {
-            let navioTemaDb = lNaviosTemaDb.find(x => x.id == iNavioTema.id);
+            let navioTemaDb = (iNavioTema.id == undefined || iNavioTema.id == '') ? undefined : lNaviosTemaDb.find(x => x.id == iNavioTema.id);
             if (navioTemaDb == undefined) {
                 // inserir navioTema caso a atualizaçao do tema envolva incluir esse navioTema
                 iNavioTema.idUsuarioFezInclusao = idUsuarioOperador;

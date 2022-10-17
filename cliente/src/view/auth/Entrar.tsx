@@ -90,48 +90,45 @@ const Entrar = () => {
     }
 
     return (
-        <div className='fundo-entrar'>
-            <div className="fundo-frente-entrar">
-
-                <div className='titulo-wrapper'>
-                    <h1>ENCOURAÇADO VALENTE</h1>
-                </div>
-                <div className="d-flex justify-content-center">
-                    <div className="col-6 pe-3">
-                        {eTelaEntrar ?
-                            <Card>
-                                <CardContent>
-                                    <h3 className="subtitulo">ENTRAR</h3>
-                                    <div className="d-flex flex-column align-items-center">
-                                        <EncVnTextField label="Email" variant="outlined" className="mt-4" sx={{ width: 350 }} onChange={ev => handleChangeEmail(ev.target.value)} value={email} />
-                                        <EncVnTextField label="Senha" type="password" variant="outlined" className="mt-4" sx={{ width: 350 }} onChange={ev => handleChangeSenha(ev.target.value)} value={senha} />
-                                        <Button variant="contained" size="medium" className="mt-4" sx={{ width: 200 }} onClick={() => handleClickEntrarUsuarioEncVn()}>Entrar</Button>
-                                        <GoogleAuthBotao />
-                                    </div>
-                                </CardContent>
-                                <CardActions>
-                                    <Button size="medium" onClick={() => handleClickCriarConta()}>Criar uma nova conta</Button>
-                                </CardActions>
-                            </Card> :
-                            <Card>
-                                <CardContent>
-                                    <h3 className="subtitulo">CADASTRAR</h3>
-                                    <div className="d-flex flex-column align-items-center">
-                                        <EncVnTextField label="Nome" variant="outlined" className="mt-4" sx={{ width: 350 }} onChange={ev => handleChangeNomeCadastro(ev.target.value)} value={nomeCadastro} />
-                                        <EncVnTextField label="Email" variant="outlined" className="mt-4" sx={{ width: 350 }} onChange={ev => handleChangeEmailCadastro(ev.target.value)} value={emailCadastro} />
-                                        <EncVnTextField label="Senha" type="password" variant="outlined" className="mt-4" sx={{ width: 350 }} onChange={ev => handleChangeSenhaCadastro(ev.target.value)} value={senhaCadastro} />
-                                        <Button variant="contained" size="medium" className="mt-4" sx={{ width: 200 }} onClick={() => handleClickCriarContaCadastro()}>Criar a conta</Button>
-                                    </div>
-                                </CardContent>
-                                <CardActions>
-                                    <Button size="medium" onClick={() => handleClickJaTenhoContaCadastro()}>Já tenho uma conta</Button>
-                                </CardActions>
-                            </Card>}
-                    </div>
-                </div>
-                <ErroModal estaAberto={erroEstaAberto} onFechar={handleFecharErro} problema={problemaErro} />
+        <>
+            <div className='titulo-wrapper'>
+                <h1>ENCOURAÇADO VALENTE</h1>
             </div>
-        </div>
+            <div className="d-flex justify-content-center">
+                <div className="col-6 pe-3">
+                    {eTelaEntrar ?
+                        <Card>
+                            <CardContent>
+                                <h3 className="subtitulo">ENTRAR</h3>
+                                <div className="d-flex flex-column align-items-center">
+                                    <EncVnTextField label="Email" variant="outlined" className="mt-4" sx={{ width: 350 }} onChange={ev => handleChangeEmail(ev.target.value)} value={email} />
+                                    <EncVnTextField label="Senha" type="password" variant="outlined" className="mt-4" sx={{ width: 350 }} onChange={ev => handleChangeSenha(ev.target.value)} value={senha} />
+                                    <Button variant="contained" size="medium" className="mt-4" sx={{ width: 200 }} onClick={() => handleClickEntrarUsuarioEncVn()}>Entrar</Button>
+                                    <GoogleAuthBotao />
+                                </div>
+                            </CardContent>
+                            <CardActions>
+                                <Button size="medium" onClick={() => handleClickCriarConta()}>Criar uma nova conta</Button>
+                            </CardActions>
+                        </Card> :
+                        <Card>
+                            <CardContent>
+                                <h3 className="subtitulo">CADASTRAR</h3>
+                                <div className="d-flex flex-column align-items-center">
+                                    <EncVnTextField label="Nome" variant="outlined" className="mt-4" sx={{ width: 350 }} onChange={ev => handleChangeNomeCadastro(ev.target.value)} value={nomeCadastro} />
+                                    <EncVnTextField label="Email" variant="outlined" className="mt-4" sx={{ width: 350 }} onChange={ev => handleChangeEmailCadastro(ev.target.value)} value={emailCadastro} />
+                                    <EncVnTextField label="Senha" type="password" variant="outlined" className="mt-4" sx={{ width: 350 }} onChange={ev => handleChangeSenhaCadastro(ev.target.value)} value={senhaCadastro} />
+                                    <Button variant="contained" size="medium" className="mt-4" sx={{ width: 200 }} onClick={() => handleClickCriarContaCadastro()}>Criar a conta</Button>
+                                </div>
+                            </CardContent>
+                            <CardActions>
+                                <Button size="medium" onClick={() => handleClickJaTenhoContaCadastro()}>Já tenho uma conta</Button>
+                            </CardActions>
+                        </Card>}
+                </div>
+            </div>
+            <ErroModal estaAberto={erroEstaAberto} onFechar={handleFecharErro} problema={problemaErro} />
+        </>
     )
 }
 
