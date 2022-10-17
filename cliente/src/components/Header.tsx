@@ -1,22 +1,23 @@
 import { Box, AppBar, Toolbar, IconButton, Typography, Menu, Container, 
     Avatar, Button, Tooltip, MenuItem } from "@mui/material";
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, Navigate, useNavigate } from "react-router-dom";
 import DirectionsBoatFilledOutlinedIcon  from '@mui/icons-material/DirectionsBoatFilledOutlined';
 import MenuIcon from '@mui/icons-material/Menu';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
-
-const pages = [{nome: 'Home', url: ''}, {nome: 'Entrar', url: 'auth/entrar'}, {nome: 'Loja', url: 'loja'}, {nome: 'Sala de jogo', url: 'game/123'}];
-const settings = ['Perfil', 'Logout'];
+import UserState from '../integracao/UserState';
+import { isNullishCoalesce } from "typescript";
 
 const theme = createTheme({
 palette: {
     primary: {
-        // Purple and green play nicely together.
             main: '#f4900c',
         },
     },
 });
+
+const userState = new UserState();
+const loggedIn = userState.localStorageUser;
 
 const Header = () => {
 
@@ -38,6 +39,34 @@ const Header = () => {
         setAnchorElUser(null);
     };
 
+    //const pages = [{label: 'Home', href: ''}, {label: 'Entrar', href: 'auth/entrar'}, {label: 'Loja', href: 'loja'}, {label: 'Sala de jogo', href: 'game/123'}];
+    //const settings = [{label: 'Perfil', href: 'perfil'}, {label: loggedIn ? 'Logout' : 'Entrar', href: 'auth/entrar'}];
+
+    const definePages = () => {
+        if (loggedIn) {
+            return [{label: 'Home', href: ''}, {label: 'Entrar', href: 'auth/entrar'}, {label: 'Loja', href: 'loja'}, {label: 'Sala de jogo', href: 'game/123'}];
+        }
+
+        return [];
+    }
+    const pages = definePages();    
+
+    const defineSettings = () => {
+        if (loggedIn) {
+            return [{ label: 'Perfil', href: 'perfil', onclick: () => {} }, {label: 'Logout', href: 'auth/entrar', onclick: logOut}];
+        }
+
+        return [{ label: 'Login', href: 'auth/entrar', onclick: () => {} }];;
+    }
+    const settings = defineSettings();
+
+    const logOut = () => {
+        localStorage.removeItem('user');
+        localStorage.clear();
+
+        window.location.reload()
+    }
+
     return (
         <ThemeProvider theme={theme}>    
         <AppBar position="static">
@@ -48,7 +77,7 @@ const Header = () => {
                         variant="h6"
                         noWrap
                         component="a"
-                        href="/"
+                        href= {loggedIn ? "" : "/auth/entrar"}
                         sx={{
                             mr: 2,
                             display: { xs: 'none', md: 'flex' },
@@ -58,9 +87,8 @@ const Header = () => {
                             textDecoration: 'none',
                         }}
                     >
-                        Inicio
+                        Jogar
                     </Typography>
-
                     <Box sx={{ flexGrow: 1, display: { xs: 'flex', md: 'none' } }}>
                         <IconButton
                             size="large"
@@ -72,6 +100,7 @@ const Header = () => {
                         >
                             <MenuIcon />
                         </IconButton>
+                        
                         <Menu
                             id="menu-appbar"
                             anchorEl={anchorElNav}
@@ -91,20 +120,21 @@ const Header = () => {
                             }}
                         >
                             {pages.map((page) => (
-                                <MenuItem key={page.nome} onClick={handleCloseNavMenu}>
+                                <MenuItem key={page.label} onClick={handleCloseNavMenu}>
                                     <Typography textAlign="center">
-                                        <Link style={{ textDecoration: "none", color: "white" }} to={`/${page.url}`}>{page.nome}</Link>
+                                        <Link style={{ textDecoration: "none", color: "black" }} to={`/${page.href}`}>{page.label}</Link>
                                     </Typography>
                                 </MenuItem>
                             ))}
                         </Menu>
+                        
                     </Box>
                     <DirectionsBoatFilledOutlinedIcon  sx={{ display: { xs: 'flex', md: 'none' }, mr: 1 }} />
                     <Typography
                         variant="h5"
                         noWrap
                         component="a"
-                        href=""
+                        href= {loggedIn ? "" : "/auth/entrar"}
                         sx={{
                             mr: 2,
                             display: { xs: 'flex', md: 'none' },
@@ -116,24 +146,38 @@ const Header = () => {
                             textDecoration: 'none',
                         }}
                     >
-                        Inicio
+                        Jogar
                     </Typography>
-                    <Box sx={{ flexGrow: 1, display: { xs: 'none', md: 'flex' } }}>
-                        {pages.map((page) => (
-                            <Button
-                                key={page.url}
-                                onClick={handleCloseNavMenu}
-                                sx={{ my: 2, color: 'white', display: 'block' }}
-                            >
-                                <Link style={{ textDecoration: "none", color: "white", fontFamily: "Bungee" }} to={`/${page.url}`}>{page.nome}</Link>
-                            </Button>
-                        ))}
-                    </Box>
-
+                        <Box sx={{ flexGrow: 1, display: { xs: 'none', md: 'flex' } }}>                        
+                            {pages.map((page) => (
+                                <Button
+                                    key={page.label}
+                                    onClick={handleCloseNavMenu}
+                                    sx={{ my: 2, color: 'white', display: 'block' }}
+                                >
+                                    <Link style={{ textDecoration: "none", color: "white", fontFamily: "Bungee"}} to={`/${page.href}`}>{page.label}</Link>
+                                </Button>
+                            ))}
+                        </Box>               
+                    <Typography
+                        variant="subtitle2"
+                        noWrap
+                        sx={{
+                            mr: 2,
+                            fontFamily: 'Bungee',
+                            fontWeight: 700,
+                            letterSpacing: '.1rem',
+                            color: 'white',
+                            textDecoration: 'none',
+                        }}
+                    >
+                        {loggedIn ? ( 'Bem Vindo, ' + loggedIn?.nome.split(' ')[0]) : 'Entre, convidado'}
+                    </Typography>
+                    
                     <Box sx={{ flexGrow: 0 }}>
-                        <Tooltip title="Open settings">
+                        <Tooltip title="Open settings"> 
                             <IconButton onClick={handleOpenUserMenu} sx={{ p: 0 }}>
-                                <Avatar alt="Remy Sharp" src="/static/images/avatar/2.jpg" />
+                                <Avatar alt="Profile pic" src="https://static.vecteezy.com/ti/vetor-gratis/p3/4305899-marinheiro-plano-ilustracao-maritimo-academia-marinheiro-em-trabalho-uniforme-marinho-ocupacao-marinheiro-com-corda-isolado-personagem-de-desenho-animado-fundo-branco-vetor.jpg" />
                             </IconButton>
                         </Tooltip>
                         <Menu
@@ -153,8 +197,8 @@ const Header = () => {
                             onClose={handleCloseUserMenu}
                         >
                             {settings.map((setting) => (
-                                <MenuItem key={setting} onClick={handleCloseUserMenu}>
-                                    <Typography textAlign="center"><Link style={{ textDecoration: "none", color: "black" }} to={`/${setting}`}>{setting}</Link></Typography>
+                                <MenuItem key={setting.label} onClick={handleCloseUserMenu}>
+                                    <Typography textAlign="center"><Link onClick={setting.onclick} style={{ textDecoration: "none", color: "black" }} to={`/${setting.href}`}>{setting.label}</Link></Typography>
                                 </MenuItem>
                             ))}
                         </Menu>
