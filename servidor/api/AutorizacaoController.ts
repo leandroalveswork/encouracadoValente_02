@@ -52,6 +52,8 @@ class AutorizacaoController extends ControllerBase {
         });
     }
 
+    tempoSessao: number = 20 * 60 * 50;
+
     // codifique as actions:
 
     // post
@@ -96,7 +98,7 @@ class AutorizacaoController extends ControllerBase {
             throw ex;
         }
         const token = jsonwebtoken.sign({ id: usuarioDb.id }, this._configBack.salDoJwt, {
-            expiresIn: 20 * 30 // expira em 20 min
+            expiresIn: this.tempoSessao
         });
         let usuarioLogado = new MdUsuarioLogado();
         usuarioLogado.id = usuarioDb.id;
@@ -122,7 +124,7 @@ class AutorizacaoController extends ControllerBase {
             throw ex;
         }
         const token = jsonwebtoken.sign({ id: usuarioDb.id }, this._configBack.salDoJwt, {
-            expiresIn: 20 * 60 * 50 // expira em 20 * 50 minutos
+            expiresIn: this.tempoSessao
         });
         const username = this._configBack;  
         let usuarioLogado = new MdUsuarioLogado();
@@ -146,7 +148,7 @@ class AutorizacaoController extends ControllerBase {
         // console.table(usuarioInsert);
         await this._usuarioRepositorio.insertPorOperador(usuarioInsert, usuarioInsert.id);
         const token = jsonwebtoken.sign({ id: usuarioInsert.id }, this._configBack.salDoJwt, {
-            expiresIn: 20 * 30 // expira em 20 min
+            expiresIn: this.tempoSessao
         });
         let usuarioLogado = new MdUsuarioLogado();
         usuarioLogado.id = usuarioInsert.id;
@@ -201,7 +203,7 @@ class AutorizacaoController extends ControllerBase {
         console.table(usuarioInsert);
         await this._usuarioRepositorio.insertPorOperador(usuarioInsert, usuarioInsert.id);
         const token = jsonwebtoken.sign({ id: usuarioInsert.id }, this._configBack.salDoJwt, {
-            expiresIn: 20 * 30 // expira em 20 min
+            expiresIn: this.tempoSessao
         });
         let usuarioLogado = new MdUsuarioLogado();
         usuarioLogado.id = usuarioInsert.id;
