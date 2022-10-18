@@ -1,10 +1,9 @@
-import UserState from '../integracao/UserState';
-
 const Home = () => {
-    const userState = new UserState();
     return (
         <>
-            <h1 style={ {color: 'white' }}>{`Olá usuário: ${userState.localStorageUser?.nome ?? 'indefinido'}`}</h1>
+            <div className='titulo-wrapper'>
+                <h1>ENCOURAÇADO VALENTE</h1>
+            </div>
         </>
     )
 }

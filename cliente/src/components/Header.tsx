@@ -52,7 +52,7 @@ const Header = () => {
 
     const definePages = () => {
         if (loggedIn) {
-            return [{label: 'Home', href: ''}, {label: 'Entrar', href: 'auth/entrar'}, {label: 'Loja', href: 'loja'}, {label: 'Sala de jogo', href: 'game/123'}];
+            return [{label: 'Home', href: ''}, {label: 'Loja', href: 'loja'}, {label: 'Sala de jogo', href: 'game/123'}];
         }
 
         return [];

@@ -1,4 +1,4 @@
-import { Button, Card, CardActions, CardContent, Pagination, styled, TextField } from '@mui/material';
+import { Button, Card, CardActions, CardContent, Fab, Pagination, styled, TextField } from '@mui/material';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import ConfirmacaoModal from '../../components/confirmacaoModal/ConfirmacaoModal';
@@ -8,6 +8,7 @@ import ClientRest from '../../integracao/ClientRest';
 import UserState from '../../integracao/UserState';
 import { MdResumoTema } from '../../modelos/importarBack/MdResumoTema';
 import { UtilPagina } from '../../util/UtilPagina';
+import AddIcon from '@mui/icons-material/Add';
 
 const EncVnTextField = styled(TextField)({
     '& input + fieldset': {
@@ -16,6 +17,12 @@ const EncVnTextField = styled(TextField)({
         borderWidth: 2,
     }
 });
+
+const WhitePagination = styled(Pagination)({
+    color: 'white',
+    backgroundColor: 'white',
+    borderRadius: '10px'
+})
 
 const IndexLoja = () => {
     const navigate = useNavigate();
@@ -75,13 +82,12 @@ const IndexLoja = () => {
     
     return (
         <div>
-            <span style={{color: "white"}}>{`Olá usuário: ${userState.localStorageUser?.nome ?? 'indefinido'}`}</span>
             <h1 style={{color: 'white'}}>Loja</h1>
             {lTemas.length > 0 && <>
                 <div className="row" >
                     {temasPaginados.map(iResumoTema => {
                         return (<div className='col-6' key={iResumoTema.id}>
-                            <Card>
+                            <Card style={{marginTop: '10px'}}>
                                 <CardContent >
                                     <h3 className="subtitulo">{iResumoTema.nome}</h3>
                                     <span>{iResumoTema.descricao}</span>
@@ -97,12 +103,12 @@ const IndexLoja = () => {
                     })}
                 </div>
                 <div className="d-flex justify-content-center pt-4">
-                    <Pagination variant='outlined' color='primary' count={qtPaginas} page={pagina} onChange={(ev, pgn) => setPagina(_ => pgn)} />
+                    <WhitePagination color='standard' variant='outlined' count={qtPaginas} page={pagina} onChange={(ev, pgn) => setPagina(_ => pgn)} />
                 </div>
             </>}
             {lTemas.length == 0 && <span style={{color: 'white'}}>Nenhum tema adicionado ainda.</span>}
-            <div className="d-flex justify-content-end pt-4">
-                <Button size="medium" onClick={() => navigate('/loja/adicionarTema')}>Adicionar tema</Button>
+            <div className="d-flex justify-content-center pt-4">
+                <Fab size="medium" variant='extended'  onClick={() => navigate('/loja/adicionarTema')}> Adicionar tema <AddIcon sx={{mr: 1}} style={{marginBottom: '5px'}}/></Fab>
             </div>
 
             <ConfirmacaoModal estaAberto={confirmacaoExclusaoEstaAberto} onFecharOuCancelar={() => setConfirmacaoExclusaoEstaAberto(_ => false)} onConfirmar={() => handleClickConfirmarExclusao()}

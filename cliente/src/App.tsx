@@ -31,7 +31,7 @@ function App() {
           <Route path="/game/prepare" element={<ProtectedRoute><PreparacaoJogo/></ProtectedRoute> } />,
         </Routes>
       </div>
-      <Footer />
+      {/* <Footer /> */} 
     </>
   )
 }

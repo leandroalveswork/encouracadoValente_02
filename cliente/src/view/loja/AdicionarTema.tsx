@@ -1,5 +1,5 @@
-import { Box, Button, styled, Tab, Tabs, TextField } from '@mui/material';
-import { useEffect, useState } from 'react';
+import { Box, Button, InputAdornment, styled, Tab, Tabs, TextField } from '@mui/material';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import ErroModal from '../../components/erroModal/ErroModal';
 import SucessoModal from '../../components/sucessoModal/SucessoModal';
@@ -10,6 +10,7 @@ import { PostNovoNavioTema } from '../../modelos/importarBack/PostNovoNavioTema'
 import { PostNovoTema } from '../../modelos/importarBack/PostNovoTema';
 import { UtilNumber } from '../../util/UtilNumber';
 import ManterListaNavioTema from './ManterListaNavioTema';
+import '../css/AdicionarTema.css'
 
 const EncVnTextField = styled(TextField)({
     '& input + fieldset': {
@@ -69,35 +70,34 @@ const AdicionarTema = () => {
 
     return (
         <>
-            <span>{`Olá usuário: ${userState.localStorageUser?.nome ?? 'indefinido'}`}</span>
             <h1>Adicionar Tema</h1>
-            
-            <Box>
+            <Box className='box'>
                 <Tabs value={idxTab} onChange={(ev, nextIdxTab) => setIdxTab(_ => nextIdxTab)} aria-label="basic tabs example">
                     <Tab label="Dados de Resumo" />
                     <Tab label="Navios" />
                 </Tabs>
+                {idxTab == 0 && <>
+                    <div className="row g-0">
+                        <EncVnTextField label="Nome" variant="outlined" className="mt-4" sx={{ width: 350 }} onChange={ev => setNome(_ => ev.target.value)} value={nome} />
+                        <EncVnTextField label="Preço" type="number" variant="outlined" className="mt-4" sx={{ width: 350 }} onChange={ev => setPreco(_ => UtilNumber.parseFloatOrDefault(ev.target.value))} 
+                        value={precoAsFormatado} InputProps={{
+                            startAdornment: <InputAdornment position="start">R$</InputAdornment>,
+                        }} />
+                    </div>
+                    <div className="row g-0">
+                        <EncVnTextField multiline rows={4} label="Descrição" variant="outlined" className="mt-4" sx={{ width: 350 }} onChange={ev => setDescricao(_ => ev.target.value)} value={descricao} />
+                    </div>
+                </>}
+                {idxTab == 1 && <ManterListaNavioTema lNaviosTema={lNaviosTema} setLNaviosTema={setLNaviosTema} />}
+                <div className="row g-0" style={{marginTop: '10px'}}>
+                    <div className="col-6">
+                        <Button size="medium" onClick={() => window.history.back()}>Voltar</Button>
+                    </div>
+                    <div className="col-5">
+                        <Button size="medium" variant="contained" onClick={() => handleClickSalvar()}>Salvar</Button>
+                    </div>
+                </div>
             </Box>
-
-            {idxTab == 0 && <>
-                <div className="row g-0">
-                    <EncVnTextField label="Nome" variant="outlined" className="mt-4" sx={{ width: 350 }} onChange={ev => setNome(_ => ev.target.value)} value={nome} />
-                    <EncVnTextField label="Preço" type="number" variant="outlined" className="mt-4" sx={{ width: 350 }} onChange={ev => setPreco(_ => UtilNumber.parseFloatOrDefault(ev.target.value))} value={precoAsFormatado} />
-                </div>
-                <div className="row g-0">
-                    <EncVnTextField multiline rows={4} label="Descrição" variant="outlined" className="mt-4" sx={{ width: 350 }} onChange={ev => setDescricao(_ => ev.target.value)} value={descricao} />
-                </div>
-            </>}
-            {idxTab == 1 && <ManterListaNavioTema lNaviosTema={lNaviosTema} setLNaviosTema={setLNaviosTema} />}
-            <div className="row g-0">
-                <div className="col-6">
-                    <Button size="medium" onClick={() => window.history.back()}>Voltar</Button>
-                </div>
-                <div className="col-6">
-                    <Button size="medium" variant="contained" onClick={() => handleClickSalvar()}>Salvar</Button>
-                </div>
-
-            </div>
 
             <SucessoModal estaAberto={sucessoAdicaoEstaAberto} onFechar={() => navigate('/loja')} mensagem='Tema adicionado com sucesso!' />
             <ErroModal estaAberto={erroEstaAberto} onFechar={() => setErroEstaAberto(_ => false)} problema={problemaErro} />
