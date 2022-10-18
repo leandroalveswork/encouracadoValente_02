@@ -2,14 +2,11 @@
     background-color: white;
     width: 60vw;
     max-width: 60vw;
-    height: 50vh;
-    align-items: center;
-    max-height: 50vh;
+    height: 60vh;
+    max-height: 60vh;
     padding-top: 2vh;
-    justify-content: center;
     border-radius: 10px;
     margin: auto;
-    margin-top: 1vh;
     padding: auto;
 }
 
