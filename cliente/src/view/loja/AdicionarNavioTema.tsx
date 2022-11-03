@@ -98,7 +98,7 @@ const AdicionarNavioTema = (props: AdicionarNavioTemaProps) => {
                         <Button size="medium" onClick={() => props.onCancelar()}>Cancelar</Button>
                     </div>
                     <div className="col-6">
-                        <Button size="medium" variant="contained" onClick={() => handleClickSalvar()} style={{marginTop: '10px'}}>Salvar Navio</Button>
+                        <Button size="medium" variant="contained" onClick={() => handleClickSalvar()} style={{marginTop: '10px'}}>Confirmar Navio</Button>
                     </div>
 
                 </div>
