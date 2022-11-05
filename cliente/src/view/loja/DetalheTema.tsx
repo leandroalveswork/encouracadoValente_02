@@ -1,4 +1,4 @@
-import { Box, Button, styled, Tab, Tabs, TextField } from '@mui/material';
+import { Box, Button, Dialog, DialogActions, DialogContent, styled, Tab, Tabs, TextField } from '@mui/material';
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import ErroModal from '../../components/erroModal/ErroModal';
@@ -32,7 +32,8 @@ const DetalheTema = () => {
     const [nome, setNome] = useState('');
     const [preco, setPreco] = useState<number | null>(null);
     const [descricao, setDescricao] = useState('');
-    const [idxTab, setIdxTab] = useState(0);
+    // const [idxTab, setIdxTab] = useState(0);
+    const [popupNaviosTemaEstaAberto, setPopupNaviosTemaEstaAberto] = useState(false);
     const [lNaviosTema, setLNaviosTema] = useState<MdDetalheNavioTema[]>([]);
 
     const [erroEstaAberto, setErroEstaAberto] = useState(false);
@@ -115,11 +116,11 @@ const DetalheTema = () => {
             <h1>{eAlteracao ? 'Alterar Tema' : 'Detalhes Tema'}</h1>
 
             <Box className='box'>
-                <Tabs value={idxTab} onChange={(ev, nextIdxTab) => setIdxTab(_ => nextIdxTab)} aria-label="basic tabs example">
+                {/* <Tabs value={idxTab} onChange={(ev, nextIdxTab) => setIdxTab(_ => nextIdxTab)} aria-label="basic tabs example">
                     <Tab label="Dados de Resumo" />
                     <Tab label="Navios" />
                 </Tabs>
-                {idxTab == 0 && <>
+                {idxTab == 0 && <> */}
                     <div className="row g-0">
                         <EncVnTextField label="Nome" variant="outlined" className="mt-4" sx={{ width: 350 }} onChange={ev => setNome(_ => ev.target.value)} value={nome} disabled={!eAlteracao} />
                         <EncVnTextField label="Preço" type="number" variant="outlined" className="mt-4" sx={{ width: 350 }} onChange={ev => setPreco(_ => UtilNumber.parseFloatOrDefault(ev.target.value))} value={precoAsFormatado} disabled={!eAlteracao} />
@@ -127,23 +128,43 @@ const DetalheTema = () => {
                     <div className="row g-0">
                         <EncVnTextField multiline rows={4} label="Descrição" variant="outlined" className="mt-4" sx={{ width: 350 }} onChange={ev => setDescricao(_ => ev.target.value)} value={descricao} disabled={!eAlteracao} />
                     </div>
-                </>}
-                {idxTab == 1 && <ManterListaNavioTema lNaviosTema={lNaviosTema} setLNaviosTema={setLNaviosTema} />}
+                {/* </>} */}
+                {/* {idxTab == 1 && <ManterListaNavioTema lNaviosTema={lNaviosTema} setLNaviosTema={setLNaviosTema} />} */}
                 <div className="row g-0">
-                    <div className="col-6">
+                    <div className="col-11" style={{marginTop: '10px'}}>
+                        <Button size="medium" variant="contained" onClick={() => setPopupNaviosTemaEstaAberto(_ => true)}>Abrir Lista de Navios</Button>
+                    </div>
+                    <div className="col-6" style={{marginTop: '10px'}}>
                         <Button size="medium" onClick={() => window.history.back()}>Voltar</Button>
                     </div>
                     {eAlteracao && <div className="col-6" style={{marginTop: '10px'}}>
                         <Button size="medium" variant="contained" onClick={() => handleClickSalvar()}>Salvar</Button>
                     </div>}
-                    {!eAlteracao && <div className="col-6">
+                    {!eAlteracao && <div className="col-6" style={{marginTop: '10px'}}>
                         <Button size="medium" variant="contained" onClick={() => handleClickAlterar()}>Alterar</Button>
                     </div>}
 
                 </div>
             </Box>
 
+            {/* Pop Up com os NavioTema */}
+            <Dialog
+                open={popupNaviosTemaEstaAberto}
+                onClose={() => setPopupNaviosTemaEstaAberto(_ => false)}
+                fullWidth
+                maxWidth='lg'
+            >
+                <DialogContent>
+                    <ManterListaNavioTema lNaviosTema={lNaviosTema} setLNaviosTema={setLNaviosTema} />
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setPopupNaviosTemaEstaAberto(_ => false)}>
+                        OK
+                    </Button>
+                </DialogActions>
+            </Dialog>
 
+            {/* Mensagens de sucesso e erro */}
             <SucessoModal estaAberto={sucessoAlteracaoEstaAberto} onFechar={() => navigate('/loja')} mensagem='Tema alterado com sucesso!' />
             <ErroModal estaAberto={erroEstaAberto} onFechar={() => setErroEstaAberto(_ => false)} problema={problemaErro} />
         </>
