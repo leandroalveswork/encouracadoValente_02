@@ -20,7 +20,11 @@ palette: {
 const userState = new UserState();
 const loggedIn = userState.localStorageUser;
 
-const Header = () => {
+interface HeaderProps {
+    username: string
+}
+
+const Header = (props: HeaderProps) => {
 
   const [anchorElNav, setAnchorElNav] = useState<null | HTMLElement>(null);
   const [anchorElUser, setAnchorElUser] = useState<null | HTMLElement>(null);
@@ -37,6 +41,7 @@ const Header = () => {
     };
 
     const handleCloseUserMenu = () => {
+        console.log("caiu aqui!");
         setAnchorElUser(null);
     };
 
@@ -172,7 +177,7 @@ const Header = () => {
                             textDecoration: 'none',
                         }}
                     >
-                        {loggedIn ? ( 'Bem Vindo, ' + loggedIn?.nome.split(' ')[0]) : 'Entre, convidado'}
+                        {loggedIn ? ( 'Bem Vindo, ' + props.username.split(' ')[0]) : 'Entre, convidado'}
                     </Typography>
                     
                     <Box sx={{ flexGrow: 0 }}>
