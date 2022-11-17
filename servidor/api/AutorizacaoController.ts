@@ -107,8 +107,8 @@ class AutorizacaoController extends ControllerBase {
             ex.problema = 'Os campos ' + StringUteis.listarEmPt(camposNulos) + ' são obrigatórios';
             throw ex;
         }
-        const totalUsuarios = await this._usuarioRepositorio.selectAll();
-        console.table(totalUsuarios);
+        // const totalUsuarios = await this._usuarioRepositorio.selectAll();
+        // console.table(totalUsuarios);
         const usuarioDb = await this._usuarioRepositorio.selectByEmailOrDefault(loginUsuario.email);
         // console.table(usuarioDb);
         // console.log('        if usuario = null');
@@ -235,7 +235,6 @@ class AutorizacaoController extends ControllerBase {
         usuarioInsert.eSuperuser = false;
         usuarioInsert.eUsuarioGoogle = false;
         // console.table(usuarioInsert);
-        console.table(usuarioInsert);
         await this._usuarioRepositorio.insertPorOperador(usuarioInsert, usuarioInsert.id);
         const token = jsonwebtoken.sign({ id: usuarioInsert.id }, this._configBack.salDoJwt, {
             expiresIn: this.tempoSessao
