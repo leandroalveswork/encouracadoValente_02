@@ -54,8 +54,8 @@ class AutorizacaoController extends ControllerBase {
         this.router.put('/updateUsuario', async (req, res) => {
             try {
                 const idUsuarioLogado = await this.obterIdUsuarioLogado(req);
-                const novoUsuario = await this.updateUsuario(req.body, idUsuarioLogado)
-                res.send({message: "Usuario alterado com sucesso", data: novoUsuario});
+                await this.updateUsuario(req.body, idUsuarioLogado);
+                res.send();
             } catch (exc) {
                 MdExcecao.enviarExcecao(req, res, exc);
             }
@@ -67,15 +67,29 @@ class AutorizacaoController extends ControllerBase {
     // codifique as actions:
 
 
-    updateUsuario = async(novoUsuario: PutUpdateUsuario, idUsuarioLogado: string): Promise<void> => {
+    updateUsuario = async (novoUsuario: PutUpdateUsuario, idUsuarioLogado: string): Promise<void> => {
 
+        if (!novoUsuario.eAlteracaoSenha) {
+            await this.updateUsuarioSomenteNome(novoUsuario, idUsuarioLogado);
+            return;
+        }
+        
+        // Update usuario alterando a senha
+        
+        // Validaçao
         if (novoUsuario.nome.length <= 2) {
             let ex = new MdExcecao();
             ex.codigoExcecao = 400;
             ex.problema = 'O nome deve possuir mais do que 2 caracteres';
             throw ex;
         }
-        
+        if (novoUsuario.senhaNova.length <= 8) {
+            let ex = new MdExcecao();
+            ex.codigoExcecao = 400;
+            ex.problema = 'A senha deve possuir mais do que 8 caracteres';
+            throw ex;
+        }
+
         const usuarioDb = await this._usuarioRepositorio.selectByIdOrDefault(idUsuarioLogado);
         if (usuarioDb == null) {
             let ex = new MdExcecao();
@@ -83,12 +97,46 @@ class AutorizacaoController extends ControllerBase {
             ex.problema = 'Usuario não encontrado.';
             throw ex;
         }
-        let newUser = new DbUsuario()
-        newUser = usuarioDb
-        // Adicionar novos campos para serem trocados
-        newUser.nome = novoUsuario.nome
-        await this._usuarioRepositorio.updatePorOperador(newUser, usuarioDb.id)
-        //return newUser
+        const senhaEstaCorreta = await bcrypt.compare(novoUsuario.senhaAnterior, usuarioDb.senha);
+        if (!senhaEstaCorreta) {
+            let ex = new MdExcecao();
+            ex.codigoExcecao = 400;
+            ex.problema = 'A senha anterior esta incorreta';
+            throw ex;
+        }
+        
+        // Alteraçao
+        const salt = await bcrypt.genSalt(10);
+        const senhaCrypt = await bcrypt.hash(novoUsuario.senhaNova, salt);
+        let newUser = new DbUsuario();
+        newUser = usuarioDb;
+        newUser.nome = novoUsuario.nome;
+        newUser.senha = senhaCrypt;
+        await this._usuarioRepositorio.updatePorOperador(newUser, usuarioDb.id);
+    }
+    
+    updateUsuarioSomenteNome = async (novoUsuario: PutUpdateUsuario, idUsuarioLogado: string): Promise<void> => {
+        // Validaçao
+        if (novoUsuario.nome.length <= 2) {
+            let ex = new MdExcecao();
+            ex.codigoExcecao = 400;
+            ex.problema = 'O nome deve possuir mais do que 2 caracteres';
+            throw ex;
+        }
+
+        const usuarioDb = await this._usuarioRepositorio.selectByIdOrDefault(idUsuarioLogado);
+        if (usuarioDb == null) {
+            let ex = new MdExcecao();
+            ex.codigoExcecao = 404;
+            ex.problema = 'Usuario não encontrado.';
+            throw ex;
+        }
+        
+        // Alteraçao
+        let newUser = new DbUsuario();
+        newUser = usuarioDb;
+        newUser.nome = novoUsuario.nome;
+        await this._usuarioRepositorio.updatePorOperador(newUser, usuarioDb.id);
     }
 
     // post

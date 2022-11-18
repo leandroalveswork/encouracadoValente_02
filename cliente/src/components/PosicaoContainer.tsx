@@ -1,4 +1,3 @@
-import { useMemo } from "react"
 import Posicao  from "./Posicao"
 import './css/PosicaoContainer.css'
 
@@ -10,7 +9,7 @@ export interface PosicaoContainerProps {
 }
 
 const PosicaoContainer = ({clickable, idPrefix, handlePosicaoOnClick, backgroundColor}: PosicaoContainerProps) => {
-    const posicoes = useMemo(() => {
+    const calcularPosicoes = () => {
         const posicoes: Array<JSX.Element> = []
         for (let row = 0; row < 10; row++) {
             for (let column = 0; column < 10; column++) {
@@ -18,11 +17,11 @@ const PosicaoContainer = ({clickable, idPrefix, handlePosicaoOnClick, background
             }
         }
         return posicoes
-    }, [])
+    }
 
     return (
         <div className="posicao-container">
-            {posicoes}
+            {calcularPosicoes()}
         </div>
     )
 

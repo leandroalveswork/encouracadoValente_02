@@ -13,13 +13,20 @@ import DetalheTema from './view/loja/DetalheTema';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import PreparacaoJogo from './view/PreparacaoJogo';
+import Perfil from './view/auth/Perfil';
 import ProtectedRoute from './routes/ProtectedRoute';
+import { useState } from "react";
+import UserState from "./integracao/UserState";
 
 function App() {
+  const userState = new UserState();
+  
+  const [username, setUsername] = useState(userState.localStorageUser?.nome ?? '');
+  
   //TODO: Não disponibilizar chaves sensíveis no arquivo .env quando commitar o código . Sofrerão replace no processo de CI
   return (
     <>
-      <Header />
+      <Header username={username} />
       <div className='app'>
         <Routes>
           <Route path="/auth/entrar" element={<Entrar />} />,
@@ -29,6 +36,7 @@ function App() {
           <Route path="/" element={<Home />} />,
           <Route path="/game/:roomId" element={<ProtectedRoute><TelaJogo backendUrl={`ws://${process.env.REACT_APP_url_do_servidor_backend as string}/room`} /></ProtectedRoute>} />,
           <Route path="/game/prepare" element={<ProtectedRoute><PreparacaoJogo/></ProtectedRoute> } />,
+          <Route path="/perfil" element={<ProtectedRoute><Perfil setUsername={setUsername} /></ProtectedRoute> } />,
         </Routes>
       </div>
       {/* <Footer /> */} 
