@@ -64,13 +64,13 @@ const IndexLoja = () => {
     }
 
     const handleClickConfirmarExclusao = async () => {
-        console.log('**f|inicio do rExclusao');
+        // console.log('**f|inicio do rExclusao');
         
         const rExclusao = await clientRest.callDeleteAutorizado<undefined>('/api/tema/excluirPorId?id=' + idTemaConfirmacaoExclusaoPendente, undefined)
-        console.log('**f|rExclusao devolvido');
+        // console.log('**f|rExclusao devolvido');
         
         setConfirmacaoExclusaoEstaAberto(_ => false);
-        console.log('**f|confirmacao fechado');
+        // console.log('**f|confirmacao fechado');
         
         if (rExclusao.eOk) {
             setSucessoExclusaoEstaAberto(_ => true);

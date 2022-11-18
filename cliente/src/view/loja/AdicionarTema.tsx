@@ -10,6 +10,7 @@ import { PostNovoNavioTema } from '../../modelos/importarBack/PostNovoNavioTema'
 import { PostNovoTema } from '../../modelos/importarBack/PostNovoTema';
 import { UtilNumber } from '../../util/UtilNumber';
 import ManterListaNavioTema from './ManterListaNavioTema';
+import MdRespostaApi from '../../modelos/MdRespostaApi';
 import '../css/AdicionarTema.css'
 
 const EncVnTextField = styled(TextField)({
@@ -53,12 +54,23 @@ const AdicionarTema = () => {
         novoTema.nome = nome;
         novoTema.preco = preco;
         novoTema.descricao = descricao;
+        let promisesParaResolver: Promise<MdRespostaApi<undefined>>[] = [];
         for (let iDetalheTema of lNaviosTema) {
             let novoNavioTemaParaPush = new PostNovoNavioTema();
             novoNavioTemaParaPush.tamnQuadrados = iDetalheTema.tamnQuadrados;
             novoNavioTemaParaPush.nomePersonalizado = iDetalheTema.nomePersonalizado;
-            novoNavioTemaParaPush.urlImagemNavio = iDetalheTema.urlImagemNavio;
+            novoNavioTemaParaPush.numeroRecuperacaoArquivoImagemNavio = iDetalheTema.numeroRecuperacaoArquivoImagemNavio ?? '';
+            if (iDetalheTema.bytesParaUploadArquivo == null) 
+                continue;
+            promisesParaResolver.push(clientRest.callUploadArquivo(iDetalheTema.bytesParaUploadArquivo, iDetalheTema.numeroRecuperacaoArquivoImagemNavio ?? ''));
             novoTema.naviosTema.push(novoNavioTemaParaPush);
+        }
+        let listaRUpload = await Promise.all(promisesParaResolver);
+        let rErroOrDefault = listaRUpload.find(x => !x.eOk);
+        if (rErroOrDefault != undefined) {
+            setProblemaErro(_ => rErroOrDefault?.problema ?? '');
+            setErroEstaAberto(_ => true);
+            return;
         }
         let rAdicao = await clientRest.callPostAutorizado<string>('/api/tema/adicionar', novoTema, '');
         if (rAdicao.eOk) {

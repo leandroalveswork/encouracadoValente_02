@@ -284,7 +284,7 @@ class TemaController extends ControllerBase {
         
         await this._temaRepositorio.deleteById(id);
         await this._navioTemaRepositorio.deleteMuitosNaviosTemaByTemaId(id);
-        
+        await this._arquivoRepositorio.deleteByListaNumerosRecuperacao(numerosRecuperacaoNaviosTemaDb);
     }
 }
 

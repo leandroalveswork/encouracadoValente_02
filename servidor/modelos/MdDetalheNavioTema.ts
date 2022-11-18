@@ -5,5 +5,6 @@ export class MdDetalheNavioTema {
     tamnQuadrados: number = 0;
     nomePersonalizado: string = '';
     arquivoImagemNavio: MdArquivoBase64 | null = null;
+    bytesParaUploadArquivo: string | Blob | null = null;
     numeroRecuperacaoArquivoImagemNavio: string | null = null;
 }

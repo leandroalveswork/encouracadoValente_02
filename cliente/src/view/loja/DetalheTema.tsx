@@ -12,6 +12,7 @@ import { PutNavioTema } from '../../modelos/importarBack/PutNavioTema';
 import { PutTema } from '../../modelos/importarBack/PutTema';
 import { UtilNumber } from '../../util/UtilNumber';
 import ManterListaNavioTema from './ManterListaNavioTema';
+import MdRespostaApi from '../../modelos/MdRespostaApi';
 import '../css/DetalheTema.css'
 
 const EncVnTextField = styled(TextField)({
@@ -85,13 +86,24 @@ const DetalheTema = () => {
         temaAlterado.nome = nome;
         temaAlterado.preco = preco;
         temaAlterado.descricao = descricao;
+        let promisesParaResolver: Promise<MdRespostaApi<undefined>>[] = [];
         for (let iDetalheTema of lNaviosTema) {
             let navioTemaParaPush = new PutNavioTema();
             navioTemaParaPush.id = iDetalheTema.id;
             navioTemaParaPush.tamnQuadrados = iDetalheTema.tamnQuadrados;
             navioTemaParaPush.nomePersonalizado = iDetalheTema.nomePersonalizado;
-            navioTemaParaPush.urlImagemNavio = iDetalheTema.urlImagemNavio;
+            navioTemaParaPush.numeroRecuperacaoArquivoImagemNavio = iDetalheTema.numeroRecuperacaoArquivoImagemNavio ?? '';
             temaAlterado.naviosTema.push(navioTemaParaPush);
+            if (iDetalheTema.bytesParaUploadArquivo != null)
+                promisesParaResolver.push(clientRest.callUploadArquivo(iDetalheTema.bytesParaUploadArquivo, iDetalheTema.numeroRecuperacaoArquivoImagemNavio ?? ''));
+            temaAlterado.naviosTema.push(navioTemaParaPush);
+        }
+        let listaRUpload = await Promise.all(promisesParaResolver);
+        let rErroOrDefault = listaRUpload.find(x => !x.eOk);
+        if (rErroOrDefault != undefined) {
+            setProblemaErro(_ => rErroOrDefault?.problema ?? '');
+            setErroEstaAberto(_ => true);
+            return;
         }
         let rAlteracao = await clientRest.callPutAutorizado<undefined>('/api/tema/alterar', temaAlterado, undefined);
         if (rAlteracao.eOk) {
@@ -100,6 +112,7 @@ const DetalheTema = () => {
             setProblemaErro(_ => rAlteracao.problema);
             setErroEstaAberto(_ => true);
         }
+        
     }
 
     const handleClickAlterar = () => {
