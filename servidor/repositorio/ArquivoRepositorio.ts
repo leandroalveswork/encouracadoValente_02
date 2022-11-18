@@ -23,7 +23,8 @@ class ArquivoRepositorio extends RepositorioCrud<DbArquivo> {
             nomeArquivo: String,
             nome: String,
             tipo: { type: String, required: true },
-            buffer: { type: Buffer, required: true }
+            buffer: { type: Buffer, required: true },
+            numeroRecuperacao: { type: String, required: true }
         });
         this.inicializarMongo('Arquivo', schema);
     }

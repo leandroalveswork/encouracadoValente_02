@@ -94,6 +94,8 @@ const DetalheTema = () => {
             navioTemaParaPush.nomePersonalizado = iDetalheTema.nomePersonalizado;
             navioTemaParaPush.numeroRecuperacaoArquivoImagemNavio = iDetalheTema.numeroRecuperacaoArquivoImagemNavio ?? '';
             temaAlterado.naviosTema.push(navioTemaParaPush);
+            // Se os bytes foram informados, significa upload novo
+            // Se os bytes nao foram informados, significa que nao mudou a imagem -> adicionar mesmo assim na lista de naviosTema
             if (iDetalheTema.bytesParaUploadArquivo != null)
                 promisesParaResolver.push(clientRest.callUploadArquivo(iDetalheTema.bytesParaUploadArquivo, iDetalheTema.numeroRecuperacaoArquivoImagemNavio ?? ''));
             temaAlterado.naviosTema.push(navioTemaParaPush);

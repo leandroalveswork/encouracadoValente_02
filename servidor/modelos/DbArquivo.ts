@@ -4,6 +4,6 @@ export class DbArquivo extends DbEncVn {
     nomeArquivo: string | undefined = undefined;
     nome: string | undefined = undefined;
     tipo: string = '';
-    buffer: Buffer;
+    buffer: Buffer = Buffer.from([]);
     numeroRecuperacao: string = '';
 }

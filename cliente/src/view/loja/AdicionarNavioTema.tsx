@@ -32,12 +32,20 @@ const AdicionarNavioTema = (props: AdicionarNavioTemaProps) => {
 
     const [tamnQuadradosAsString, setTamnQuadradosAsString] = useState('');
     const [nomePersonalizado, setNomePersonalizado] = useState('');
-    const [urlImagem, setUrlImagem] = useState('');
+    const [bytesImagem, setBytesImagem] = useState<Blob | null>(null);
+    const [numeroRecuperacaoImagem, setNumeroRecuperacaoImagem] = useState<string | null>(null);
 
     const [erroEstaAberto, setErroEstaAberto] = useState(false);
     const [problemaErro, setProblemaErro] = useState('');
+    
+    const handleArquivoSelecionado = (event: any) => {
+        setBytesImagem(_ => event.target.files[0]);
+        setNumeroRecuperacaoImagem(_ => StringUteis.gerarNovoIdDe24Caracteres());
+    }
 
     const handleClickSalvar = async () => {
+        
+        // Validaçao
         let camposNulos: string[] = [];
         let tamnQuadradosAsNumber = 0;
         try {
@@ -51,8 +59,8 @@ const AdicionarNavioTema = (props: AdicionarNavioTemaProps) => {
         if (nomePersonalizado.length == 0) {
             camposNulos.push('Nome Personalizado');
         }
-        if (urlImagem.length == 0) {
-            camposNulos.push('Url Imagem');
+        if (numeroRecuperacaoImagem == null) {
+            camposNulos.push('Imagem');
         }
         if (camposNulos.length > 0) {
             setProblemaErro(_ => 'Os campos ' + StringUteis.listarEmPt(camposNulos) + ' são obrigatórios');
@@ -62,7 +70,8 @@ const AdicionarNavioTema = (props: AdicionarNavioTemaProps) => {
         let novoNavioTema = new MdDetalheNavioTema();
         novoNavioTema.tamnQuadrados = tamnQuadradosAsNumber;
         novoNavioTema.nomePersonalizado = nomePersonalizado;
-        novoNavioTema.urlImagemNavio = urlImagem;
+        novoNavioTema.numeroRecuperacaoArquivoImagemNavio = numeroRecuperacaoImagem;
+        novoNavioTema.bytesParaUploadArquivo = bytesImagem;
         props.onSalvar(novoNavioTema);
     }
 
@@ -91,9 +100,28 @@ const AdicionarNavioTema = (props: AdicionarNavioTemaProps) => {
                 </div>
                 <div className="row g-0">
                     <EncVnTextField label="Nome Personalizado" variant="outlined" className="mt-4" sx={{ width: 350 }} onChange={ev => setNomePersonalizado(_ => ev.target.value)} value={nomePersonalizado} />
-                    <EncVnTextField label="Url Imagem" variant="outlined" className="mt-4" sx={{ width: 350 }} onChange={ev => setUrlImagem(_ => ev.target.value)} value={urlImagem} />
+                    
+                    {/* Botao de upload */}
+                    <div className="d-flex mt-3">
+                        <span>Imagem:</span>
+                        <label htmlFor="btn-upload" className="ms-3">
+                            <input
+                            id="btn-upload"
+                            name="btn-upload"
+                            style={{ display: 'none' }}
+                            type="file"
+                            onChange={handleArquivoSelecionado} />
+                            <Button
+                            className="btn-choose"
+                            variant="outlined"
+                            component="span" >
+                                Escolher Arquivo
+                            </Button>
+                        </label>
+                    </div>
+                    <div className="file-name mt-3">{bytesImagem != null ? (bytesImagem as File).name : null}</div>
                 </div>
-                <div className="row g-0">
+                <div className="row g-0 mt-3">
                     <div className="col-6">
                         <Button size="medium" onClick={() => props.onCancelar()}>Cancelar</Button>
                     </div>

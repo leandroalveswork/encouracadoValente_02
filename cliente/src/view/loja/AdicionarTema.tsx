@@ -60,8 +60,11 @@ const AdicionarTema = () => {
             novoNavioTemaParaPush.tamnQuadrados = iDetalheTema.tamnQuadrados;
             novoNavioTemaParaPush.nomePersonalizado = iDetalheTema.nomePersonalizado;
             novoNavioTemaParaPush.numeroRecuperacaoArquivoImagemNavio = iDetalheTema.numeroRecuperacaoArquivoImagemNavio ?? '';
-            if (iDetalheTema.bytesParaUploadArquivo == null) 
-                continue;
+            if (iDetalheTema.bytesParaUploadArquivo == null) {
+                setProblemaErro(_ => 'Falha ao carregar imagem de um dos navios.');
+                setErroEstaAberto(_ => true);
+                return;
+            }
             promisesParaResolver.push(clientRest.callUploadArquivo(iDetalheTema.bytesParaUploadArquivo, iDetalheTema.numeroRecuperacaoArquivoImagemNavio ?? ''));
             novoTema.naviosTema.push(novoNavioTemaParaPush);
         }

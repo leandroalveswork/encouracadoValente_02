@@ -115,6 +115,7 @@ class ClientRest {
     
         let r = await axios.postForm('http://' + (process.env.REACT_APP_url_do_servidor_backend as string) + '/api/arquivo/upload', formData, {
             headers: {
+                "x-access-token": this._userState.localStorageUser?.token ?? '',
                 "numero-recuperacao": numeroRecuperacao
             }
         });
