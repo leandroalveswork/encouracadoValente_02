@@ -46,11 +46,21 @@ const AlterarNavioTema = (props: AlterarNavioTemaProps) => {
             return nomePeloMdArquivoBase64;
         return '';
     }
-
     const [nomeImagemSelecionada, setNomeImagemSelecionada] = useState(calcularNomeImagemSelecionada());
     useEffect(() =>
         setNomeImagemSelecionada(_ => calcularNomeImagemSelecionada()),
     [bytesImagem, numeroRecuperacaoImagem, numeroRecuperacaoImagemInicial, nomePeloMdArquivoBase64]);
+    const calcularSrcImagemPrevia = (): string => {
+        if (bytesImagem != null)
+            return URL.createObjectURL(bytesImagem);
+        if (numeroRecuperacaoImagem == numeroRecuperacaoImagemInicial)
+            return 'data:image/*;base64,' + (props.navioTemaInicial?.arquivoImagemNavio?.dadosBase64 ?? '');
+        return '';
+    }
+    const [srcImagemPrevia, setSrcImagemPrevia] = useState(calcularSrcImagemPrevia());
+    useEffect(() => 
+        setSrcImagemPrevia(calcularSrcImagemPrevia()),
+    [bytesImagem, numeroRecuperacaoImagem, numeroRecuperacaoImagemInicial]);
     
     const [erroEstaAberto, setErroEstaAberto] = useState(false);
     const [problemaErro, setProblemaErro] = useState('');
@@ -125,9 +135,9 @@ const AlterarNavioTema = (props: AlterarNavioTemaProps) => {
                     <EncVnTextField label="Nome Personalizado" variant="outlined" className="mt-4" sx={{ width: 350 }} onChange={ev => setNomePersonalizado(_ => ev.target.value)} value={nomePersonalizado} />
                     
                     {/* Botao de upload */}
-                    <FormControl>
-                        <span>Imagem</span>
-                        <label htmlFor="btn-upload">
+                    <div className="d-flex mt-3">
+                        <span>Imagem: </span>
+                        <label htmlFor="btn-upload" className="ms-3">
                             <input
                             id="btn-upload"
                             name="btn-upload"
@@ -141,8 +151,11 @@ const AlterarNavioTema = (props: AlterarNavioTemaProps) => {
                                 Escolher Arquivo
                             </Button>
                         </label>
-                        <div className="file-name">{nomeImagemSelecionada}</div>
-                    </FormControl>
+                    </div>
+                    <div className="file-name mt-3">{nomeImagemSelecionada}</div>
+                </div>
+                <div className="row g-0">
+                    <img src={srcImagemPrevia} alt='imagem' />
                 </div>
                 <div className="row g-0">
                     <div className="col-6">

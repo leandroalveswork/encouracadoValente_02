@@ -35,6 +35,16 @@ const AdicionarNavioTema = (props: AdicionarNavioTemaProps) => {
     const [bytesImagem, setBytesImagem] = useState<Blob | null>(null);
     const [numeroRecuperacaoImagem, setNumeroRecuperacaoImagem] = useState<string | null>(null);
 
+    const calcularSrcImagemPrevia = (): string => {
+        if (bytesImagem != null)
+            return URL.createObjectURL(bytesImagem);
+        return '';
+    }
+    const [srcImagemPrevia, setSrcImagemPrevia] = useState(calcularSrcImagemPrevia());
+    useEffect(() => 
+        setSrcImagemPrevia(_ => calcularSrcImagemPrevia()),
+    [bytesImagem]);
+    
     const [erroEstaAberto, setErroEstaAberto] = useState(false);
     const [problemaErro, setProblemaErro] = useState('');
     
@@ -120,6 +130,9 @@ const AdicionarNavioTema = (props: AdicionarNavioTemaProps) => {
                         </label>
                     </div>
                     <div className="file-name mt-3">{bytesImagem != null ? (bytesImagem as File).name : null}</div>
+                </div>
+                <div className="row g-0">
+                    {bytesImagem != null && <img src={srcImagemPrevia} alt='imagem' />}
                 </div>
                 <div className="row g-0 mt-3">
                     <div className="col-6">
