@@ -12,7 +12,7 @@ class RepositorioCrud<TEntidade extends DbEncVn> {
     protected _nomeCollection: string;
     protected _schema: Schema<TEntidade>;
     protected _modelMongo: Model<TEntidade, {}, {}, {}, any>;
-    protected static _bancoMock: Record<string, any[]> = {};
+    protected static _listaModelsMongo: Record<string, any> = {};
     constructor(
         configBack: ConfigBack,
     ) {
@@ -22,7 +22,10 @@ class RepositorioCrud<TEntidade extends DbEncVn> {
     protected inicializarMongo = (nomeCollection: string, schema: Schema): void => {
         this._nomeCollection = nomeCollection;
         this._schema = schema;
-        this._modelMongo = model<TEntidade>(this._nomeCollection, this._schema);
+        if (RepositorioCrud._listaModelsMongo[nomeCollection] == undefined) {
+            RepositorioCrud._listaModelsMongo[nomeCollection] = model<TEntidade>(this._nomeCollection, this._schema);
+        }
+        this._modelMongo = RepositorioCrud._listaModelsMongo[nomeCollection];
     }
 
     selectAll = () => {

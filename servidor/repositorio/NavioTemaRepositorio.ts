@@ -23,7 +23,7 @@ class NavioTemaRepositorio extends RepositorioCrud<DbNavioTema> {
             idTema: { type: String, required: true },
             tamnQuadrados: { type: Number, required: true },
             nomePersonalizado: { type: String, required: true },
-            urlImagemNavio: { type: String, required: true }
+            numeroRecuperacaoArquivoImagemNavio: { type: String, required: true }
         });
         this.inicializarMongo('NavioTema', schema);
     }
