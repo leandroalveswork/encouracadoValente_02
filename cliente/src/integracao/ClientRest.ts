@@ -1,5 +1,6 @@
 import MdRespostaApi from "../modelos/MdRespostaApi";
 import UserState from "./UserState";
+import axios, { AxiosResponse } from "axios";
 
 class ClientRest {
 
@@ -94,6 +95,31 @@ class ClientRest {
             headers: { 'x-access-token': this._userState.localStorageUser?.token ?? '' }
         });
         return await this.handleRes<TRes>(r, resExemplo);
+    }
+
+    private handleAxiosRes = <TRes>(r: AxiosResponse<TRes>) => {
+        let rCompleto = new MdRespostaApi<TRes>();
+        rCompleto.statusCode = r.status;
+        if (!(r.status >= 200 && r.status <= 299)) {
+            rCompleto.problema = r.statusText;
+            return rCompleto;
+        }
+        rCompleto.body = r.data;
+        return rCompleto;
+    }
+    
+    callUploadArquivo = async (arquivoRaw: string | Blob, numeroRecuperacao: string): Promise<MdRespostaApi<undefined>> => {
+        let formData = new FormData();
+
+        formData.append("file", arquivoRaw);
+    
+        let r = await axios.postForm('http://' + (process.env.REACT_APP_url_do_servidor_backend as string) + '/api/arquivo/upload', formData, {
+            headers: {
+                "x-access-token": this._userState.localStorageUser?.token ?? '',
+                "numero-recuperacao": numeroRecuperacao
+            }
+        });
+        return this.handleAxiosRes<undefined>(r);
     }
 }
 

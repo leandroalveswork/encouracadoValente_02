@@ -4,5 +4,5 @@ export class DbNavioTema extends DbEncVn {
     idTema: string = '';
     tamnQuadrados: number = 0;
     nomePersonalizado: string = '';
-    urlImagemNavio: string = '';
+    numeroRecuperacaoArquivoImagemNavio: string = '';
 }

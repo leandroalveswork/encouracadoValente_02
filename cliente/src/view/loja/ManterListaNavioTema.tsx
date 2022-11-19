@@ -13,6 +13,7 @@ import { DataGrid, GridColDef, GridValueGetterParams } from '@mui/x-data-grid';
 import { LiteralNavio } from '../../modelos/LiteralNavio';
 import DeleteOutlinedIcon from '@mui/icons-material/DeleteOutlined';
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
+import ImageIcon from '@mui/icons-material/Image';
 import AdicionarNavioTema from './AdicionarNavioTema';
 import AlterarNavioTema from './AlterarNavioTema';
 
@@ -92,7 +93,9 @@ const ManterListaNavioTema = (props: ManterListaNavioTemaProps) => {
                                 </TableCell>
                                 <TableCell align="right">{elNavioTema.nomePersonalizado}</TableCell>
                                 <TableCell align="right">{elNavioTema.tamnQuadrados}</TableCell>
-                                <TableCell align="right">{elNavioTema.urlImagemNavio}</TableCell>
+                                <TableCell align="right">
+                                    <ImageIcon className="me-3" />
+                                </TableCell>
                                 <TableCell align="right">
                                     {<Button onClick={() => setIdxNavioTemaAlteracaoPendente(_ => idxNavioTema)}>
                                         <EditOutlinedIcon color="primary" className="me-3" />

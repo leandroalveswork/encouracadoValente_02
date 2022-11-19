@@ -25,20 +25,25 @@ import { table } from "console";
 import { NavioTemaRepositorio } from "../repositorio/NavioTemaRepositorio";
 import { DbNavioTema } from "../modelos/DbNavioTema";
 import { MdDetalheNavioTema } from "../modelos/MdDetalheNavioTema";
+import { ArquivoRepositorio } from "../repositorio/ArquivoRepositorio";
+import { MdArquivoBase64 } from "../modelos/MdArquivoBase64";
 
 @injectable()
 class TemaController extends ControllerBase {
     private _temaRepositorio: TemaRepositorio
     private _navioTemaRepositorio: NavioTemaRepositorio
+    private _arquivoRepositorio: ArquivoRepositorio
     constructor(
         @inject(LiteralServico.ConfigBack) configBack: ConfigBack,
         @inject(LiteralServico.TemaRepositorio) temaRepositorio: TemaRepositorio,
-        @inject(LiteralServico.NavioTemaRepositorio) navioTemaRepositorio: NavioTemaRepositorio
+        @inject(LiteralServico.NavioTemaRepositorio) navioTemaRepositorio: NavioTemaRepositorio,
+        @inject(LiteralServico.ArquivoRepositorio) arquivoRepositorio: ArquivoRepositorio
     ) {
         super(configBack);
         this._configBack = configBack;
         this._temaRepositorio = temaRepositorio;
         this._navioTemaRepositorio = navioTemaRepositorio;
+        this._arquivoRepositorio = arquivoRepositorio;
         this.router = Router();
         this.router.post('/adicionar', async (req, res) => {
             try {
@@ -101,7 +106,6 @@ class TemaController extends ControllerBase {
                     ex.problema = 'Formato da url incorreta';
                     throw ex;
                 }
-                // const temaDetalhado = await this.detalharPorId(idTema);
                 await this.excluirPorId(idTema);
                 res.send();
             } catch (exc) {
@@ -149,7 +153,7 @@ class TemaController extends ControllerBase {
             navioTemaParaPush.idTema = insertTema.id;
             navioTemaParaPush.tamnQuadrados = iNovoNavioTema.tamnQuadrados;
             navioTemaParaPush.nomePersonalizado = iNovoNavioTema.nomePersonalizado;
-            navioTemaParaPush.urlImagemNavio = iNovoNavioTema.urlImagemNavio;
+            navioTemaParaPush.numeroRecuperacaoArquivoImagemNavio = iNovoNavioTema.numeroRecuperacaoArquivoImagemNavio;
             lInsertNaviosTema.push(navioTemaParaPush);
         }
         await this._temaRepositorio.insertPorOperador(insertTema, idUsuarioLogado);
@@ -161,7 +165,7 @@ class TemaController extends ControllerBase {
     // get
     listar = async (): Promise<MdResumoTema[]> => {
         const temasDb = await this._temaRepositorio.selectAll();
-        let listaTemas: MdResumoTema[] = []
+        let listaTemas: MdResumoTema[] = [];
         for (let iTemaDb of temasDb) {
             let iTemaParaPush = new MdResumoTema();
             iTemaParaPush.id = iTemaDb.id;
@@ -186,6 +190,8 @@ class TemaController extends ControllerBase {
         }
         // console.log('tema selected');
         const naviosTemaDb = await this._navioTemaRepositorio.selectMuitosNaviosTemaByTemaId(id);
+        const numerosRecuperacaoNaviosTemaDb = naviosTemaDb.map(x => x.numeroRecuperacaoArquivoImagemNavio);
+        const arquivosNaviosTemaDb = await this._arquivoRepositorio.selectByListaNumerosRecuperacao(numerosRecuperacaoNaviosTemaDb);
         
         let temaDetalhado = new MdDetalheTema();
         temaDetalhado.id = temaDb.id;
@@ -197,7 +203,16 @@ class TemaController extends ControllerBase {
             navioTemaParaPush.id = iNavioTemaDb.id;
             navioTemaParaPush.tamnQuadrados = iNavioTemaDb.tamnQuadrados;
             navioTemaParaPush.nomePersonalizado = iNavioTemaDb.nomePersonalizado;
-            navioTemaParaPush.urlImagemNavio = iNavioTemaDb.urlImagemNavio;
+            const arquivoNavioTemaDb = arquivosNaviosTemaDb.find(x => x.numeroRecuperacao == iNavioTemaDb.numeroRecuperacaoArquivoImagemNavio);
+            if (arquivoNavioTemaDb == undefined)
+                continue;
+            let arquivoBase64 = new MdArquivoBase64();
+            arquivoBase64.nomeArquivo = arquivoNavioTemaDb.nomeArquivo;
+            arquivoBase64.nome = arquivoNavioTemaDb.nome;
+            arquivoBase64.tipo = arquivoNavioTemaDb.tipo;
+            arquivoBase64.dadosBase64 = arquivoNavioTemaDb.buffer.toString('base64');
+            navioTemaParaPush.arquivoImagemNavio = arquivoBase64;
+            navioTemaParaPush.numeroRecuperacaoArquivoImagemNavio = iNavioTemaDb.numeroRecuperacaoArquivoImagemNavio;
             temaDetalhado.naviosTema.push(navioTemaParaPush);
         }
         return temaDetalhado;
@@ -247,7 +262,7 @@ class TemaController extends ControllerBase {
             navioTemaParaPush.idTema = tema.id;
             navioTemaParaPush.tamnQuadrados = iNavioTema.tamnQuadrados;
             navioTemaParaPush.nomePersonalizado = iNavioTema.nomePersonalizado;
-            navioTemaParaPush.urlImagemNavio = iNavioTema.urlImagemNavio;
+            navioTemaParaPush.numeroRecuperacaoArquivoImagemNavio = iNavioTema.numeroRecuperacaoArquivoImagemNavio;
             lNaviosAtualizados.push(navioTemaParaPush);
         }
         await this._temaRepositorio.updatePorOperador(updateTema, idUsuarioLogado);
@@ -264,8 +279,12 @@ class TemaController extends ControllerBase {
             ex.problema = 'Tema não encontrado.';
             throw ex;
         }
+        const naviosTemaDb = await this._navioTemaRepositorio.selectMuitosNaviosTemaByTemaId(id);
+        const numerosRecuperacaoNaviosTemaDb = naviosTemaDb.map(x => x.numeroRecuperacaoArquivoImagemNavio);
+        
         await this._temaRepositorio.deleteById(id);
         await this._navioTemaRepositorio.deleteMuitosNaviosTemaByTemaId(id);
+        await this._arquivoRepositorio.deleteByListaNumerosRecuperacao(numerosRecuperacaoNaviosTemaDb);
     }
 }
 

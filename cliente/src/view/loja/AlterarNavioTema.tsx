@@ -1,4 +1,4 @@
-import { Box, Button, FormControl, InputLabel, MenuItem, Select, styled, Tab, Tabs, TextField } from '@mui/material';
+import { Box, Button, FormControl, InputLabel, MenuItem, Select, styled, Tab, Tabs, TextField, Typography } from '@mui/material';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import ErroModal from '../../components/erroModal/ErroModal';
@@ -10,6 +10,7 @@ import { PostNovoTema } from '../../modelos/importarBack/PostNovoTema';
 import { LiteralNavio } from '../../modelos/LiteralNavio';
 import { StringUteis } from '../../util/StringUteis';
 import { UtilNumber } from '../../util/UtilNumber';
+
 
 const EncVnTextField = styled(TextField)({
     '& input + fieldset': {
@@ -33,12 +34,45 @@ const AlterarNavioTema = (props: AlterarNavioTemaProps) => {
 
     const [tamnQuadradosAsString, setTamnQuadradosAsString] = useState(props.navioTemaInicial.tamnQuadrados.toString());
     const [nomePersonalizado, setNomePersonalizado] = useState(props.navioTemaInicial.nomePersonalizado);
-    const [urlImagem, setUrlImagem] = useState(props.navioTemaInicial.urlImagemNavio);
-
+    const [bytesImagem, setBytesImagem] = useState<Blob | null>(props.navioTemaInicial.bytesParaUploadArquivo);
+    const [numeroRecuperacaoImagem, setNumeroRecuperacaoImagem] = useState(props.navioTemaInicial.numeroRecuperacaoArquivoImagemNavio);
+    const [nomePeloMdArquivoBase64, setNomePeloMdArquivoBase64] = useState<string>(props.navioTemaInicial.arquivoImagemNavio?.nomeArquivo ?? '');
+    const [numeroRecuperacaoImagemInicial, setNumeroRecuperacaoImagemInicial] = useState(props.navioTemaInicial.numeroRecuperacaoArquivoImagemNavio);
+    
+    const calcularNomeImagemSelecionada = (): string => {
+        if (bytesImagem != null)
+            return (bytesImagem as File).name;
+        if (numeroRecuperacaoImagem == numeroRecuperacaoImagemInicial)
+            return nomePeloMdArquivoBase64;
+        return '';
+    }
+    const [nomeImagemSelecionada, setNomeImagemSelecionada] = useState(calcularNomeImagemSelecionada());
+    useEffect(() =>
+        setNomeImagemSelecionada(_ => calcularNomeImagemSelecionada()),
+    [bytesImagem, numeroRecuperacaoImagem, numeroRecuperacaoImagemInicial, nomePeloMdArquivoBase64]);
+    const calcularSrcImagemPrevia = (): string => {
+        if (bytesImagem != null)
+            return URL.createObjectURL(bytesImagem);
+        if (numeroRecuperacaoImagem == numeroRecuperacaoImagemInicial)
+            return 'data:image/*;base64,' + (props.navioTemaInicial?.arquivoImagemNavio?.dadosBase64 ?? '');
+        return '';
+    }
+    const [srcImagemPrevia, setSrcImagemPrevia] = useState(calcularSrcImagemPrevia());
+    useEffect(() => 
+        setSrcImagemPrevia(calcularSrcImagemPrevia()),
+    [bytesImagem, numeroRecuperacaoImagem, numeroRecuperacaoImagemInicial]);
+    
     const [erroEstaAberto, setErroEstaAberto] = useState(false);
     const [problemaErro, setProblemaErro] = useState('');
+    
+    const handleArquivoSelecionado = (event: any) => {
+        setBytesImagem(_ => event.target.files[0]);
+        setNumeroRecuperacaoImagem(_ => StringUteis.gerarNovoIdDe24Caracteres());
+    }
 
     const handleClickSalvar = async () => {
+        
+        // Validaçao
         let camposNulos: string[] = [];
         let tamnQuadradosAsNumber = 0;
         try {
@@ -52,19 +86,25 @@ const AlterarNavioTema = (props: AlterarNavioTemaProps) => {
         if (nomePersonalizado.length == 0) {
             camposNulos.push('Nome Personalizado');
         }
-        if (urlImagem.length == 0) {
-            camposNulos.push('Url Imagem');
+        if (numeroRecuperacaoImagem == null) {
+            camposNulos.push('Imagem');
         }
         if (camposNulos.length > 0) {
             setProblemaErro(_ => 'Os campos ' + StringUteis.listarEmPt(camposNulos) + ' são obrigatórios');
             setErroEstaAberto(_ => true);
             return;
         }
+        
+        // Salvar na lista local
         let navioTemaAtual = new MdDetalheNavioTema();
         navioTemaAtual.id = props.navioTemaInicial.id;
         navioTemaAtual.tamnQuadrados = tamnQuadradosAsNumber;
         navioTemaAtual.nomePersonalizado = nomePersonalizado;
-        navioTemaAtual.urlImagemNavio = urlImagem;
+        navioTemaAtual.numeroRecuperacaoArquivoImagemNavio = numeroRecuperacaoImagem;
+        // Se os bytes foram informados, significa upload novo
+        // Se os bytes nao foram informados, significa que nao mudou a imagem -> adicionar mesmo assim na lista de naviosTema
+        if (numeroRecuperacaoImagem != numeroRecuperacaoImagemInicial)
+            navioTemaAtual.bytesParaUploadArquivo = bytesImagem;
         props.onSalvar(navioTemaAtual);
     }
 
@@ -93,7 +133,29 @@ const AlterarNavioTema = (props: AlterarNavioTemaProps) => {
                 </div>
                 <div className="row g-0">
                     <EncVnTextField label="Nome Personalizado" variant="outlined" className="mt-4" sx={{ width: 350 }} onChange={ev => setNomePersonalizado(_ => ev.target.value)} value={nomePersonalizado} />
-                    <EncVnTextField label="Url Imagem" variant="outlined" className="mt-4" sx={{ width: 350 }} onChange={ev => setUrlImagem(_ => ev.target.value)} value={urlImagem} />
+                    
+                    {/* Botao de upload */}
+                    <div className="d-flex mt-3">
+                        <span>Imagem: </span>
+                        <label htmlFor="btn-upload" className="ms-3">
+                            <input
+                            id="btn-upload"
+                            name="btn-upload"
+                            style={{ display: 'none' }}
+                            type="file"
+                            onChange={handleArquivoSelecionado} />
+                            <Button
+                            className="btn-choose"
+                            variant="outlined"
+                            component="span" >
+                                Escolher Arquivo
+                            </Button>
+                        </label>
+                    </div>
+                    <div className="file-name mt-3">{nomeImagemSelecionada}</div>
+                </div>
+                <div className="row g-0">
+                    <img src={srcImagemPrevia} alt='imagem' />
                 </div>
                 <div className="row g-0">
                     <div className="col-6">
