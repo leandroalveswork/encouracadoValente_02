@@ -27,6 +27,7 @@ import { DbNavioTema } from "../modelos/DbNavioTema";
 import { MdDetalheNavioTema } from "../modelos/MdDetalheNavioTema";
 import { ArquivoRepositorio } from "../repositorio/ArquivoRepositorio";
 import { MdArquivoBase64 } from "../modelos/MdArquivoBase64";
+import { MdPreviaNavio } from "../modelos/MdPreviaNavio";
 
 @injectable()
 class TemaController extends ControllerBase {
@@ -165,13 +166,44 @@ class TemaController extends ControllerBase {
     // get
     listar = async (): Promise<MdResumoTema[]> => {
         const temasDb = await this._temaRepositorio.selectAll();
+        const naviosTemaDb = await this._navioTemaRepositorio.selectAll();
+        const arquivosDb = await this._arquivoRepositorio.selectAll();
         let listaTemas: MdResumoTema[] = [];
         for (let iTemaDb of temasDb) {
+            
+            // Dados do tema
             let iTemaParaPush = new MdResumoTema();
             iTemaParaPush.id = iTemaDb.id;
             iTemaParaPush.nome = iTemaDb.nome;
             iTemaParaPush.preco = iTemaDb.preco;
             iTemaParaPush.descricao = iTemaDb.descricao;
+            
+            // Loop nos naviosTema para pegar cada previa
+            iTemaParaPush.previas = [];
+            const naviosTemaPrevia = naviosTemaDb
+                .filter(x => x.idTema == iTemaDb.id)
+                .sort((a, b) => a.tamnQuadrados - b.tamnQuadrados);
+            for (let iNavioTemaPrevia of naviosTemaPrevia) {
+                
+                // Recuperar o arquivo
+                const arquivoPrevia = arquivosDb.find(x => x.numeroRecuperacao == iNavioTemaPrevia.numeroRecuperacaoArquivoImagemNavio);
+                if (arquivoPrevia == undefined)
+                    continue;
+                    
+                // Parsear em MdPreviaNavio
+                let arquivoBase64 = new MdArquivoBase64();
+                arquivoBase64.nomeArquivo = arquivoPrevia.nomeArquivo;
+                arquivoBase64.nome = arquivoPrevia.nome;
+                arquivoBase64.tipo = arquivoPrevia.tipo;
+                arquivoBase64.dadosBase64 = arquivoPrevia.buffer.toString('base64');
+                let previaNavioParaPush = new MdPreviaNavio();
+                previaNavioParaPush.tamanhoQuadrados = iNavioTemaPrevia.tamnQuadrados;
+                previaNavioParaPush.arquivo = arquivoBase64;
+                previaNavioParaPush.linkLocal = '';
+                
+                // Fim do loop, adicionando a previa
+                iTemaParaPush.previas.push(previaNavioParaPush);
+            }
             listaTemas.push(iTemaParaPush);
         }
         return listaTemas;

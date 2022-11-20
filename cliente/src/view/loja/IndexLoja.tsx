@@ -91,6 +91,15 @@ const IndexLoja = () => {
                                 <CardContent >
                                     <h3 className="subtitulo">{iResumoTema.nome}</h3>
                                     <span>{iResumoTema.descricao}</span>
+                                    
+                                    {/* Previa dos navios */}
+                                    {iResumoTema.previas.map(iPreviaNavio => {
+                                        return (<div key={iPreviaNavio.tamanhoQuadrados}>
+                                            <img
+                                                src={'data:image/*;base64,' + (iPreviaNavio.arquivo?.dadosBase64 ?? '')}
+                                                alt='imagem previa' />
+                                        </div>)
+                                    })}
                                 </CardContent>
                                 <CardActions>
                                     <Button size="medium" variant="contained" onClick={() => {}}>{'Comprar - R$ ' + iResumoTema.preco}</Button>
