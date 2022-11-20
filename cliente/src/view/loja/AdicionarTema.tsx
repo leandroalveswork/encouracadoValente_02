@@ -86,7 +86,7 @@ const AdicionarTema = () => {
 
     return (
         <>
-            <h1>Adicionar Tema</h1>
+            <h1 style={{color: 'white', fontFamily: 'bungee', textAlign: 'center', marginTop: '16px' }}>Adicionar Tema</h1>
             <Box className='box'>
                 {/* <Tabs value={idxTab} onChange={(ev, nextIdxTab) => setIdxTab(_ => nextIdxTab)} aria-label="basic tabs example">
                     <Tab label="Dados de Resumo" />

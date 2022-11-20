@@ -84,7 +84,7 @@ const IndexLoja = () => {
     
     return (
         <div>
-            <h1 style={{color: 'white'}}>Loja</h1>
+            <h1 style={{color: 'white', fontFamily: 'bungee', textAlign: 'center', marginTop: '16px' }}>Loja</h1>
             {lTemas.length > 0 && <>
                 <div className="row" >
                     {temasPaginados.map(iResumoTema => {
