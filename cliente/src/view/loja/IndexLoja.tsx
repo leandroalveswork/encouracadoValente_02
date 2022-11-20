@@ -1,4 +1,4 @@
-import { Button, Card, CardActions, CardContent, Fab, Pagination, styled, TextField } from '@mui/material';
+import { Button, Card, CardActions, CardContent, Fab, Pagination, styled, TextField, CircularProgress } from '@mui/material';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import PosicaoContainerPrevia from '../../components/PosicaoContainerPrevia';
@@ -35,6 +35,7 @@ const IndexLoja = () => {
     const [lTemas, setLTemas] = useState<MdResumoTema[]>([]);
     const [pagina, setPagina] = useState(1);
     const [idTemaConfirmacaoExclusaoPendente, setIdTemaConfirmacaoExclusaoPendente] = useState('');
+    const [carregouTemas, setCarregouTemas] = useState(false);
 
     const [confirmacaoExclusaoEstaAberto, setConfirmacaoExclusaoEstaAberto] = useState(false);
     const [sucessoExclusaoEstaAberto, setSucessoExclusaoEstaAberto] = useState(false);
@@ -46,6 +47,7 @@ const IndexLoja = () => {
             .then(rLista => {
                 if (rLista.eOk) {
                     setLTemas(rLista.body ?? []);
+                    setCarregouTemas(_ => true);
                 } else {
                     setProblemaErro(rLista.problema);
                     setErroEstaAberto(_ => true);
@@ -85,7 +87,10 @@ const IndexLoja = () => {
     return (
         <div>
             <h1 style={{color: 'white', fontFamily: 'bungee', textAlign: 'center', marginTop: '16px' }}>Loja</h1>
-            {lTemas.length > 0 && <>
+            {!carregouTemas && <div className='d-flex justify-content-center w-100'>
+                <CircularProgress />
+            </div>}
+            {carregouTemas && lTemas.length > 0 && <>
                 <div className="row" >
                     {temasPaginados.map(iResumoTema => {
                         return (<div className='col-6' key={iResumoTema.id}>
@@ -129,7 +134,7 @@ const IndexLoja = () => {
                     <WhitePagination color='standard' variant='outlined' count={qtPaginas} page={pagina} onChange={(ev, pgn) => setPagina(_ => pgn)} />
                 </div>
             </>}
-            {lTemas.length == 0 && <span style={{color: 'white'}}>Nenhum tema adicionado ainda.</span>}
+            {carregouTemas && lTemas.length == 0 && <span style={{color: 'white'}}>Nenhum tema adicionado ainda.</span>}
             <div className="d-flex justify-content-center pt-4">
                 <Fab size="medium" variant='extended'  onClick={() => navigate('/loja/adicionarTema')}> Adicionar tema <AddIcon sx={{mr: 1}} style={{marginBottom: '5px'}}/></Fab>
             </div>
