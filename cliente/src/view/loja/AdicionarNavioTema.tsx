@@ -113,7 +113,7 @@ const AdicionarNavioTema = (props: AdicionarNavioTemaProps) => {
                     <EncVnTextField label="Nome Personalizado" variant="outlined" className="mt-4" sx={{ width: 350 }} onChange={ev => setNomePersonalizado(_ => ev.target.value)} value={nomePersonalizado} />
                     
                     {/* Botao de upload */}
-                    <div className="d-flex mt-3">
+                    <div className="d-flex mt-3 align-items-center">
                         <span>Imagem:</span>
                         <label htmlFor="btn-upload" className="ms-3">
                             <input
@@ -129,6 +129,7 @@ const AdicionarNavioTema = (props: AdicionarNavioTemaProps) => {
                                 Escolher Arquivo
                             </Button>
                         </label>
+                        <strong className='ms-3'>Atenção! O tamanho máximo é de 0,97 MB</strong>
                     </div>
                     <div className="file-name mt-3">{bytesImagem != null ? (bytesImagem as File).name : null}</div>
                 </div>
