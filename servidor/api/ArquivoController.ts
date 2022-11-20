@@ -64,7 +64,7 @@ class ArquivoController extends ControllerBase {
             ex.problema = 'Houve um problema, tente novamente.';
             throw ex;
         }
-        console.log('dump header numero-recuperacao = [' + headerNumeroRecuperacao + ']');
+        // console.log('dump header numero-recuperacao = [' + headerNumeroRecuperacao + ']');
             
         // Extrair o boundary (separador dos buffers)
         const boundaryKeyValue = (headerContentType as string).substring(((headerContentType as string).indexOf(';') ?? -1) + 1);
