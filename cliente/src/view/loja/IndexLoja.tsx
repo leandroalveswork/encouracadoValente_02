@@ -1,9 +1,11 @@
 import { Button, Card, CardActions, CardContent, Fab, Pagination, styled, TextField } from '@mui/material';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import PosicaoContainerPrevia from '../../components/PosicaoContainerPrevia';
 import ConfirmacaoModal from '../../components/confirmacaoModal/ConfirmacaoModal';
 import ErroModal from '../../components/erroModal/ErroModal';
 import SucessoModal from '../../components/sucessoModal/SucessoModal';
+import ImgNavioVertical from '../../components/imagem/ImgNavioVertical';
 import ClientRest from '../../integracao/ClientRest';
 import UserState from '../../integracao/UserState';
 import { MdResumoTema } from '../../modelos/importarBack/MdResumoTema';
@@ -90,16 +92,28 @@ const IndexLoja = () => {
                             <Card style={{marginTop: '10px'}}>
                                 <CardContent >
                                     <h3 className="subtitulo">{iResumoTema.nome}</h3>
-                                    <span>{iResumoTema.descricao}</span>
+                                    <span>{iResumoTema.descricao}</span><br/>
                                     
                                     {/* Previa dos navios */}
-                                    {iResumoTema.previas.map(iPreviaNavio => {
-                                        return (<div key={iPreviaNavio.tamanhoQuadrados}>
-                                            <img
-                                                src={'data:image/*;base64,' + (iPreviaNavio.arquivo?.dadosBase64 ?? '')}
-                                                alt='imagem previa' />
-                                        </div>)
+                                    <div style={{ position: 'relative' }}>
+                                        <PosicaoContainerPrevia idPrefix={'tema_nr_' + iResumoTema.id} />
+                                        {iResumoTema.previas.map(iPreviaNavio => {
+                                            return (<div key={iPreviaNavio.tamanhoQuadrados} className='d-inline me-3'>
+                                                <ImgNavioVertical
+                                                    dadosBase64={iPreviaNavio.arquivo?.dadosBase64 ?? ''}
+                                                    eSrcBase64={true}
+                                                    srcImagem={null}
+                                                    tamanhoQuadrados={iPreviaNavio.tamanhoQuadrados}
+                                                    altImagem='imagem previa'
+                                                    ePositionAbsolute={true}
+                                                    cssLeftAsPx={(iPreviaNavio.tamanhoQuadrados - 1)*60}
+                                                    cssTopAsPx={0} />
+                                                {/* <img
+                                                    src={'data:image/*;base64,' + (iPreviaNavio.arquivo?.dadosBase64 ?? '')}
+                                                    alt='imagem previa' /> */}
+                                            </div>)
                                     })}
+                                    </div>
                                 </CardContent>
                                 <CardActions>
                                     <Button size="medium" variant="contained" onClick={() => {}}>{'Comprar - R$ ' + iResumoTema.preco}</Button>

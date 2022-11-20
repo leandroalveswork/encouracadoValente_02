@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import ErroModal from '../../components/erroModal/ErroModal';
 import SucessoModal from '../../components/sucessoModal/SucessoModal';
+import ImgNavioHorizontal from '../../components/imagem/ImgNavioHorizontal';
 import ClientRest from '../../integracao/ClientRest';
 import UserState from '../../integracao/UserState';
 import { MdDetalheNavioTema } from '../../modelos/importarBack/MdDetalheNavioTema';
@@ -131,8 +132,17 @@ const AdicionarNavioTema = (props: AdicionarNavioTemaProps) => {
                     </div>
                     <div className="file-name mt-3">{bytesImagem != null ? (bytesImagem as File).name : null}</div>
                 </div>
-                <div className="row g-0">
-                    {bytesImagem != null && <img src={srcImagemPrevia} alt='imagem' />}
+                <div>
+                    {bytesImagem != null && tamnQuadradosAsString != '' && <ImgNavioHorizontal 
+                        dadosBase64=''
+                        eSrcBase64={false}
+                        srcImagem={srcImagemPrevia}
+                        tamanhoQuadrados={parseInt(tamnQuadradosAsString)}
+                        altImagem='imagem'
+                        ePositionAbsolute={false}
+                        cssLeftAsPx={0}
+                        cssTopAsPx={0}
+                    />}
                 </div>
                 <div className="row g-0 mt-3">
                     <div className="col-6">

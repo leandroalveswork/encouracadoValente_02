@@ -1,0 +1,7 @@
+.imagem-vertical {
+  transform: rotate(90deg) translateY(-100%);
+  transform-origin:top left;
+}
+
+.embrulhador-imagem {
+}
