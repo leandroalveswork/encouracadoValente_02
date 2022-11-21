@@ -32,6 +32,48 @@ class CompraRepositorio extends RepositorioCrud<DbCompra> {
         let query = this._modelMongo.find({ idUsuario: idUsuario });
         return query;
     }
+    
+    selectCompraEquipadaByIdUsuarioOrDefault = async (idUsuario: string) => {
+        let query = this._modelMongo.findOne({ idUsuario: idUsuario, estaEquipado: true });
+        return query;
+    }
+    
+    selectCompraByIdTemaQueTenhaIdUsuarioOrDefault = async (idTema: string, idUsuario: string) => {
+        let query = this._modelMongo.findOne({ idTema: idTema, idUsuario: idUsuario });
+        return query;
+    }
+    
+    equiparCompraById = async (id: string, idUsuarioOperador: string) => {
+        let compraDb = await this.selectByIdOrDefault(id);
+        if (compraDb == null)
+            throw 'Erro no servidor';
+        let lComprasDb = await this.selectMuitasComprasByIdUsuario(compraDb.idUsuarioComprador);
+        let lComprasParaSalvar: HydratedDocument<DbCompra, {}, unknown>[] = [];
+        for (let iCompraDb of lComprasDb) {
+            if (iCompraDb.id == id && iCompraDb.estaEquipado) // Se estiver equipando o mesmo tema ja equipado, sair do metodo
+                return;
+            if (iCompraDb.id == id && !iCompraDb.estaEquipado) { // Equipar o tema
+                let compraAtual = { ...iCompraDb };
+                compraAtual.estaEquipado = true;
+                compraAtual.idUsuarioFezInclusao = idUsuarioOperador;
+                compraAtual.horaUltimaAtualizacao = new Date();
+                let updateCompra = new this._modelMongo({ ...compraAtual });
+                updateCompra.isNew = false;
+                lComprasParaSalvar.push(updateCompra);
+                continue;
+            }
+            if (iCompraDb.id != id && iCompraDb.estaEquipado) { // Tirar o equipamento do tema anterior
+                let compraAtual = { ...iCompraDb };
+                compraAtual.estaEquipado = false;
+                compraAtual.idUsuarioFezInclusao = idUsuarioOperador;
+                compraAtual.horaUltimaAtualizacao = new Date();
+                let updateCompra = new this._modelMongo({ ...compraAtual });
+                updateCompra.isNew = false;
+                lComprasParaSalvar.push(updateCompra);
+            }
+        }
+        await this._modelMongo.bulkSave(lComprasParaSalvar);
+    }
 }
 
 export { CompraRepositorio };

@@ -28,6 +28,8 @@ import { DbCompra } from "../modelos/DbCompra";
 import { MdDetalheNavioTema } from "../modelos/MdDetalheNavioTema";
 import { MdArquivoBase64 } from "../modelos/MdArquivoBase64";
 import { MdPreviaNavio } from "../modelos/MdPreviaNavio";
+import { MdDetalheTemaAnulavel } from "../modelos/MdDetalheTemaAnulavel";
+import { PutEquiparTema } from "../modelos/PutEquiparTema";
 
 @injectable()
 class CompraController extends ControllerBase {
@@ -66,6 +68,24 @@ class CompraController extends ControllerBase {
                 const idUsuarioLogado = await this.obterIdUsuarioLogado(req);
                 const temasResumidos = await this.listarPorIdUsuario(idUsuarioLogado);
                 res.send(temasResumidos);
+            } catch (exc) {
+                MdExcecao.enviarExcecao(req, res, exc);
+            }
+        });
+        this.router.get('/detalharTemaEquipadoUsuarioLogadoOrDefault', async (req, res) => {
+            try {
+                const idUsuarioLogado = await this.obterIdUsuarioLogado(req);
+                const temaDetalhadoOrDefault = await this.detalharTemaEquipadoPorIdUsuarioOrDefault(idUsuarioLogado);
+                res.send(temaDetalhadoOrDefault);
+            } catch (exc) {
+                MdExcecao.enviarExcecao(req, res, exc);
+            }
+        });
+        this.router.put('/equiparTemaUsuarioLogado', async (req, res) => {
+            try {
+                const idUsuarioLogado = await this.obterIdUsuarioLogado(req);
+                const temaDetalhadoOrDefault = await this.equiparTemaPorUsuario(req.body, idUsuarioLogado, idUsuarioLogado);
+                res.send(temaDetalhadoOrDefault);
             } catch (exc) {
                 MdExcecao.enviarExcecao(req, res, exc);
             }
@@ -176,6 +196,66 @@ class CompraController extends ControllerBase {
             listaTemas.push(iTemaParaPush);
         }
         return listaTemas;
+    }
+    
+    // autorizado
+    // get
+    detalharTemaEquipadoPorIdUsuarioOrDefault = async (idUsuario: string): Promise<MdDetalheTemaAnulavel> => {
+        const compraEquipada = await this._compraRepositorio.selectCompraEquipadaByIdUsuarioOrDefault(idUsuario);
+        if (compraEquipada == null)
+            return new MdDetalheTemaAnulavel();
+        const temaDb = await this._temaRepositorio.selectByIdOrDefault(compraEquipada.idTema);
+        if (temaDb == null) {
+            let ex = new MdExcecao();
+            ex.codigoExcecao = 404;
+            ex.problema = 'Tema não encontrado.';
+            throw ex;
+        }
+        
+        // Detalhamento do tema
+        const naviosTemaDb = await this._navioTemaRepositorio.selectMuitosNaviosTemaByTemaId(compraEquipada.idTema);
+        const numerosRecuperacaoNaviosTemaDb = naviosTemaDb.map(x => x.numeroRecuperacaoArquivoImagemNavio);
+        const arquivosNaviosTemaDb = await this._arquivoRepositorio.selectByListaNumerosRecuperacao(numerosRecuperacaoNaviosTemaDb);
+        
+        let temaDetalhado = new MdDetalheTema();
+        temaDetalhado.id = temaDb.id;
+        temaDetalhado.nome = temaDb.nome;
+        temaDetalhado.preco = temaDb.preco;
+        temaDetalhado.descricao = temaDb.descricao;
+        for (let iNavioTemaDb of naviosTemaDb) {
+            let navioTemaParaPush = new MdDetalheNavioTema();
+            navioTemaParaPush.id = iNavioTemaDb.id;
+            navioTemaParaPush.tamnQuadrados = iNavioTemaDb.tamnQuadrados;
+            navioTemaParaPush.nomePersonalizado = iNavioTemaDb.nomePersonalizado;
+            const arquivoNavioTemaDb = arquivosNaviosTemaDb.find(x => x.numeroRecuperacao == iNavioTemaDb.numeroRecuperacaoArquivoImagemNavio);
+            if (arquivoNavioTemaDb == undefined)
+                continue;
+            let arquivoBase64 = new MdArquivoBase64();
+            arquivoBase64.nomeArquivo = arquivoNavioTemaDb.nomeArquivo;
+            arquivoBase64.nome = arquivoNavioTemaDb.nome;
+            arquivoBase64.tipo = arquivoNavioTemaDb.tipo;
+            arquivoBase64.dadosBase64 = arquivoNavioTemaDb.buffer.toString('base64');
+            navioTemaParaPush.arquivoImagemNavio = arquivoBase64;
+            navioTemaParaPush.numeroRecuperacaoArquivoImagemNavio = iNavioTemaDb.numeroRecuperacaoArquivoImagemNavio;
+            temaDetalhado.naviosTema.push(navioTemaParaPush);
+        }
+        let temaDetalhadoAnulavel = new MdDetalheTemaAnulavel();
+        temaDetalhadoAnulavel.eTemaNulo = false;
+        temaDetalhadoAnulavel.detalheTema = temaDetalhado;
+        return temaDetalhadoAnulavel;
+    }
+    
+    // autorizado
+    // put
+    equiparTemaPorUsuario = async (equiparTema: PutEquiparTema, idUsuarioEquipado: string, idUsuarioOperador: string): Promise<void> => {
+        const compraDb = await this._compraRepositorio.selectCompraByIdTemaQueTenhaIdUsuarioOrDefault(equiparTema.idTema, idUsuarioEquipado);
+        if (compraDb == null) {
+            let ex = new MdExcecao();
+            ex.codigoExcecao = 404;
+            ex.problema = 'Tema não encontrado, ou não comprado.';
+            throw ex;
+        }
+        await this._compraRepositorio.equiparCompraById(compraDb.id, idUsuarioOperador);
     }
 
 }
