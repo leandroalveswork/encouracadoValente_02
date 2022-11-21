@@ -18,6 +18,7 @@ import { ArquivoRepositorio } from './repositorio/ArquivoRepositorio';
 import { ArquivoController } from './api/ArquivoController';
 import { CompraRepositorio } from './repositorio/CompraRepositorio';
 import { CompraController } from './api/CompraController';
+import { LiberacaoController } from './api/LiberacaoController';
 
 const iocProvedor = new Container();
 iocProvedor.bind<ConfigBack>(LiteralServico.ConfigBack).to(ConfigBack).inSingletonScope();
@@ -32,6 +33,7 @@ iocProvedor.bind<ArquivoRepositorio>(LiteralServico.ArquivoRepositorio).to(Arqui
 iocProvedor.bind<AutorizacaoController>(LiteralServico.AutorizacaoController).to(AutorizacaoController).inRequestScope();
 iocProvedor.bind<TemaController>(LiteralServico.TemaController).to(TemaController).inRequestScope();
 iocProvedor.bind<CompraController>(LiteralServico.CompraController).to(CompraController).inRequestScope();
+iocProvedor.bind<LiberacaoController>(LiteralServico.LiberacaoController).to(LiberacaoController).inRequestScope();
 iocProvedor.bind<ArquivoController>(LiteralServico.ArquivoController).to(ArquivoController).inRequestScope();
 
 const app = express();
@@ -41,6 +43,7 @@ const mediadorWs = iocProvedor.get<MediadorWs>(LiteralServico.MediadorWs);
 const autorizacaoController = iocProvedor.get<AutorizacaoController>(LiteralServico.AutorizacaoController);
 const temaController = iocProvedor.get<TemaController>(LiteralServico.TemaController);
 const compraController = iocProvedor.get<CompraController>(LiteralServico.CompraController);
+const liberacaoController = iocProvedor.get<CompraController>(LiteralServico.LiberacaoController);
 const arquivoController = iocProvedor.get<ArquivoController>(LiteralServico.ArquivoController);
 
 mongoose.connect(configBack.conexaoMongodb, { dbName: 'EncVn' })
@@ -54,6 +57,7 @@ mongoose.connect(configBack.conexaoMongodb, { dbName: 'EncVn' })
     app.use('/api/autorizacao', autorizacaoController.router);
     app.use('/api/tema', temaController.router);
     app.use('/api/compra', compraController.router);
+    app.use('/api/liberacao', liberacaoController.router);
     app.use('/api/arquivo', arquivoController.router);
     // _gerenciadorRequisicoesApi.useTodasRouters(app);
     // app.use(ExControllerMiddleware.middleware);
