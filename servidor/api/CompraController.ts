@@ -90,6 +90,15 @@ class CompraController extends ControllerBase {
                 MdExcecao.enviarExcecao(req, res, exc);
             }
         });
+        this.router.get('/obterIdTemaEquipadoUsuarioLogadoOrDefault', async (req, res) => {
+            try {
+                const idUsuarioLogado = await this.obterIdUsuarioLogado(req);
+                const idTemaOrDefault = await this.detalharTemaEquipadoPorIdUsuarioOrDefault(idUsuarioLogado);
+                res.send(idTemaOrDefault);
+            } catch (exc) {
+                MdExcecao.enviarExcecao(req, res, exc);
+            }
+        });
     }
 
     // codifique as actions:
@@ -258,6 +267,14 @@ class CompraController extends ControllerBase {
         await this._compraRepositorio.equiparCompraById(compraDb.id, idUsuarioOperador);
     }
 
+    // autorizado
+    // get
+    obterIdTemaEquipadoPorUsuarioOrDefault = async (idUsuario: string): Promise<string> => {
+        const compraEquipada = await this._compraRepositorio.selectCompraEquipadaByIdUsuarioOrDefault(idUsuario);
+        if (compraEquipada == null)
+            return '';
+        return compraEquipada.idTema;
+    }
 }
 
 export { CompraController };
