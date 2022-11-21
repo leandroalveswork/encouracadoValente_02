@@ -24,7 +24,8 @@ class UsuarioRepositorio extends RepositorioCrud<DbUsuario> {
             email: { type: String, required: true },
             senha: String, // não pode ter required, porque contas integradas com Google não tem senha
             eSuperuser: { type: Boolean, required: true },
-            eUsuarioGoogle: { type: Boolean, required: true }
+            eUsuarioGoogle: { type: Boolean, required: true },
+            creditos: Number
         });
         this.inicializarMongo('Usuario', schema);
     }

@@ -3,34 +3,35 @@ import "reflect-metadata";
 import { LiteralServico } from "../literais/LiteralServico";
 import { RepositorioCrud } from "./RepositorioCrud";
 import { ConfigBack } from "../ConfigBack";
-import { Document, Model, model, Query, Schema, Types } from "mongoose";
+import { Document, HydratedDocument, Model, model, Query, Schema, Types } from "mongoose";
 import { throws } from "assert";
 import { config } from "dotenv";
-import { DbTema } from "../modelos/DbTema";
+import { DbNavioTema } from "../modelos/DbNavioTema";
+import { DbCompra } from "../modelos/DbCompra";
 
 @injectable()
-class TemaRepositorio extends RepositorioCrud<DbTema> {
+class CompraRepositorio extends RepositorioCrud<DbCompra> {
     constructor(
         @inject(LiteralServico.ConfigBack) configBack: ConfigBack
     ) {
         super(configBack);
-        const schema = new Schema<DbTema>({
+        const schema = new Schema<DbCompra>({
             id: Types.ObjectId,
             idUsuarioFezInclusao: { type: String, required: true },
             horaInclusao: { type: Date, required: true },
             idUsuarioFezUltimaAtualizacao: String,
             horaUltimaAtualizacao: Date,
-            nome: { type: String, required: true },
-            preco: { type: Number, required: true },
-            descricao: { type: String, required: true },
+            idTema: { type: String, required: true },
+            idUsuarioComprador: { type: String, required: true },
+            estaEquipado: { type: Boolean, required: true }
         });
-        this.inicializarMongo('Tema', schema);
+        this.inicializarMongo('Compra', schema);
     }
 
-    selectMuitosTemasByListaTemasId = async (listaTemasId: string[]) => {
-        let query = this._modelMongo.find({ id: { $in: listaTemasId } });
+    selectMuitasComprasByIdUsuario = async (idUsuario: string) => {
+        let query = this._modelMongo.find({ idUsuario: idUsuario });
         return query;
     }
 }
 
-export { TemaRepositorio };
+export { CompraRepositorio };

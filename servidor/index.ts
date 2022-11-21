@@ -16,6 +16,8 @@ import { TemaController } from './api/TemaController';
 import { NavioTemaRepositorio } from './repositorio/NavioTemaRepositorio';
 import { ArquivoRepositorio } from './repositorio/ArquivoRepositorio';
 import { ArquivoController } from './api/ArquivoController';
+import { CompraRepositorio } from './repositorio/CompraRepositorio';
+import { CompraController } from './api/CompraController';
 
 const iocProvedor = new Container();
 iocProvedor.bind<ConfigBack>(LiteralServico.ConfigBack).to(ConfigBack).inSingletonScope();
@@ -23,11 +25,13 @@ iocProvedor.bind<MediadorWs>(LiteralServico.MediadorWs).to(MediadorWs).inRequest
 
 iocProvedor.bind<UsuarioRepositorio>(LiteralServico.UsuarioRepositorio).to(UsuarioRepositorio).inRequestScope();
 iocProvedor.bind<TemaRepositorio>(LiteralServico.TemaRepositorio).to(TemaRepositorio).inRequestScope();
+iocProvedor.bind<CompraRepositorio>(LiteralServico.CompraRepositorio).to(CompraRepositorio).inRequestScope();
 iocProvedor.bind<NavioTemaRepositorio>(LiteralServico.NavioTemaRepositorio).to(NavioTemaRepositorio).inRequestScope();
 iocProvedor.bind<ArquivoRepositorio>(LiteralServico.ArquivoRepositorio).to(ArquivoRepositorio).inRequestScope();
 
 iocProvedor.bind<AutorizacaoController>(LiteralServico.AutorizacaoController).to(AutorizacaoController).inRequestScope();
 iocProvedor.bind<TemaController>(LiteralServico.TemaController).to(TemaController).inRequestScope();
+iocProvedor.bind<CompraController>(LiteralServico.CompraController).to(CompraController).inRequestScope();
 iocProvedor.bind<ArquivoController>(LiteralServico.ArquivoController).to(ArquivoController).inRequestScope();
 
 const app = express();
@@ -36,6 +40,7 @@ const configBack = iocProvedor.get<ConfigBack>(LiteralServico.ConfigBack);
 const mediadorWs = iocProvedor.get<MediadorWs>(LiteralServico.MediadorWs);
 const autorizacaoController = iocProvedor.get<AutorizacaoController>(LiteralServico.AutorizacaoController);
 const temaController = iocProvedor.get<TemaController>(LiteralServico.TemaController);
+const compraController = iocProvedor.get<CompraController>(LiteralServico.CompraController);
 const arquivoController = iocProvedor.get<ArquivoController>(LiteralServico.ArquivoController);
 
 mongoose.connect(configBack.conexaoMongodb, { dbName: 'EncVn' })
@@ -48,6 +53,7 @@ mongoose.connect(configBack.conexaoMongodb, { dbName: 'EncVn' })
     
     app.use('/api/autorizacao', autorizacaoController.router);
     app.use('/api/tema', temaController.router);
+    app.use('/api/compra', compraController.router);
     app.use('/api/arquivo', arquivoController.router);
     // _gerenciadorRequisicoesApi.useTodasRouters(app);
     // app.use(ExControllerMiddleware.middleware);

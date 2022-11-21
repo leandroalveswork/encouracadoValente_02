@@ -85,6 +85,11 @@ class NavioTemaRepositorio extends RepositorioCrud<DbNavioTema> {
         await this._modelMongo.bulkSave(lNaviosParaSalvar);
         await this._modelMongo.deleteMany({ id: { $in: lIdNaviosTemaExcluidos } });
     }
+
+    selectMuitosNaviosTemaByListaTemasId = async (listaTemasId: string[]) => {
+        let query = this._modelMongo.find({ idTema: { $in: listaTemasId } });
+        return query;
+    }
 }
 
 export { NavioTemaRepositorio };
