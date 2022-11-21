@@ -15,6 +15,7 @@ const LiteralServico = {
     AutorizacaoController: Symbol.for('AutorizacaoController'),
     TemaController: Symbol.for('TemaController'),
     CompraController: Symbol.for('CompraController'),
+    LiberacaoController: Symbol.for('LiberacaoController'),
     ArquivoController: Symbol.for('ArquivoController'),
 };
 
