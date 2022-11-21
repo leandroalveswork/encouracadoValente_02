@@ -66,7 +66,7 @@ class CompraController extends ControllerBase {
         this.router.get('/listarPorIdUsuarioLogado', async (req, res) => {
             try {
                 const idUsuarioLogado = await this.obterIdUsuarioLogado(req);
-                const temasResumidos = await this.listarPorIdUsuario(idUsuarioLogado);
+                const temasResumidos = await this.listarPorIdUsuarioLogado(idUsuarioLogado);
                 res.send(temasResumidos);
             } catch (exc) {
                 MdExcecao.enviarExcecao(req, res, exc);
@@ -75,7 +75,7 @@ class CompraController extends ControllerBase {
         this.router.get('/detalharTemaEquipadoUsuarioLogadoOrDefault', async (req, res) => {
             try {
                 const idUsuarioLogado = await this.obterIdUsuarioLogado(req);
-                const temaDetalhadoOrDefault = await this.detalharTemaEquipadoPorIdUsuarioOrDefault(idUsuarioLogado);
+                const temaDetalhadoOrDefault = await this.detalharTemaEquipadoUsuarioLogadoOrDefault(idUsuarioLogado);
                 res.send(temaDetalhadoOrDefault);
             } catch (exc) {
                 MdExcecao.enviarExcecao(req, res, exc);
@@ -84,7 +84,7 @@ class CompraController extends ControllerBase {
         this.router.put('/equiparTemaUsuarioLogado', async (req, res) => {
             try {
                 const idUsuarioLogado = await this.obterIdUsuarioLogado(req);
-                const temaDetalhadoOrDefault = await this.equiparTemaPorUsuario(req.body, idUsuarioLogado, idUsuarioLogado);
+                const temaDetalhadoOrDefault = await this.equiparTemaUsuarioLogado(req.body, idUsuarioLogado);
                 res.send(temaDetalhadoOrDefault);
             } catch (exc) {
                 MdExcecao.enviarExcecao(req, res, exc);
@@ -93,7 +93,7 @@ class CompraController extends ControllerBase {
         this.router.get('/obterIdTemaEquipadoUsuarioLogadoOrDefault', async (req, res) => {
             try {
                 const idUsuarioLogado = await this.obterIdUsuarioLogado(req);
-                const idTemaOrDefault = await this.detalharTemaEquipadoPorIdUsuarioOrDefault(idUsuarioLogado);
+                const idTemaOrDefault = await this.obterIdTemaEquipadoUsuarioLogadoOrDefault(idUsuarioLogado);
                 res.send(idTemaOrDefault);
             } catch (exc) {
                 MdExcecao.enviarExcecao(req, res, exc);
@@ -155,7 +155,7 @@ class CompraController extends ControllerBase {
 
     // autorizado
     // get
-    listarPorIdUsuario = async (idUsuarioLogado: string): Promise<MdResumoTema[]> => {
+    listarPorIdUsuarioLogado = async (idUsuarioLogado: string): Promise<MdResumoTema[]> => {
         
         // Obter os temas comprados pelo usuario, montar uma lista de ids de temas para recuperar tanto os temas quanto os navioTema e montar uma lista de numerosRecuperacao dos naviosTema para recuperar os arquivos
         const comprasDb = await this._compraRepositorio.selectMuitasComprasByIdUsuario(idUsuarioLogado);
@@ -209,8 +209,8 @@ class CompraController extends ControllerBase {
     
     // autorizado
     // get
-    detalharTemaEquipadoPorIdUsuarioOrDefault = async (idUsuario: string): Promise<MdDetalheTemaAnulavel> => {
-        const compraEquipada = await this._compraRepositorio.selectCompraEquipadaByIdUsuarioOrDefault(idUsuario);
+    detalharTemaEquipadoUsuarioLogadoOrDefault = async (idUsuarioLogado: string): Promise<MdDetalheTemaAnulavel> => {
+        const compraEquipada = await this._compraRepositorio.selectCompraEquipadaByIdUsuarioOrDefault(idUsuarioLogado);
         if (compraEquipada == null)
             return new MdDetalheTemaAnulavel();
         const temaDb = await this._temaRepositorio.selectByIdOrDefault(compraEquipada.idTema);
@@ -256,21 +256,21 @@ class CompraController extends ControllerBase {
     
     // autorizado
     // put
-    equiparTemaPorUsuario = async (equiparTema: PutEquiparTema, idUsuarioEquipado: string, idUsuarioOperador: string): Promise<void> => {
-        const compraDb = await this._compraRepositorio.selectCompraByIdTemaQueTenhaIdUsuarioOrDefault(equiparTema.idTema, idUsuarioEquipado);
+    equiparTemaUsuarioLogado = async (equiparTema: PutEquiparTema, idUsuarioLogado: string): Promise<void> => {
+        const compraDb = await this._compraRepositorio.selectCompraByIdTemaQueTenhaIdUsuarioOrDefault(equiparTema.idTema, idUsuarioLogado);
         if (compraDb == null) {
             let ex = new MdExcecao();
             ex.codigoExcecao = 404;
             ex.problema = 'Tema não encontrado, ou não comprado.';
             throw ex;
         }
-        await this._compraRepositorio.equiparCompraById(compraDb.id, idUsuarioOperador);
+        await this._compraRepositorio.equiparCompraById(compraDb.id, idUsuarioLogado);
     }
 
     // autorizado
     // get
-    obterIdTemaEquipadoPorUsuarioOrDefault = async (idUsuario: string): Promise<string> => {
-        const compraEquipada = await this._compraRepositorio.selectCompraEquipadaByIdUsuarioOrDefault(idUsuario);
+    obterIdTemaEquipadoUsuarioLogadoOrDefault = async (idUsuarioLogado: string): Promise<string> => {
+        const compraEquipada = await this._compraRepositorio.selectCompraEquipadaByIdUsuarioOrDefault(idUsuarioLogado);
         if (compraEquipada == null)
             return '';
         return compraEquipada.idTema;
