@@ -12,9 +12,7 @@ import { PostNovoTema } from '../../modelos/importarBack/PostNovoTema';
 import { PutNavioTema } from '../../modelos/importarBack/PutNavioTema';
 import { PutTema } from '../../modelos/importarBack/PutTema';
 import { UtilNumber } from '../../util/UtilNumber';
-import ManterListaNavioTema from './ManterListaNavioTema';
 import MdRespostaApi from '../../modelos/MdRespostaApi';
-import '../css/DetalheTema.css'
 import { PutAdicaoCreditos } from '../../modelos/importarBack/PutAdicaoCreditos';
 
 const EncVnTextField = styled(TextField)({
@@ -35,7 +33,6 @@ const LiberarCreditos = () => {
     const [nome, setNome] = useState('');
     const [creditos, setCreditos] = useState<number | null>(null);
     const [valorAdicionar, setValorAdicionar] = useState<number | null>(null);
-    const [descricao, setDescricao] = useState('');
     const [carregouUsuario, setCarregouUsuario] = useState(false);
 
     const [confirmacaoAdicaoEstaAberto, setConfirmacaoAdicaoEstaAberto] = useState(false);
@@ -102,7 +99,10 @@ const LiberarCreditos = () => {
         <>
             <h1 style={{color: 'white', fontFamily: 'bungee', textAlign: 'center', marginTop: '16px' }}>Liberar Créditos</h1>
 
-            <Box className='box'>
+            {!carregouUsuario && <div className='d-flex justify-content-center w-100'>
+                <CircularProgress />
+            </div>}
+            {carregouUsuario && <Box className='box'>
                     <div className="row g-0">
                         <EncVnTextField label="Nome" variant="outlined" className="mt-4" sx={{ width: 350, marginRight: 16 }} value={nome} disabled />
                         <EncVnTextField label="Saldo Atual" type="number" variant="outlined" className="mt-4" sx={{ width: 350 }} value={creditosAsFormatado} disabled
@@ -125,7 +125,7 @@ const LiberarCreditos = () => {
                     </div>
 
                 </div>
-            </Box>
+            </Box>}
 
             {/* Confirmação, Mensagens de sucesso e erro */}
             <ConfirmacaoModal estaAberto={confirmacaoAdicaoEstaAberto} onFecharOuCancelar={() => setConfirmacaoAdicaoEstaAberto(_ => false)} onConfirmar={() => handleClickConfirmarAdicao()}
