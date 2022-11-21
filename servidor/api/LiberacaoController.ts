@@ -14,6 +14,7 @@ import { UsuarioRepositorio } from "../repositorio/UsuarioRepositorio";
 import { ControllerBase } from "./ControllerBase";
 import { UtilUrl } from "../UtilUrl";
 import { PutAdicaoCreditos } from "../modelos/PutAdicaoCreditos";
+import { MdResumoUsuarioLiberavel } from "../modelos/MdResumoUsuarioLiberavel";
 
 @injectable()
 class LiberacaoController extends ControllerBase {
@@ -26,6 +27,31 @@ class LiberacaoController extends ControllerBase {
         this._configBack = configBack;
         this._usuarioRepositorio = usuarioRepositorio;
         this.router = Router();
+        this.router.get('/listar', async (req, res) => {
+           try {
+                const idUsuarioLogado = await this.obterIdUsuarioLogado(req);
+                const usuariosLiberaveis = await this.listar();
+                res.send(usuariosLiberaveis);
+           } catch (exc) {
+                MdExcecao.enviarExcecao(req, res, exc);
+           }
+        });
+        this.router.get('/resumirPorId', async (req, res) => {
+            try {
+                const idUsuarioLogado = await this.obterIdUsuarioLogado(req);
+                const idUsuario = UtilUrl.obterParamPorKey(req.url ?? '', 'id');
+                if (idUsuario == undefined || idUsuario == '') {
+                    let ex = new MdExcecao();
+                    ex.codigoExcecao = 400;
+                    ex.problema = 'Formato da url incorreta';
+                    throw ex;
+                }
+                const usuarioResumido = await this.resumirPorId(idUsuario);
+                res.send(usuarioResumido);
+            } catch (exc) {
+                MdExcecao.enviarExcecao(req, res, exc);
+            }
+        })
         this.router.put('/adicionarCreditos', async (req, res) => {
             try {
                 const idUsuarioLogado = await this.obterIdUsuarioLogado(req);
@@ -38,6 +64,38 @@ class LiberacaoController extends ControllerBase {
     }
 
     // codifique as actions:
+    
+    // autorizado
+    // get
+    listar = async (): Promise<MdResumoUsuarioLiberavel[]> => {
+        const usuariosDb = await this._usuarioRepositorio.selectAll();
+        let listaUsuarios: MdResumoUsuarioLiberavel[] = [];
+        for (let iUsuarioDb of usuariosDb) {
+            let iUsuarioParaPush = new MdResumoUsuarioLiberavel();
+            iUsuarioParaPush.id = iUsuarioDb.id;
+            iUsuarioParaPush.nome = iUsuarioDb.nome;
+            iUsuarioParaPush.creditos = iUsuarioDb.creditos ?? 0;
+            listaUsuarios.push(iUsuarioParaPush);
+        }
+        return listaUsuarios;
+    }
+    
+    // autorizado
+    // get
+    resumirPorId = async (id: string): Promise<MdResumoUsuarioLiberavel> => {
+        const usuarioDb = await this._usuarioRepositorio.selectByIdOrDefault(id);
+        if (usuarioDb == null) {
+            let ex = new MdExcecao();
+            ex.codigoExcecao = 404;
+            ex.problema = 'Usuário não encontrado';
+            throw ex;
+        }
+        let usuarioResumido = new MdResumoUsuarioLiberavel();
+        usuarioResumido.id = usuarioDb.id;
+        usuarioResumido.nome = usuarioDb.nome;
+        usuarioResumido.creditos = usuarioDb.creditos ?? 0;
+        return usuarioResumido;
+    }
 
     // autorizado
     // put
