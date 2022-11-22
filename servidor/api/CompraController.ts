@@ -140,7 +140,7 @@ class CompraController extends ControllerBase {
         if (compraJaFeitaDb != null) {
             let ex = new MdExcecao();
             ex.codigoExcecao = 400;
-            ex.problema = 'O tema ja foi comprado.';
+            ex.problema = 'O tema já foi comprado.';
             throw ex;
         }
         
