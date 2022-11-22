@@ -26,6 +26,11 @@ class TemaRepositorio extends RepositorioCrud<DbTema> {
         });
         this.inicializarMongo('Tema', schema);
     }
+
+    selectMuitosTemasByListaTemasId = async (listaTemasId: string[]) => {
+        let query = this._modelMongo.find({ id: { $in: listaTemasId } });
+        return query;
+    }
 }
 
 export { TemaRepositorio };

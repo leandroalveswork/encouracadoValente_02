@@ -9,7 +9,7 @@ import ImgNavioVertical from '../../components/imagem/ImgNavioVertical';
 import ClientRest from '../../integracao/ClientRest';
 import UserState from '../../integracao/UserState';
 import { MdResumoTema } from '../../modelos/importarBack/MdResumoTema';
-import { PostNovaCompra } from '../../modelos/importarBack/PostNovaCompra';
+import { PutEquiparTema } from '../../modelos/importarBack/PutEquiparTema';
 import { UtilPagina } from '../../util/UtilPagina';
 import AddIcon from '@mui/icons-material/Add';
 
@@ -27,7 +27,7 @@ const WhitePagination = styled(Pagination)({
     borderRadius: '10px'
 })
 
-const IndexLoja = () => {
+const IndexMochila = () => {
     const navigate = useNavigate();
 
     const userState = new UserState();
@@ -35,63 +35,53 @@ const IndexLoja = () => {
 
     const [lTemas, setLTemas] = useState<MdResumoTema[]>([]);
     const [pagina, setPagina] = useState(1);
-    const [idTemaConfirmacaoExclusaoPendente, setIdTemaConfirmacaoExclusaoPendente] = useState('');
+    const [idTemaEquipado, setIdTemaEquipado] = useState('');
     const [carregouTemas, setCarregouTemas] = useState(false);
+    const [carregouEquipacao, setCarregouEquipacao] = useState(true);
 
-    const [confirmacaoExclusaoEstaAberto, setConfirmacaoExclusaoEstaAberto] = useState(false);
-    const [sucessoExclusaoEstaAberto, setSucessoExclusaoEstaAberto] = useState(false);
-    const [sucessoCompraEstaAberto, setSucessoCompraEstaAberto] = useState(false);
     const [erroEstaAberto, setErroEstaAberto] = useState(false);
     const [problemaErro, setProblemaErro] = useState('');
 
     useEffect(() => {
-        clientRest.callGetAutorizado<MdResumoTema[]>('/api/tema/listar', [])
-            .then(rLista => {
+        clientRest.callGetAutorizado<MdResumoTema[]>('/api/compra/listarPorIdUsuarioLogado', [])
+            .then(async (rLista) => {
                 if (rLista.eOk) {
-                    setLTemas(rLista.body ?? []);
-                    setCarregouTemas(_ => true);
+                    const rIdTemaEquipado = await clientRest.callGetAutorizado<string>('/api/compra/obterIdTemaEquipadoUsuarioLogadoOrDefault', '');
+                    if (rIdTemaEquipado.eOk) {
+                        setIdTemaEquipado(_ => rIdTemaEquipado.body ?? '');
+                        setLTemas(_ => rLista.body ?? []);
+                        setCarregouTemas(_ => true);
+                    } else {
+                        setProblemaErro(_ => rIdTemaEquipado.problema);
+                        setErroEstaAberto(_ => true);
+                    }
                 } else {
-                    setProblemaErro(rLista.problema);
+                    setProblemaErro(_ => rLista.problema);
                     setErroEstaAberto(_ => true);
                 }
             });
         
+        return () => {
+            setCarregouTemas(_ => true);
+            setCarregouEquipacao(_ => true);
+        }
     }, []);
 
     let qtPaginas = UtilPagina.calcularQtPaginas(lTemas.length, 6);
-    // useEffect(() => { qtPaginas = UtilPagina.calcularQtPaginas(lTemas.length, 6); }, [lTemas])
-
     let temasPaginados = UtilPagina.recortarPagina(lTemas, pagina, 6);
-    // useEffect(() => { temasPaginados = UtilPagina.recortarPagina(lTemas, pagina, 6); }, [lTemas, pagina])
-    // console.log(qtPaginas);
     
-    const handleClickExcluir = (idTema: string) => {
-        setIdTemaConfirmacaoExclusaoPendente(_ => idTema);
-        setConfirmacaoExclusaoEstaAberto(_ => true);
-    }
-
-    const handleClickConfirmarExclusao = async () => {
-        const rExclusao = await clientRest.callDeleteAutorizado<undefined>('/api/tema/excluirPorId?id=' + idTemaConfirmacaoExclusaoPendente, undefined);
-        setConfirmacaoExclusaoEstaAberto(_ => false);
-        
-        if (rExclusao.eOk) {
-            setSucessoExclusaoEstaAberto(_ => true);
+    const handleClickEquipar = async (idTema: string) => {
+        const putEquiparTema = new PutEquiparTema();
+        putEquiparTema.idTema = idTema;
+        setCarregouEquipacao(_ => false);
+        const rEquipacao = await clientRest.callPutAutorizado<undefined>('/api/compra/equiparTemaUsuarioLogado', putEquiparTema, undefined);
+        if (rEquipacao.eOk) {
+            setIdTemaEquipado(_ => idTema);
+            setCarregouEquipacao(_ => true);
         } else {
-            setProblemaErro(rExclusao.problema);
+            setProblemaErro(rEquipacao.problema);
             setErroEstaAberto(_ => true);
-        }
-    }
-    
-    const handleClickComprar = async (idTema: string) => {
-        const novaCompra = new PostNovaCompra();
-        novaCompra.idTema = idTema;
-        const rCompra = await clientRest.callPostAutorizado<string>('/api/compra/adicionar', novaCompra, '');
-        
-        if (rCompra.eOk) {
-            setSucessoCompraEstaAberto(_ => true);
-        } else {
-            setProblemaErro(rCompra.problema);
-            setErroEstaAberto(_ => true);
+            setCarregouEquipacao(_ => true);
         }
     }
     
@@ -124,19 +114,15 @@ const IndexLoja = () => {
                                                     ePositionAbsolute={true}
                                                     cssLeftAsPx={(iPreviaNavio.tamanhoQuadrados - 1)*60}
                                                     cssTopAsPx={0} />
-                                                {/* <img
-                                                    src={'data:image/*;base64,' + (iPreviaNavio.arquivo?.dadosBase64 ?? '')}
-                                                    alt='imagem previa' /> */}
                                             </div>)
                                     })}
                                     </div>
                                 </CardContent>
                                 <CardActions>
-                                    {!iResumoTema.foiCompradoPorUsuarioLogado && <Button size="medium" variant="contained" onClick={() => handleClickComprar(iResumoTema.id)}>{'Comprar - R$ ' + iResumoTema.preco}</Button>}
-                                    {iResumoTema.foiCompradoPorUsuarioLogado && <Button size="medium" color="inherit" disabled>Comprado</Button>}
+                                    {!carregouEquipacao && <CircularProgress color="success" />}                                        
+                                    {carregouEquipacao && iResumoTema.id != idTemaEquipado && <Button size="medium" variant="contained" color="success" onClick={() => handleClickEquipar(iResumoTema.id)}>Equipar</Button>}
+                                    {carregouEquipacao && iResumoTema.id == idTemaEquipado && <Button size="medium" color="inherit" disabled>Equipado</Button>}
                                     <Button size="medium" onClick={() => navigate('/loja/detalheTema?id=' + iResumoTema.id)}>Ver mais</Button>
-                                    <Button size="medium" variant="contained" onClick={() => navigate('/loja/detalheTema?id=' + iResumoTema.id + '&eAlteracao=S')}>Alterar</Button>
-                                    <Button size="medium" variant="contained" color="error" onClick={() => handleClickExcluir(iResumoTema.id)}>Excluir</Button>
                                 </CardActions>
                             </Card>
                         </div>)
@@ -146,19 +132,12 @@ const IndexLoja = () => {
                     <WhitePagination color='standard' variant='outlined' count={qtPaginas} page={pagina} onChange={(ev, pgn) => setPagina(_ => pgn)} />
                 </div>
             </>}
-            {carregouTemas && lTemas.length == 0 && <span style={{color: 'white'}}>Nenhum tema adicionado ainda.</span>}
-            <div className="d-flex justify-content-center pt-4">
-                <Fab size="medium" variant='extended'  onClick={() => navigate('/loja/adicionarTema')}> Adicionar tema <AddIcon sx={{mr: 1}} style={{marginBottom: '5px'}}/></Fab>
-            </div>
+            {carregouTemas && lTemas.length == 0 && <span style={{color: 'white'}}>Nenhum tema comprado ainda.</span>}
 
-            <ConfirmacaoModal estaAberto={confirmacaoExclusaoEstaAberto} onFecharOuCancelar={() => setConfirmacaoExclusaoEstaAberto(_ => false)} onConfirmar={() => handleClickConfirmarExclusao()}
-                mensagem='Deseja excluir este tema? Isso causará a exclusão das personalizações deste tema.' />
-            <SucessoModal estaAberto={sucessoExclusaoEstaAberto} onFechar={() => window.location.reload()} mensagem='Tema excluído com sucesso!' />
-            <SucessoModal estaAberto={sucessoCompraEstaAberto} onFechar={() => window.location.reload()} mensagem='Tema comprado com sucesso!' />
             <ErroModal estaAberto={erroEstaAberto} onFechar={() => setErroEstaAberto(_ => false)} problema={problemaErro} />
         </div>
     )
 }
 
 
-export default IndexLoja
+export default IndexMochila

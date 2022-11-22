@@ -6,4 +6,5 @@ export class MdResumoTema {
     preco: number = 0
     descricao: string = ''
     previas: MdPreviaNavio[] = []
+    foiCompradoPorUsuarioLogado: boolean = false
 }

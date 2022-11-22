@@ -41,7 +41,7 @@ const Header = (props: HeaderProps) => {
     };
 
     const handleCloseUserMenu = () => {
-        console.log("caiu aqui!");
+        // console.log("caiu aqui!");
         setAnchorElUser(null);
     };
 
@@ -57,7 +57,7 @@ const Header = (props: HeaderProps) => {
 
     const definePages = () => {
         if (loggedIn) {
-            return [{label: 'Home', href: ''}, {label: 'Loja', href: 'loja'}, {label: 'Sala de jogo', href: 'game/123'}];
+            return [{label: 'Home', href: ''}, {label: 'Loja', href: 'loja'}, {label: 'Mochila', href: 'mochila'}, {label: 'Liberação', href: 'liberacao'}, {label: 'Sala de jogo', href: 'game/123'}];
         }
 
         return [];

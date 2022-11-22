@@ -94,7 +94,7 @@ class AutorizacaoController extends ControllerBase {
         if (usuarioDb == null) {
             let ex = new MdExcecao();
             ex.codigoExcecao = 404;
-            ex.problema = 'Usuario não encontrado.';
+            ex.problema = 'Usuário não encontrado.';
             throw ex;
         }
         const senhaEstaCorreta = await bcrypt.compare(novoUsuario.senhaAnterior, usuarioDb.senha);
@@ -128,7 +128,7 @@ class AutorizacaoController extends ControllerBase {
         if (usuarioDb == null) {
             let ex = new MdExcecao();
             ex.codigoExcecao = 404;
-            ex.problema = 'Usuario não encontrado.';
+            ex.problema = 'Usuário não encontrado.';
             throw ex;
         }
         
@@ -217,6 +217,7 @@ class AutorizacaoController extends ControllerBase {
         usuarioLogado.email = usuarioDb.email;
         usuarioLogado.eSuperuser = usuarioDb.eSuperuser;
         usuarioLogado.eUsuarioGoogle = usuarioDb.eUsuarioGoogle;
+        usuarioLogado.creditos = usuarioDb.creditos ?? 0;
         return usuarioLogado;
     }
 
@@ -228,6 +229,7 @@ class AutorizacaoController extends ControllerBase {
         usuarioInsert.senha = ''; // não é necessário preencher, porque o email e senha são informados durante login com Google
         usuarioInsert.eSuperuser = false;
         usuarioInsert.eUsuarioGoogle = true;
+        usuarioInsert.creditos = 0;
         // console.table(usuarioInsert);
         await this._usuarioRepositorio.insertPorOperador(usuarioInsert, usuarioInsert.id);
         const token = jsonwebtoken.sign({ id: usuarioInsert.id }, this._configBack.salDoJwt, {
@@ -240,6 +242,7 @@ class AutorizacaoController extends ControllerBase {
         usuarioLogado.email = usuarioInsert.email;
         usuarioLogado.eSuperuser = usuarioInsert.eSuperuser;
         usuarioLogado.eUsuarioGoogle = usuarioInsert.eUsuarioGoogle;
+        usuarioLogado.creditos = usuarioInsert.creditos;
         return usuarioLogado;
     }
 
@@ -282,6 +285,7 @@ class AutorizacaoController extends ControllerBase {
         usuarioInsert.senha = senhaCrypt;
         usuarioInsert.eSuperuser = false;
         usuarioInsert.eUsuarioGoogle = false;
+        usuarioInsert.creditos = 0;
         // console.table(usuarioInsert);
         await this._usuarioRepositorio.insertPorOperador(usuarioInsert, usuarioInsert.id);
         const token = jsonwebtoken.sign({ id: usuarioInsert.id }, this._configBack.salDoJwt, {
@@ -294,6 +298,7 @@ class AutorizacaoController extends ControllerBase {
         usuarioLogado.email = usuarioInsert.email;
         usuarioLogado.eSuperuser = usuarioInsert.eSuperuser;
         usuarioLogado.eUsuarioGoogle = usuarioInsert.eUsuarioGoogle;
+        usuarioLogado.creditos = usuarioInsert.creditos;
         return usuarioLogado;
     }
 }

@@ -8,6 +8,6 @@ export default class MdRespostaApi<T> {
     problema: string
     body: T | null
     get eOk() {
-        return this.statusCode == 200;
+        return 200 <= this.statusCode && this.statusCode <= 299;
     }
 }

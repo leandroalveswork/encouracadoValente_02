@@ -28,23 +28,27 @@ import { MdDetalheNavioTema } from "../modelos/MdDetalheNavioTema";
 import { ArquivoRepositorio } from "../repositorio/ArquivoRepositorio";
 import { MdArquivoBase64 } from "../modelos/MdArquivoBase64";
 import { MdPreviaNavio } from "../modelos/MdPreviaNavio";
+import { CompraRepositorio } from "../repositorio/CompraRepositorio";
 
 @injectable()
 class TemaController extends ControllerBase {
     private _temaRepositorio: TemaRepositorio
     private _navioTemaRepositorio: NavioTemaRepositorio
     private _arquivoRepositorio: ArquivoRepositorio
+    private _compraRepositorio: CompraRepositorio
     constructor(
         @inject(LiteralServico.ConfigBack) configBack: ConfigBack,
         @inject(LiteralServico.TemaRepositorio) temaRepositorio: TemaRepositorio,
         @inject(LiteralServico.NavioTemaRepositorio) navioTemaRepositorio: NavioTemaRepositorio,
-        @inject(LiteralServico.ArquivoRepositorio) arquivoRepositorio: ArquivoRepositorio
+        @inject(LiteralServico.ArquivoRepositorio) arquivoRepositorio: ArquivoRepositorio,
+        @inject(LiteralServico.CompraRepositorio) compraRepositorio: CompraRepositorio
     ) {
         super(configBack);
         this._configBack = configBack;
         this._temaRepositorio = temaRepositorio;
         this._navioTemaRepositorio = navioTemaRepositorio;
         this._arquivoRepositorio = arquivoRepositorio;
+        this._compraRepositorio = compraRepositorio;
         this.router = Router();
         this.router.post('/adicionar', async (req, res) => {
             try {
@@ -58,7 +62,7 @@ class TemaController extends ControllerBase {
         this.router.get('/listar', async (req, res) => {
             try {
                 const idUsuarioLogado = await this.obterIdUsuarioLogado(req);
-                const temasResumidos = await this.listar();
+                const temasResumidos = await this.listar(idUsuarioLogado);
                 res.send(temasResumidos);
             } catch (exc) {
                 MdExcecao.enviarExcecao(req, res, exc);
@@ -139,7 +143,7 @@ class TemaController extends ControllerBase {
         if (novoTema.naviosTema.length == 0) {
             let ex = new MdExcecao();
             ex.codigoExcecao = 400;
-            ex.problema = 'É obrigatório preencher pelo menos um navio para adicionar um tema.';
+            ex.problema = 'É obrigatório preencher pelo menos uma personalização para adicionar um tema.';
             throw ex;
         }
         let insertTema = new DbTema();
@@ -164,11 +168,15 @@ class TemaController extends ControllerBase {
 
     // autorizado
     // get
-    listar = async (): Promise<MdResumoTema[]> => {
+    listar = async (idUsuarioLogado: string): Promise<MdResumoTema[]> => {
         const temasDb = await this._temaRepositorio.selectAll();
         const naviosTemaDb = await this._navioTemaRepositorio.selectAll();
         const arquivosDb = await this._arquivoRepositorio.selectAll();
+        const comprasUsuarioLogado = await this._compraRepositorio.selectMuitasComprasByIdUsuario(idUsuarioLogado);
+        const listaIdTemasCompradosUsuarioLogado = comprasUsuarioLogado.map(x => x.idTema);
         let listaTemas: MdResumoTema[] = [];
+        // console.log('dump listaIdTemasComprados =');
+        // console.log(listaIdTemasCompradosUsuarioLogado);
         for (let iTemaDb of temasDb) {
             
             // Dados do tema
@@ -204,6 +212,11 @@ class TemaController extends ControllerBase {
                 // Fim do loop, adicionando a previa
                 iTemaParaPush.previas.push(previaNavioParaPush);
             }
+            
+            // Verificar se o usuario logado comprou o tema
+            iTemaParaPush.foiCompradoPorUsuarioLogado = listaIdTemasCompradosUsuarioLogado.includes(iTemaDb.id.toString());
+            // console.log('dump idTema ' + iTemaParaPush.id + ' foi comprado = ' + iTemaParaPush.foiCompradoPorUsuarioLogado);
+            
             listaTemas.push(iTemaParaPush);
         }
         return listaTemas;
@@ -272,7 +285,7 @@ class TemaController extends ControllerBase {
         if (tema.naviosTema.length == 0) {
             let ex = new MdExcecao();
             ex.codigoExcecao = 400;
-            ex.problema = 'É obrigatório preencher pelo menos um navio para alterar um tema.';
+            ex.problema = 'É obrigatório preencher pelo menos uma personalização para alterar um tema.';
             throw ex;
         }
         const temaDb = await this._temaRepositorio.selectByIdOrDefault(tema.id);

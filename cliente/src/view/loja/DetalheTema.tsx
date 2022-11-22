@@ -1,4 +1,4 @@
-import { Box, Button, Dialog, DialogActions, DialogContent, styled, Tab, Tabs, TextField } from '@mui/material';
+import { Box, Button, Dialog, DialogActions, DialogContent, styled, Tab, Tabs, TextField, InputAdornment } from '@mui/material';
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import ErroModal from '../../components/erroModal/ErroModal';
@@ -137,7 +137,10 @@ const DetalheTema = () => {
                 {idxTab == 0 && <> */}
                     <div className="row g-0">
                         <EncVnTextField label="Nome" variant="outlined" className="mt-4" sx={{ width: 350 }} onChange={ev => setNome(_ => ev.target.value)} value={nome} disabled={!eAlteracao} />
-                        <EncVnTextField label="Preço" type="number" variant="outlined" className="mt-4" sx={{ width: 350 }} onChange={ev => setPreco(_ => UtilNumber.parseFloatOrDefault(ev.target.value))} value={precoAsFormatado} disabled={!eAlteracao} />
+                        <EncVnTextField label="Preço" type="number" variant="outlined" className="mt-4" sx={{ width: 350 }} onChange={ev => setPreco(_ => UtilNumber.parseFloatOrDefault(ev.target.value))} value={precoAsFormatado} disabled={!eAlteracao}
+                            InputProps={{
+                                startAdornment: <InputAdornment position="start">R$</InputAdornment>,
+                            }} />
                     </div>
                     <div className="row g-0">
                         <EncVnTextField multiline rows={4} label="Descrição" variant="outlined" className="mt-4" sx={{ width: 350 }} onChange={ev => setDescricao(_ => ev.target.value)} value={descricao} disabled={!eAlteracao} />
@@ -146,7 +149,7 @@ const DetalheTema = () => {
                 {/* {idxTab == 1 && <ManterListaNavioTema lNaviosTema={lNaviosTema} setLNaviosTema={setLNaviosTema} />} */}
                 <div className="row g-0">
                     <div className="col-11" style={{marginTop: '10px'}}>
-                        <Button size="medium" variant="contained" onClick={() => setPopupNaviosTemaEstaAberto(_ => true)}>Abrir Lista de Navios</Button>
+                        <Button size="medium" variant="contained" onClick={() => setPopupNaviosTemaEstaAberto(_ => true)}>Abrir Lista de Personalizações</Button>
                     </div>
                     <div className="col-6" style={{marginTop: '10px'}}>
                         <Button size="medium" onClick={() => window.history.back()}>Voltar</Button>
