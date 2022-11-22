@@ -8,8 +8,11 @@ import {
 import Entrar from './view/auth/Entrar';
 
 import IndexLoja from './view/loja/IndexLoja';
+import IndexMochila from './view/mochila/IndexMochila';
+import IndexLiberacao from './view/liberacao/IndexLiberacao';
 import AdicionarTema from './view/loja/AdicionarTema';
 import DetalheTema from './view/loja/DetalheTema';
+import LiberarCreditos from './view/liberacao/LiberarCreditos';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import PreparacaoJogo from './view/PreparacaoJogo';
@@ -33,6 +36,9 @@ function App() {
           <Route path="/loja" element={<ProtectedRoute><IndexLoja /></ProtectedRoute>} />,
           <Route path="/loja/adicionarTema" element={<ProtectedRoute><AdicionarTema /></ProtectedRoute>} />,
           <Route path="/loja/detalheTema" element={<ProtectedRoute><DetalheTema /></ProtectedRoute>} />,
+          <Route path="/mochila" element={<ProtectedRoute><IndexMochila /></ProtectedRoute>} />,
+          <Route path="/liberacao" element={<ProtectedRoute><IndexLiberacao /></ProtectedRoute>} />,
+          <Route path="/liberacao/liberarCreditos" element={<ProtectedRoute><LiberarCreditos /></ProtectedRoute>} />,
           <Route path="/" element={<Home />} />,
           <Route path="/game/:roomId" element={<ProtectedRoute><TelaJogo backendUrl={`ws://${process.env.REACT_APP_url_do_servidor_backend as string}/room`} /></ProtectedRoute>} />,
           <Route path="/game/prepare" element={<ProtectedRoute><PreparacaoJogo/></ProtectedRoute> } />,
