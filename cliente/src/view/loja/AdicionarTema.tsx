@@ -107,7 +107,7 @@ const AdicionarTema = () => {
                 {/* {idxTab == 1 && <ManterListaNavioTema lNaviosTema={lNaviosTema} setLNaviosTema={setLNaviosTema} />} */}
                 <div className="row g-0" >
                     <div className="col-11" style={{marginTop: '10px'}}>
-                        <Button size="medium" variant="contained" onClick={() => setPopupNaviosTemaEstaAberto(_ => true)}>Abrir Lista de Navios</Button>
+                        <Button size="medium" variant="contained" onClick={() => setPopupNaviosTemaEstaAberto(_ => true)}>Abrir Lista de Personalizações</Button>
                     </div>
                     <div className="col-6" style={{marginTop: '10px'}}>
                         <Button size="medium" onClick={() => window.history.back()}>Voltar</Button>

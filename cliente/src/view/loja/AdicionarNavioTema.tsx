@@ -88,7 +88,7 @@ const AdicionarNavioTema = (props: AdicionarNavioTemaProps) => {
 
     return (
         <>
-            <h1>Adicionar Navio</h1>
+            <h1>Adicionar Personalização</h1>
             
                 <div className="row g-0">
                     <FormControl>
@@ -150,7 +150,7 @@ const AdicionarNavioTema = (props: AdicionarNavioTemaProps) => {
                         <Button size="medium" onClick={() => props.onCancelar()}>Cancelar</Button>
                     </div>
                     <div className="col-6">
-                        <Button size="medium" variant="contained" onClick={() => handleClickSalvar()} style={{marginTop: '10px'}}>Confirmar Navio</Button>
+                        <Button size="medium" variant="contained" onClick={() => handleClickSalvar()} style={{marginTop: '10px'}}>Confirmar Personalização</Button>
                     </div>
 
                 </div>

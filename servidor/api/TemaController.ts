@@ -143,7 +143,7 @@ class TemaController extends ControllerBase {
         if (novoTema.naviosTema.length == 0) {
             let ex = new MdExcecao();
             ex.codigoExcecao = 400;
-            ex.problema = 'É obrigatório preencher pelo menos um navio para adicionar um tema.';
+            ex.problema = 'É obrigatório preencher pelo menos uma personalização para adicionar um tema.';
             throw ex;
         }
         let insertTema = new DbTema();
@@ -285,7 +285,7 @@ class TemaController extends ControllerBase {
         if (tema.naviosTema.length == 0) {
             let ex = new MdExcecao();
             ex.codigoExcecao = 400;
-            ex.problema = 'É obrigatório preencher pelo menos um navio para alterar um tema.';
+            ex.problema = 'É obrigatório preencher pelo menos uma personalização para alterar um tema.';
             throw ex;
         }
         const temaDb = await this._temaRepositorio.selectByIdOrDefault(tema.id);

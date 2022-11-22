@@ -68,10 +68,10 @@ const ManterListaNavioTema = (props: ManterListaNavioTemaProps) => {
 
     return (
         <>
-            <h3>Lista de Navios</h3>
+            <h3>Lista de Personalizações</h3>
             {props.lNaviosTema.length > 0 && <>
                 <TableContainer component={Paper}>
-                    <Table sx={{ minWidth: 650 }} size="small" aria-label="Lista de navios">
+                    <Table sx={{ minWidth: 650 }} size="small" aria-label="Lista de personalizações">
                         <TableHead>
                             <TableRow>
                                 <TableCell>Navio OG</TableCell>
@@ -112,9 +112,9 @@ const ManterListaNavioTema = (props: ManterListaNavioTemaProps) => {
                     </Table>
                 </TableContainer>
             </>}
-            {props.lNaviosTema.length == 0 && <span>Nenhum navio adicionado ainda.</span>}
+            {props.lNaviosTema.length == 0 && <span>Nenhuma personalização adicionada ainda.</span>}
             <div className="d-flex justify-content-end pt-4">
-                <Button size="medium" onClick={() => setFormNavioTema(_ => 'adicionar')}>Adicionar Navio</Button>
+                <Button size="medium" onClick={() => setFormNavioTema(_ => 'adicionar')}>Adicionar Personalização</Button>
             </div>
             {formNavioTema == 'adicionar' && <AdicionarNavioTema onCancelar={() => setFormNavioTema(_ => 'escondido')} onSalvar={handleSalvarAdicao} />}
             {formNavioTema == 'alterar' && <AlterarNavioTema navioTemaInicial={props.lNaviosTema[idxNavioTemaAlteracaoPendente ?? 0]} onCancelar={() => setFormNavioTema(_ => 'escondido')} onSalvar={handleSalvarAlteracao} /> }
