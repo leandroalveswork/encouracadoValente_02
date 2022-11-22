@@ -111,7 +111,7 @@ const AlterarNavioTema = (props: AlterarNavioTemaProps) => {
 
     return (
         <>
-            <h1>Alterar Navio</h1>
+            <h1>Alterar Personalização</h1>
             
                 <div className="row g-0">
                     <FormControl>
@@ -173,7 +173,7 @@ const AlterarNavioTema = (props: AlterarNavioTemaProps) => {
                         <Button size="medium" onClick={() => props.onCancelar()}>Cancelar</Button>
                     </div>
                     <div className="col-6">
-                        <Button size="medium" variant="contained" onClick={() => handleClickSalvar()} style={{marginTop: '5px'}}>Confirmar Navio</Button>
+                        <Button size="medium" variant="contained" onClick={() => handleClickSalvar()} style={{marginTop: '5px'}}>Confirmar Personalização</Button>
                     </div>
 
                 </div>

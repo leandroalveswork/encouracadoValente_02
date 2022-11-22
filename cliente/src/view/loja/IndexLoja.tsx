@@ -152,7 +152,7 @@ const IndexLoja = () => {
             </div>
 
             <ConfirmacaoModal estaAberto={confirmacaoExclusaoEstaAberto} onFecharOuCancelar={() => setConfirmacaoExclusaoEstaAberto(_ => false)} onConfirmar={() => handleClickConfirmarExclusao()}
-                mensagem='Deseja excluir este tema? Isso causará a exclusão dos navios deste tema.' />
+                mensagem='Deseja excluir este tema? Isso causará a exclusão das personalizações deste tema.' />
             <SucessoModal estaAberto={sucessoExclusaoEstaAberto} onFechar={() => window.location.reload()} mensagem='Tema excluído com sucesso!' />
             <SucessoModal estaAberto={sucessoCompraEstaAberto} onFechar={() => window.location.reload()} mensagem='Tema comprado com sucesso!' />
             <ErroModal estaAberto={erroEstaAberto} onFechar={() => setErroEstaAberto(_ => false)} problema={problemaErro} />
