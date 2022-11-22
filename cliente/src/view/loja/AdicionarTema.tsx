@@ -126,7 +126,7 @@ const AdicionarTema = () => {
                 maxWidth='lg'
             >
                 <DialogContent>
-                    <ManterListaNavioTema lNaviosTema={lNaviosTema} setLNaviosTema={setLNaviosTema} />
+                    <ManterListaNavioTema lNaviosTema={lNaviosTema} setLNaviosTema={setLNaviosTema} eListaBloqueada={false} />
                 </DialogContent>
                 <DialogActions>
                     <Button onClick={() => setPopupNaviosTemaEstaAberto(_ => false)}>

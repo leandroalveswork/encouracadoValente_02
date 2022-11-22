@@ -16,6 +16,7 @@ import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
 import ImageIcon from '@mui/icons-material/Image';
 import AdicionarNavioTema from './AdicionarNavioTema';
 import AlterarNavioTema from './AlterarNavioTema';
+import ImgNavioHorizontal from '../../components/imagem/ImgNavioHorizontal';
 
 const EncVnTextField = styled(TextField)({
     '& input + fieldset': {
@@ -28,6 +29,7 @@ const EncVnTextField = styled(TextField)({
 interface ManterListaNavioTemaProps {
     lNaviosTema: MdDetalheNavioTema[]
     setLNaviosTema: React.Dispatch<React.SetStateAction<MdDetalheNavioTema[]>>
+    eListaBloqueada: boolean
 }
 
 type TpFormNavioTema = 'escondido' | 'adicionar' | 'alterar' ;
@@ -94,15 +96,24 @@ const ManterListaNavioTema = (props: ManterListaNavioTemaProps) => {
                                 <TableCell align="right">{elNavioTema.nomePersonalizado}</TableCell>
                                 <TableCell align="right">{elNavioTema.tamnQuadrados}</TableCell>
                                 <TableCell align="right">
-                                    <ImageIcon className="me-3" />
+                                    {<ImgNavioHorizontal
+                                        dadosBase64={elNavioTema.bytesParaUploadArquivo == null ? elNavioTema.arquivoImagemNavio?.dadosBase64 ?? '' : ''}
+                                        eSrcBase64={elNavioTema.bytesParaUploadArquivo == null}
+                                        srcImagem={elNavioTema.bytesParaUploadArquivo != null ? URL.createObjectURL(elNavioTema.bytesParaUploadArquivo) : ''}
+                                        tamanhoQuadrados={elNavioTema.tamnQuadrados}
+                                        altImagem='imagem'
+                                        ePositionAbsolute={false}
+                                        cssLeftAsPx={0}
+                                        cssTopAsPx={0}
+                                    />}
                                 </TableCell>
                                 <TableCell align="right">
-                                    {<Button onClick={() => setIdxNavioTemaAlteracaoPendente(_ => idxNavioTema)}>
+                                    {!props.eListaBloqueada && <Button onClick={() => setIdxNavioTemaAlteracaoPendente(_ => idxNavioTema)}>
                                         <EditOutlinedIcon color="primary" className="me-3" />
                                     </Button>}
                                 </TableCell>
                                 <TableCell align="right">
-                                    {<Button onClick={() => handleClickExcluir(idxNavioTema)}>
+                                    {!props.eListaBloqueada && <Button onClick={() => handleClickExcluir(idxNavioTema)}>
                                         <DeleteOutlinedIcon color="error" className="me-3" />
                                     </Button>}
                                 </TableCell>
@@ -113,9 +124,9 @@ const ManterListaNavioTema = (props: ManterListaNavioTemaProps) => {
                 </TableContainer>
             </>}
             {props.lNaviosTema.length == 0 && <span>Nenhuma personalização adicionada ainda.</span>}
-            <div className="d-flex justify-content-end pt-4">
+            {!props.eListaBloqueada && <div className="d-flex justify-content-end pt-4">
                 <Button size="medium" onClick={() => setFormNavioTema(_ => 'adicionar')}>Adicionar Personalização</Button>
-            </div>
+            </div>}
             {formNavioTema == 'adicionar' && <AdicionarNavioTema onCancelar={() => setFormNavioTema(_ => 'escondido')} onSalvar={handleSalvarAdicao} />}
             {formNavioTema == 'alterar' && <AlterarNavioTema navioTemaInicial={props.lNaviosTema[idxNavioTemaAlteracaoPendente ?? 0]} onCancelar={() => setFormNavioTema(_ => 'escondido')} onSalvar={handleSalvarAlteracao} /> }
         </>
