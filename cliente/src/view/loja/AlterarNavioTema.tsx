@@ -157,7 +157,7 @@ const AlterarNavioTema = (props: AlterarNavioTemaProps) => {
                     <div className="file-name mt-3">{nomeImagemSelecionada}</div>
                 </div>
                 <div>
-                    {bytesImagem != null && tamnQuadradosAsString != '' && <ImgNavioHorizontal
+                    {srcImagemPrevia != '' && tamnQuadradosAsString != '' && <ImgNavioHorizontal
                         dadosBase64=''
                         eSrcBase64={false}
                         srcImagem={srcImagemPrevia}

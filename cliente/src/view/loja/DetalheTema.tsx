@@ -122,7 +122,7 @@ const DetalheTema = () => {
         } else {
             searchParams.append('eAlteracao', 'S');
         }
-        navigate(window.location.href.split('?')[0] + '?' + searchParams.toString());
+        setSearchParams(_ => searchParams);
     }
 
     return (
@@ -172,7 +172,7 @@ const DetalheTema = () => {
                 maxWidth='lg'
             >
                 <DialogContent>
-                    <ManterListaNavioTema lNaviosTema={lNaviosTema} setLNaviosTema={setLNaviosTema} />
+                    <ManterListaNavioTema lNaviosTema={lNaviosTema} setLNaviosTema={setLNaviosTema} eListaBloqueada={!eAlteracao} />
                 </DialogContent>
                 <DialogActions>
                     <Button onClick={() => setPopupNaviosTemaEstaAberto(_ => false)}>
