@@ -94,6 +94,7 @@ class CompraController extends ControllerBase {
             try {
                 const idUsuarioLogado = await this.obterIdUsuarioLogado(req);
                 const idTemaOrDefault = await this.obterIdTemaEquipadoUsuarioLogadoOrDefault(idUsuarioLogado);
+                // console.log('dump idTemaOrDefault = [' + idTemaOrDefault + ']');
                 res.send(idTemaOrDefault);
             } catch (exc) {
                 MdExcecao.enviarExcecao(req, res, exc);
@@ -132,7 +133,14 @@ class CompraController extends ControllerBase {
         if (saldoComprador < temaDb.preco) {
             let ex = new MdExcecao();
             ex.codigoExcecao = 401;
-            ex.problema = 'Créditos insuficientes: você possui R$' + saldoComprador + ' mas o tema custa ' + temaDb.preco;
+            ex.problema = 'Créditos insuficientes: você possui R$' + saldoComprador + ' mas o tema custa R$' + temaDb.preco;
+            throw ex;
+        }
+        const compraJaFeitaDb = await this._compraRepositorio.selectCompraByIdTemaQueTenhaIdUsuarioOrDefault(novaCompra.idTema, idUsuarioLogado);
+        if (compraJaFeitaDb != null) {
+            let ex = new MdExcecao();
+            ex.codigoExcecao = 400;
+            ex.problema = 'O tema ja foi comprado.';
             throw ex;
         }
         

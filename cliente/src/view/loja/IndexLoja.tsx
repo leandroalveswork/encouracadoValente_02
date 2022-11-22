@@ -9,6 +9,7 @@ import ImgNavioVertical from '../../components/imagem/ImgNavioVertical';
 import ClientRest from '../../integracao/ClientRest';
 import UserState from '../../integracao/UserState';
 import { MdResumoTema } from '../../modelos/importarBack/MdResumoTema';
+import { PostNovaCompra } from '../../modelos/importarBack/PostNovaCompra';
 import { UtilPagina } from '../../util/UtilPagina';
 import AddIcon from '@mui/icons-material/Add';
 
@@ -39,6 +40,7 @@ const IndexLoja = () => {
 
     const [confirmacaoExclusaoEstaAberto, setConfirmacaoExclusaoEstaAberto] = useState(false);
     const [sucessoExclusaoEstaAberto, setSucessoExclusaoEstaAberto] = useState(false);
+    const [sucessoCompraEstaAberto, setSucessoCompraEstaAberto] = useState(false);
     const [erroEstaAberto, setErroEstaAberto] = useState(false);
     const [problemaErro, setProblemaErro] = useState('');
 
@@ -53,6 +55,7 @@ const IndexLoja = () => {
                     setErroEstaAberto(_ => true);
                 }
             });
+        
     }, []);
 
     let qtPaginas = UtilPagina.calcularQtPaginas(lTemas.length, 6);
@@ -68,18 +71,26 @@ const IndexLoja = () => {
     }
 
     const handleClickConfirmarExclusao = async () => {
-        // console.log('**f|inicio do rExclusao');
-        
-        const rExclusao = await clientRest.callDeleteAutorizado<undefined>('/api/tema/excluirPorId?id=' + idTemaConfirmacaoExclusaoPendente, undefined)
-        // console.log('**f|rExclusao devolvido');
-        
+        const rExclusao = await clientRest.callDeleteAutorizado<undefined>('/api/tema/excluirPorId?id=' + idTemaConfirmacaoExclusaoPendente, undefined);
         setConfirmacaoExclusaoEstaAberto(_ => false);
-        // console.log('**f|confirmacao fechado');
         
         if (rExclusao.eOk) {
             setSucessoExclusaoEstaAberto(_ => true);
         } else {
             setProblemaErro(rExclusao.problema);
+            setErroEstaAberto(_ => true);
+        }
+    }
+    
+    const handleClickComprar = async (idTema: string) => {
+        const novaCompra = new PostNovaCompra();
+        novaCompra.idTema = idTema;
+        const rCompra = await clientRest.callPostAutorizado<string>('/api/compra/adicionar', novaCompra, '');
+        
+        if (rCompra.eOk) {
+            setSucessoCompraEstaAberto(_ => true);
+        } else {
+            setProblemaErro(rCompra.problema);
             setErroEstaAberto(_ => true);
         }
     }
@@ -121,7 +132,8 @@ const IndexLoja = () => {
                                     </div>
                                 </CardContent>
                                 <CardActions>
-                                    <Button size="medium" variant="contained" onClick={() => {}}>{'Comprar - R$ ' + iResumoTema.preco}</Button>
+                                    {!iResumoTema.foiCompradoPorUsuarioLogado && <Button size="medium" variant="contained" onClick={() => handleClickComprar(iResumoTema.id)}>{'Comprar - R$ ' + iResumoTema.preco}</Button>}
+                                    {iResumoTema.foiCompradoPorUsuarioLogado && <Button size="medium" color="inherit" disabled>Comprado</Button>}
                                     <Button size="medium" onClick={() => navigate('/loja/detalheTema?id=' + iResumoTema.id)}>Ver mais</Button>
                                     <Button size="medium" variant="contained" onClick={() => navigate('/loja/detalheTema?id=' + iResumoTema.id + '&eAlteracao=S')}>Alterar</Button>
                                     <Button size="medium" variant="contained" color="error" onClick={() => handleClickExcluir(iResumoTema.id)}>Excluir</Button>
@@ -142,6 +154,7 @@ const IndexLoja = () => {
             <ConfirmacaoModal estaAberto={confirmacaoExclusaoEstaAberto} onFecharOuCancelar={() => setConfirmacaoExclusaoEstaAberto(_ => false)} onConfirmar={() => handleClickConfirmarExclusao()}
                 mensagem='Deseja excluir este tema? Isso causará a exclusão dos navios deste tema.' />
             <SucessoModal estaAberto={sucessoExclusaoEstaAberto} onFechar={() => window.location.reload()} mensagem='Tema excluído com sucesso!' />
+            <SucessoModal estaAberto={sucessoCompraEstaAberto} onFechar={() => window.location.reload()} mensagem='Tema comprado com sucesso!' />
             <ErroModal estaAberto={erroEstaAberto} onFechar={() => setErroEstaAberto(_ => false)} problema={problemaErro} />
         </div>
     )

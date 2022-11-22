@@ -78,9 +78,9 @@ class NavioTemaRepositorio extends RepositorioCrud<DbNavioTema> {
                 lNaviosParaSalvar.push(updateNavio);
             }
         }
-        let lIdNaviosAtualizados = naviosAtualizados.map(x => x.id);
+        let lIdNaviosAtualizados = naviosAtualizados.map(x => x.id.toString());
         // excluir os naviosTema caso a atualizaçao do tema envolva excluir esses navioTema 
-        let naviosTemaExcluidos = lNaviosTemaDb.filter(x => !lIdNaviosAtualizados.includes(x.id));
+        let naviosTemaExcluidos = lNaviosTemaDb.filter(x => !lIdNaviosAtualizados.includes(x.id.toString()));
         let lIdNaviosTemaExcluidos = naviosTemaExcluidos.map(x => x.id);
         await this._modelMongo.bulkSave(lNaviosParaSalvar);
         await this._modelMongo.deleteMany({ id: { $in: lIdNaviosTemaExcluidos } });

@@ -48,28 +48,25 @@ class CompraRepositorio extends RepositorioCrud<DbCompra> {
         if (compraDb == null)
             throw 'Erro no servidor';
         let lComprasDb = await this.selectMuitasComprasByIdUsuario(compraDb.idUsuarioComprador);
+        // console.log('dump lCompraDb.length = ' + lComprasDb.length);
         let lComprasParaSalvar: HydratedDocument<DbCompra, {}, unknown>[] = [];
         for (let iCompraDb of lComprasDb) {
-            if (iCompraDb.id == id && iCompraDb.estaEquipado) // Se estiver equipando o mesmo tema ja equipado, sair do metodo
+            if (iCompraDb.id.toString() == id && iCompraDb.estaEquipado) // Se estiver equipando o mesmo tema ja equipado, sair do metodo
                 return;
-            if (iCompraDb.id == id && !iCompraDb.estaEquipado) { // Equipar o tema
-                let compraAtual = { ...iCompraDb };
-                compraAtual.estaEquipado = true;
-                compraAtual.idUsuarioFezInclusao = idUsuarioOperador;
-                compraAtual.horaUltimaAtualizacao = new Date();
-                let updateCompra = new this._modelMongo({ ...compraAtual });
-                updateCompra.isNew = false;
-                lComprasParaSalvar.push(updateCompra);
+            if (iCompraDb.id.toString() == id && !iCompraDb.estaEquipado) { // Equipar o tema
+                // console.log('equipando tema...');
+                iCompraDb.estaEquipado = true;
+                iCompraDb.idUsuarioFezUltimaAtualizacao = idUsuarioOperador;
+                iCompraDb.horaUltimaAtualizacao = new Date();
+                lComprasParaSalvar.push(iCompraDb);
                 continue;
             }
-            if (iCompraDb.id != id && iCompraDb.estaEquipado) { // Tirar o equipamento do tema anterior
-                let compraAtual = { ...iCompraDb };
-                compraAtual.estaEquipado = false;
-                compraAtual.idUsuarioFezInclusao = idUsuarioOperador;
-                compraAtual.horaUltimaAtualizacao = new Date();
-                let updateCompra = new this._modelMongo({ ...compraAtual });
-                updateCompra.isNew = false;
-                lComprasParaSalvar.push(updateCompra);
+            if (iCompraDb.id.toString() != id && iCompraDb.estaEquipado) { // Tirar o equipamento do tema anterior
+                // console.log('tirando equipamento tema...');
+                iCompraDb.estaEquipado = false;
+                iCompraDb.idUsuarioFezUltimaAtualizacao = idUsuarioOperador;
+                iCompraDb.horaUltimaAtualizacao = new Date();
+                lComprasParaSalvar.push(iCompraDb);
             }
         }
         await this._modelMongo.bulkSave(lComprasParaSalvar);
