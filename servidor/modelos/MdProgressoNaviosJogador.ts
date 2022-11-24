@@ -1,7 +1,7 @@
 import { MdTiro } from "./MdTiro";
 import { PutPosicaoEstrategia } from "./PutPosicaoEstrategia";
 
-export class MdProgressoNaviosJogadorLogado {
+export class MdProgressoNaviosJogador {
     tiros: MdTiro[] = [];
     naviosTotais: PutPosicaoEstrategia[] = [];
 }

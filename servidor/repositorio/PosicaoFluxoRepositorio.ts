@@ -47,11 +47,11 @@ class PosicaoFluxoRepositorio extends RepositorioCrud<DbPosicaoFluxo> {
         await this._modelMongo.bulkSave(lPosicoesEstrategiaParaSalvar);
     }
 
-    selectByListaNumerosRecuperacao = (listaNumerosRecuperacao: string[]) => {
-        let query = this._modelMongo.find({ numeroRecuperacao: { $in: listaNumerosRecuperacao } });
+    selectByNumeroRecuperacaoUrlSalaFluxoQueTenhaIdUsuarioOrDefault = (numeroRecuperacaoUrlSalaFluxo: number, idUsuarioLogado: string) => {
+        let query = this._modelMongo.find({ numeroRecuperacaoUrlSalaFluxo: numeroRecuperacaoUrlSalaFluxo, idUsuarioEnviador: idUsuarioLogado });
         return query;
     }
-    
+
     deleteByListaNumerosRecuperacao = async (listaNumerosRecuperacao: string[]): Promise<void> => {
         await this._modelMongo.deleteMany({ numeroRecuperacao: { $in: listaNumerosRecuperacao } });
     }
