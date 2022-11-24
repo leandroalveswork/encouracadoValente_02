@@ -10,6 +10,9 @@ const LiteralServico = {
     CompraRepositorio: Symbol.for('CompraRepositorio'),
     NavioTemaRepositorio: Symbol.for('NavioTemaRepositorio'),
     ArquivoRepositorio: Symbol.for('ArquivoRepositorio'),
+    SalaFluxoRepositorio: Symbol.for('SalaFluxoRepositorio'),
+    PosicaoFluxoRepositorio: Symbol.for('PosicaoFluxoRepositorio'),
+    TiroFluxoRepositorio: Symbol.for('TiroFluxoRepositorio'),
 
     // controllers de api
     AutorizacaoController: Symbol.for('AutorizacaoController'),
@@ -17,6 +20,7 @@ const LiteralServico = {
     CompraController: Symbol.for('CompraController'),
     LiberacaoController: Symbol.for('LiberacaoController'),
     ArquivoController: Symbol.for('ArquivoController'),
+    FluxoMultiplayerController: Symbol.for('FluxoMultiplayerController'),
 };
 
 export { LiteralServico };
