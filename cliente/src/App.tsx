@@ -20,6 +20,7 @@ import Perfil from './view/auth/Perfil';
 import ProtectedRoute from './routes/ProtectedRoute';
 import { useState } from "react";
 import UserState from "./integracao/UserState";
+import ListagemSalas from "./view/ListagemSalas"
 
 function App() {
   const userState = new UserState();
@@ -43,6 +44,7 @@ function App() {
           <Route path="/game/:roomId" element={<ProtectedRoute><TelaJogo backendUrl={`ws://${process.env.REACT_APP_url_do_servidor_backend as string}/room`} /></ProtectedRoute>} />,
           <Route path="/game/prepare" element={<ProtectedRoute><PreparacaoJogo/></ProtectedRoute> } />,
           <Route path="/perfil" element={<ProtectedRoute><Perfil setUsername={setUsername} /></ProtectedRoute> } />,
+          <Route path="/salas" element={<ProtectedRoute><ListagemSalas/></ProtectedRoute>} />,
         </Routes>
       </div>
       {/* <Footer /> */} 

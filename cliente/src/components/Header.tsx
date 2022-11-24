@@ -83,7 +83,7 @@ const Header = (props: HeaderProps) => {
                         variant="h6"
                         noWrap
                         component="a"
-                        href= {loggedIn ? "" : "/auth/entrar"}
+                        href= {loggedIn ? "/salas" : "/auth/entrar"}
                         sx={{
                             mr: 2,
                             display: { xs: 'none', md: 'flex' },
