@@ -46,10 +46,26 @@ const AdicionarTema = () => {
         return ('' + precoRaw);
     }
 
+    const validarNavios = (navios: MdDetalheNavioTema[])=>{
+        if (navios.some((navio) => navio.tamnQuadrados == 4) &&
+            navios.some((navio) => navio.tamnQuadrados == 3) &&
+            navios.some((navio) => navio.tamnQuadrados == 2) &&
+            navios.some((navio) => navio.tamnQuadrados == 1)){
+                return true
+            }
+        else{
+            return false
+        }
+    }
     let precoAsFormatado = formatarPreco(preco);
     // useEffect(() => { precoAsFormatado = formatarPreco(preco) }, [preco]);
 
     const handleClickSalvar = async () => {
+        if (!validarNavios(lNaviosTema)){
+            setProblemaErro(_ => 'Faltam navios a serem adicionados');
+            setErroEstaAberto(_ => true);
+            return;
+        }
         let novoTema = new PostNovoTema();
         novoTema.nome = nome;
         novoTema.preco = preco;
