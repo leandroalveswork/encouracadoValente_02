@@ -51,10 +51,6 @@ class PosicaoFluxoRepositorio extends RepositorioCrud<DbPosicaoFluxo> {
         let query = this._modelMongo.find({ numeroRecuperacaoUrlSalaFluxo: numeroRecuperacaoUrlSalaFluxo, idUsuarioEnviador: idUsuarioLogado });
         return query;
     }
-
-    deleteByListaNumerosRecuperacao = async (listaNumerosRecuperacao: string[]): Promise<void> => {
-        await this._modelMongo.deleteMany({ numeroRecuperacao: { $in: listaNumerosRecuperacao } });
-    }
 }
 
 export { PosicaoFluxoRepositorio };
