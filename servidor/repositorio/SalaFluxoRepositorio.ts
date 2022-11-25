@@ -37,6 +37,11 @@ class SalaFluxoRepositorio extends RepositorioCrud<DbSalaFluxo> {
         ] });
         return query;
     }
+    
+    selectByNumeroRecuperacaoUrl = (numeroRecuperacaoUrl: number) => {
+        let query = this._modelMongo.findOne({ numeroRecuperacaoUrl: numeroRecuperacaoUrl });
+        return query;
+    }
 }
 
 export { SalaFluxoRepositorio };

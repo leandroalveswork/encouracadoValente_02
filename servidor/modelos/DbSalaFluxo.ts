@@ -6,4 +6,6 @@ export class DbSalaFluxo extends DbEncVn {
     idPlayer2: string | null = null;
     player1CarregouFluxo: boolean = false;
     player2CarregouFluxo: boolean = false;
+    horaCancelamentoSaidaPlayer1: Date | null = null;
+    horaCancelamentoSaidaPlayer2: Date | null = null;
 }
