@@ -19,22 +19,31 @@ import { ArquivoController } from './api/ArquivoController';
 import { CompraRepositorio } from './repositorio/CompraRepositorio';
 import { CompraController } from './api/CompraController';
 import { LiberacaoController } from './api/LiberacaoController';
+import { SalaFluxoRepositorio } from './repositorio/SalaFluxoRepositorio';
+import { PosicaoFluxoRepositorio } from './repositorio/PosicaoFluxoRepositorio';
+import { TiroFluxoRepositorio } from './repositorio/TiroFluxoRepositorio';
+import { FluxoMultiplayerController } from './api/FluxoMultiplayerController';
 
 const iocProvedor = new Container();
 iocProvedor.bind<ConfigBack>(LiteralServico.ConfigBack).to(ConfigBack).inSingletonScope();
-iocProvedor.bind<MediadorWs>(LiteralServico.MediadorWs).to(MediadorWs).inRequestScope();
 
 iocProvedor.bind<UsuarioRepositorio>(LiteralServico.UsuarioRepositorio).to(UsuarioRepositorio).inRequestScope();
 iocProvedor.bind<TemaRepositorio>(LiteralServico.TemaRepositorio).to(TemaRepositorio).inRequestScope();
 iocProvedor.bind<CompraRepositorio>(LiteralServico.CompraRepositorio).to(CompraRepositorio).inRequestScope();
 iocProvedor.bind<NavioTemaRepositorio>(LiteralServico.NavioTemaRepositorio).to(NavioTemaRepositorio).inRequestScope();
 iocProvedor.bind<ArquivoRepositorio>(LiteralServico.ArquivoRepositorio).to(ArquivoRepositorio).inRequestScope();
+iocProvedor.bind<SalaFluxoRepositorio>(LiteralServico.SalaFluxoRepositorio).to(SalaFluxoRepositorio).inRequestScope();
+iocProvedor.bind<PosicaoFluxoRepositorio>(LiteralServico.PosicaoFluxoRepositorio).to(PosicaoFluxoRepositorio).inRequestScope();
+iocProvedor.bind<TiroFluxoRepositorio>(LiteralServico.TiroFluxoRepositorio).to(TiroFluxoRepositorio).inRequestScope();
+
+iocProvedor.bind<MediadorWs>(LiteralServico.MediadorWs).to(MediadorWs).inRequestScope();
 
 iocProvedor.bind<AutorizacaoController>(LiteralServico.AutorizacaoController).to(AutorizacaoController).inRequestScope();
 iocProvedor.bind<TemaController>(LiteralServico.TemaController).to(TemaController).inRequestScope();
 iocProvedor.bind<CompraController>(LiteralServico.CompraController).to(CompraController).inRequestScope();
 iocProvedor.bind<LiberacaoController>(LiteralServico.LiberacaoController).to(LiberacaoController).inRequestScope();
 iocProvedor.bind<ArquivoController>(LiteralServico.ArquivoController).to(ArquivoController).inRequestScope();
+iocProvedor.bind<FluxoMultiplayerController>(LiteralServico.FluxoMultiplayerController).to(FluxoMultiplayerController).inRequestScope();
 
 const app = express();
 
@@ -45,6 +54,7 @@ const temaController = iocProvedor.get<TemaController>(LiteralServico.TemaContro
 const compraController = iocProvedor.get<CompraController>(LiteralServico.CompraController);
 const liberacaoController = iocProvedor.get<CompraController>(LiteralServico.LiberacaoController);
 const arquivoController = iocProvedor.get<ArquivoController>(LiteralServico.ArquivoController);
+const fluxoMultiplayerController = iocProvedor.get<FluxoMultiplayerController>(LiteralServico.FluxoMultiplayerController);
 
 mongoose.connect(configBack.conexaoMongodb, { dbName: 'EncVn' })
   .then(async () => {
@@ -59,6 +69,7 @@ mongoose.connect(configBack.conexaoMongodb, { dbName: 'EncVn' })
     app.use('/api/compra', compraController.router);
     app.use('/api/liberacao', liberacaoController.router);
     app.use('/api/arquivo', arquivoController.router);
+    app.use('/api/fluxoMultiplayer', fluxoMultiplayerController.router);
     // _gerenciadorRequisicoesApi.useTodasRouters(app);
     // app.use(ExControllerMiddleware.middleware);
     
