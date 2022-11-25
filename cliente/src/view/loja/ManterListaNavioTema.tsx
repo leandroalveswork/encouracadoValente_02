@@ -130,7 +130,7 @@ const ManterListaNavioTema = (props: ManterListaNavioTemaProps) => {
                 <Button size="medium" onClick={() => setFormNavioTema(_ => 'adicionar')}>Adicionar Personalização</Button>
             </div>}
             {formNavioTema == 'adicionar' && <AdicionarNavioTema onCancelar={() => setFormNavioTema(_ => 'escondido')} onSalvar={handleSalvarAdicao} naviosAdicionados={naviosAdicionados} />}
-            {formNavioTema == 'alterar' && <AlterarNavioTema navioTemaInicial={props.lNaviosTema[idxNavioTemaAlteracaoPendente ?? 0]} onCancelar={() => setFormNavioTema(_ => 'escondido')} onSalvar={handleSalvarAlteracao} /> }
+            {formNavioTema == 'alterar' && <AlterarNavioTema navioTemaInicial={props.lNaviosTema[idxNavioTemaAlteracaoPendente ?? 0]} onCancelar={() => setFormNavioTema(_ => 'escondido')} onSalvar={handleSalvarAlteracao} naviosAdicionados={naviosAdicionados} /> }
         </>
     )
 }
