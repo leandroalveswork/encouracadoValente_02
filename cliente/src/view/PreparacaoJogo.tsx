@@ -467,10 +467,10 @@ const PreparacaoJogo = (props: PreparacaoJogoProps) => {
                         </div>
                     </div>
 
-                    <div className="row g-0">
-                        <Button disabled={!podeSelecionarPosicoes} onClick={handleEnviarNavioOnClick}> Enviar navio para a posição </Button>
-                        <Button disabled={!podeEnviarEstrategia} onClick={handleSalvarEstrategiaOnClick}> Salvar Estrategia </Button>
-                    </div>
+                    <Card sx={{ textAlign: 'center' }}>
+                        <Button disabled={!podeSelecionarPosicoes} onClick={handleEnviarNavioOnClick} sx={{ marginRight: '32px' }}> Enviar navio para a posição </Button>
+                        <Button disabled={!podeEnviarEstrategia} onClick={handleSalvarEstrategiaOnClick} variant="contained"> Salvar Estrategia </Button>
+                    </Card>
                 </>}
                 {estaEsperando && <Card sx={{ border: 1, borderColor: '#9D9D9D', height: '100%' }}>
                     <CardContent sx={{ margin: 0, border: 0, paddingBottom: 0 }}>
