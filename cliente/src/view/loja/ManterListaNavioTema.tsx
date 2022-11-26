@@ -39,7 +39,7 @@ const ManterListaNavioTema = (props: ManterListaNavioTemaProps) => {
 
     // const userState = new UserState();
     // const clientRest = new ClientRest();
-
+    const [naviosAdicionados, updateNaviosAdicionados] = useState<number[]>([])
     const [formNavioTema, setFormNavioTema] = useState<TpFormNavioTema>('escondido');
     const [idxNavioTemaAlteracaoPendente, setIdxNavioTemaAlteracaoPendente] = useState<number | null>(null);
 
@@ -49,13 +49,15 @@ const ManterListaNavioTema = (props: ManterListaNavioTemaProps) => {
         }
     }, [idxNavioTemaAlteracaoPendente]);
 
-    const handleClickExcluir = (idxNavioTema: number): void => {
+    const handleClickExcluir = (idxNavioTema: number, tamNavio: number): void => {
         props.setLNaviosTema(_ => props.lNaviosTema.filter((el, idxEl) => idxEl != idxNavioTema));
+        updateNaviosAdicionados(arr => arr.filter((item) => item != tamNavio))
     }
 
     const handleSalvarAdicao = (navioTema: MdDetalheNavioTema): void => {
         props.setLNaviosTema(_ => props.lNaviosTema.concat([ navioTema ]));
         setFormNavioTema(_ => 'escondido');
+        updateNaviosAdicionados(arr => [...arr, navioTema.tamnQuadrados])
     }
 
     const handleSalvarAlteracao = (navioTema: MdDetalheNavioTema): void => {
@@ -113,7 +115,7 @@ const ManterListaNavioTema = (props: ManterListaNavioTemaProps) => {
                                     </Button>}
                                 </TableCell>
                                 <TableCell align="right">
-                                    {!props.eListaBloqueada && <Button onClick={() => handleClickExcluir(idxNavioTema)}>
+                                    {!props.eListaBloqueada && <Button onClick={() => handleClickExcluir(idxNavioTema, elNavioTema.tamnQuadrados)}>
                                         <DeleteOutlinedIcon color="error" className="me-3" />
                                     </Button>}
                                 </TableCell>
@@ -127,8 +129,8 @@ const ManterListaNavioTema = (props: ManterListaNavioTemaProps) => {
             {!props.eListaBloqueada && <div className="d-flex justify-content-end pt-4">
                 <Button size="medium" onClick={() => setFormNavioTema(_ => 'adicionar')}>Adicionar Personalização</Button>
             </div>}
-            {formNavioTema == 'adicionar' && <AdicionarNavioTema onCancelar={() => setFormNavioTema(_ => 'escondido')} onSalvar={handleSalvarAdicao} />}
-            {formNavioTema == 'alterar' && <AlterarNavioTema navioTemaInicial={props.lNaviosTema[idxNavioTemaAlteracaoPendente ?? 0]} onCancelar={() => setFormNavioTema(_ => 'escondido')} onSalvar={handleSalvarAlteracao} /> }
+            {formNavioTema == 'adicionar' && <AdicionarNavioTema onCancelar={() => setFormNavioTema(_ => 'escondido')} onSalvar={handleSalvarAdicao} naviosAdicionados={naviosAdicionados} />}
+            {formNavioTema == 'alterar' && <AlterarNavioTema navioTemaInicial={props.lNaviosTema[idxNavioTemaAlteracaoPendente ?? 0]} onCancelar={() => setFormNavioTema(_ => 'escondido')} onSalvar={handleSalvarAlteracao} naviosAdicionados={naviosAdicionados} /> }
         </>
     )
 }

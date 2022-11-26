@@ -1,7 +1,10 @@
 import { Button, Typography } from "@mui/material"
 import PosicaoContainer from "../components/PosicaoContainer"
 import './css/TelaJogo.css'
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
+import "../components/imagem/ImgNavioVertical.css"
+import ClientRest from '../integracao/ClientRest';
+import { MdResumoTema } from "../modelos/importarBack/MdResumoTema";
 
 const PreparacaoJogo = () => {
     const barcoPequenoRef1 = useRef<any>()
@@ -22,6 +25,30 @@ const PreparacaoJogo = () => {
     const [posicaoParaMover, setPosicaoParaMover] = useState<any>()
     const [tamanhoBarcoAtual, setTamanhoBarcoAtual] = useState<number>(0)
 
+    const [temaBarcoPequenoSrc, setTemaBarcoPequenoSrc] = useState<string>();
+    const [temaBarcoMedioSrc, setTemaBarcoMedioSrc] = useState<string>();
+    const [temaBarcoGrandeSrc, setTemaBarcoGrandeSrc] = useState<string>();
+    const [temaBarcoGiganteSrc, setTemaBarcoGiganteSrc] = useState<string>();
+
+    const fundoDefault = "#DFF4FF"
+    const clientRest = new ClientRest()
+
+    useEffect(() => { //TODO: Tratar para criar endpoint que busque somente o tema a partir do ID
+        clientRest.callGetAutorizado<MdResumoTema[]>('/api/compra/listarPorIdUsuarioLogado', []).then(async (response) => {
+            const idTemaEquipado = await clientRest.callGetAutorizado<string>('/api/compra/obterIdTemaEquipadoUsuarioLogadoOrDefault', '');
+            const temaEquipado = response.body!.find(x => x.id == idTemaEquipado.body)
+
+            setTemaBarcoPequenoSrc("data:image/*;base64," + temaEquipado?.previas.find(x => x.tamanhoQuadrados == 1)?.arquivo?.dadosBase64)
+            setTemaBarcoMedioSrc("data:image/*;base64," + temaEquipado?.previas.find(x => x.tamanhoQuadrados == 2)?.arquivo?.dadosBase64)
+            setTemaBarcoGrandeSrc("data:image/*;base64," + temaEquipado?.previas.find(x => x.tamanhoQuadrados == 3)?.arquivo?.dadosBase64)
+            setTemaBarcoGiganteSrc("data:image/*;base64," + temaEquipado?.previas.find(x => x.tamanhoQuadrados == 4)?.arquivo?.dadosBase64)
+        })
+    }, [])
+
+    const calculaWidth = (tamanho: number) => {
+        return `${tamanho * 30}px`
+    }
+
     const handleBarcoOnClick = (barcoRef: React.MutableRefObject<any>, tamanhoBarco: number) => {
         barcoRef.current.style.border = '1px solid red'
         barcoRef.current.style.borderRadius = '5px'
@@ -30,12 +57,22 @@ const PreparacaoJogo = () => {
         setTamanhoBarcoAtual(tamanhoBarco)
     }
 
+    const resetFundoPosicoes = (posicoes: Array<number>) => {
+        for (let posicao of posicoes) {
+            const posicaoSelecionada = document.getElementById(`user-${posicao < 10 ? '0' + posicao : posicao}`)
+            posicaoSelecionada!.style.backgroundColor = fundoDefault
+        }
+    }
+
     const handlePosicaoOnClick = (event: any) => {
         const idPosicaoSelecionada = Number(event.currentTarget.id.replace("user-", ""))
         let ePosicaoValida = true
         let errorMessage = null
 
-        if (posicoesJaMarcadasParaOBarcoAtual.length > 0) {
+        if (posicoesFinais.flat().includes(idPosicaoSelecionada)) {
+            ePosicaoValida = false
+            errorMessage = "Posição já ocupada por outra embarcação."
+        } else if (posicoesJaMarcadasParaOBarcoAtual.length > 0) {
             const ultimaPosicaoMarcada = posicoesJaMarcadasParaOBarcoAtual[posicoesJaMarcadasParaOBarcoAtual.length - 1]
 
             if (posicoesJaMarcadasParaOBarcoAtual.length == 1) {
@@ -47,8 +84,12 @@ const PreparacaoJogo = () => {
                 errorMessage = !ePosicaoValida ? "Posição inválida. Selecione uma posição adjacente à última posição selecionada." : errorMessage
             }
 
-            if (posicoesJaMarcadasParaOBarcoAtual.length >= tamanhoBarcoAtual)
-            {
+            if (posicoesJaMarcadasParaOBarcoAtual.includes(idPosicaoSelecionada)) {
+                ePosicaoValida = false
+                errorMessage = "Posicão já selecionada. Selecione uma posição não selecionada anteriormente."
+            }
+
+            if (posicoesJaMarcadasParaOBarcoAtual.length >= tamanhoBarcoAtual) {
                 ePosicaoValida = false
                 errorMessage = "Você já selecionou o número máximo de casas para essa embarcação ocupar."
             }
@@ -65,11 +106,11 @@ const PreparacaoJogo = () => {
             const localX = (clientX - tamanhoRetangulo.left)
             const localY = (clientY - tamanhoRetangulo.top)
 
-            if (posicaoParaMover == null || posicoesJaMarcadasParaOBarcoAtual[0] - 10 == idPosicaoSelecionada) {
+            if (posicaoParaMover == null || posicoesJaMarcadasParaOBarcoAtual[0] > idPosicaoSelecionada) {
                 setPosicaoParaMover({ x: localX, y: localY, event })
             }
 
-            event.currentTarget.style.backgroundColor = 'green'
+            event.currentTarget.style.backgroundColor = 'red'
         }
         else {
             window.alert(errorMessage) //TODO: Trocar para uma notification mais adequada
@@ -84,18 +125,15 @@ const PreparacaoJogo = () => {
         const barcoMovido = document.createElement("img")
         barcoMovido.src = barcoSelecionado.src
         barcoMovido.style.height = '30px'
+        barcoMovido.style.width = `${calculaWidth(tamanhoBarcoAtual)}`
         barcoMovido.style.left = posicaoParaMover.x + 15 + 'px'
         barcoMovido.style.top = posicaoParaMover.y + 'px'
         posicaoParaMover.event.target.style.zIndex = '1000'
 
-        if (posicoesJaMarcadasParaOBarcoAtual[0] + 10 == posicoesJaMarcadasParaOBarcoAtual[1]) {
-            barcoMovido.src = `${barcoSelecionado.src.replace(".png", "")}_vertical_baixo.png`
-            barcoMovido.style.height = '60px'
-        }
+        const ePosicaoVertical = posicoesJaMarcadasParaOBarcoAtual[0] + 10 == posicoesJaMarcadasParaOBarcoAtual[1] || posicoesJaMarcadasParaOBarcoAtual[0] - 10 == posicoesJaMarcadasParaOBarcoAtual[1]
 
-        if (posicoesJaMarcadasParaOBarcoAtual[0] - 10 == posicoesJaMarcadasParaOBarcoAtual[1]) {
-            barcoMovido.src = `${barcoSelecionado.src.replace(".png", "")}_vertical_cima.png`
-            barcoMovido.style.height = '60px'
+        if (ePosicaoVertical) {
+            barcoMovido.className = 'imagem-vertical'
         }
 
         posicaoParaMover.event.target.appendChild(barcoMovido)
@@ -104,7 +142,10 @@ const PreparacaoJogo = () => {
         setPodeSelecionarPosicoes(false)
         setBarcoSelecionado(null)
         setPosicaoParaMover(null)
-        setPosicoesFinais(previousState => [...previousState, [...posicoesJaMarcadasParaOBarcoAtual]])
+        setPosicoesFinais(previousState => {
+            return [...previousState, [...posicoesJaMarcadasParaOBarcoAtual]]
+        })
+        resetFundoPosicoes(posicoesJaMarcadasParaOBarcoAtual)
         setPosicoesJaMarcadasParaOBarcoAtual([])
     }
     //TODO: Tratar para carregar o tema de acordo com o escolhido pelo usuário
@@ -119,15 +160,16 @@ const PreparacaoJogo = () => {
                 <div style={{ alignContent: 'center', paddingLeft: '5%', display: 'flex', flexDirection: 'row' }}>
                     <PosicaoContainer handlePosicaoOnClick={handlePosicaoOnClick} idPrefix='user' clickable={podeSelecionarPosicoes} />
                     <div>
-                        <img id="barcoPequeno" ref={barcoPequenoRef1} style={{ height: '30px', cursor: 'pointer' }} src="/assets/barco_pequeno_default.png" onClick={() => handleBarcoOnClick(barcoPequenoRef1, 1)} />
-                        <img id="barcoPequeno2" ref={barcoPequenoRef2} style={{ height: '30px', cursor: 'pointer' }} src="/assets/barco_pequeno_default.png" onClick={() => handleBarcoOnClick(barcoPequenoRef2, 1)} />
-                        <img id="barcoPequeno3" ref={barcoPequenoRef3} style={{ height: '30px', cursor: 'pointer' }} src="/assets/barco_pequeno_default.png" onClick={() => handleBarcoOnClick(barcoPequenoRef3, 1)} />
-                        <img id="barcoPequeno4" ref={barcoPequenoRef4} style={{ height: '30px', cursor: 'pointer' }} src="/assets/barco_pequeno_default.png" onClick={() => handleBarcoOnClick(barcoPequenoRef4, 1)} />
-                        <img id="barcoMedio1" ref={barcoMedioRef1} style={{ height: '30px', cursor: 'pointer' }} src="/assets/barco_medio_default.png" onClick={() => handleBarcoOnClick(barcoMedioRef1, 2)} />
-                        <img id="barcoMedio2" ref={barcoMedioRef2} style={{ height: '30px', cursor: 'pointer' }} src="/assets/barco_medio_default.png" onClick={() => handleBarcoOnClick(barcoMedioRef2, 2)} />
-                        <img id="barcoMedio3" ref={barcoMedioRef3} style={{ height: '30px', cursor: 'pointer' }} src="/assets/barco_medio_default.png" onClick={() => handleBarcoOnClick(barcoMedioRef3, 2)} />
-                        <img id="barcoGrande1" ref={barcoGrandeRef1} style={{ height: '30px', cursor: 'pointer' }} src="/assets/barco_grande_default.png" onClick={() => handleBarcoOnClick(barcoGrandeRef1, 3)} />
-                        <img id="barcoGrande2" ref={barcoGrandeRef2} style={{ height: '30px', cursor: 'pointer' }} src="/assets/barco_grande_default.png" onClick={() => handleBarcoOnClick(barcoGrandeRef2, 3)} />
+                        <img id="barcoPequeno1" ref={barcoPequenoRef1} style={{ height: '30px', width: calculaWidth(1), cursor: 'pointer' }} src={temaBarcoPequenoSrc} onClick={() => handleBarcoOnClick(barcoPequenoRef1, 1)} />
+                        <img id="barcoPequeno2" ref={barcoPequenoRef2} style={{ height: '30px', width: calculaWidth(1), cursor: 'pointer' }} src={temaBarcoPequenoSrc} onClick={() => handleBarcoOnClick(barcoPequenoRef2, 1)} />
+                        <img id="barcoPequeno3" ref={barcoPequenoRef3} style={{ height: '30px', width: calculaWidth(1), cursor: 'pointer' }} src={temaBarcoPequenoSrc} onClick={() => handleBarcoOnClick(barcoPequenoRef3, 1)} />
+                        <img id="barcoPequeno4" ref={barcoPequenoRef4} style={{ height: '30px', width: calculaWidth(1), cursor: 'pointer' }} src={temaBarcoPequenoSrc} onClick={() => handleBarcoOnClick(barcoPequenoRef4, 1)} />
+                        <img id="barcoMedio1" ref={barcoMedioRef1} style={{ height: '30px', width: calculaWidth(2), cursor: 'pointer' }} src={temaBarcoMedioSrc} onClick={() => handleBarcoOnClick(barcoMedioRef1, 2)} />
+                        <img id="barcoMedio2" ref={barcoMedioRef2} style={{ height: '30px', width: calculaWidth(2), cursor: 'pointer' }} src={temaBarcoMedioSrc} onClick={() => handleBarcoOnClick(barcoMedioRef2, 2)} />
+                        <img id="barcoMedio3" ref={barcoMedioRef3} style={{ height: '30px', width: calculaWidth(2), cursor: 'pointer' }} src={temaBarcoMedioSrc} onClick={() => handleBarcoOnClick(barcoMedioRef3, 2)} />
+                        <img id="barcoGrande1" ref={barcoGrandeRef1} style={{ height: '30px', width: calculaWidth(3), cursor: 'pointer' }} src={temaBarcoGrandeSrc} onClick={() => handleBarcoOnClick(barcoGrandeRef1, 3)} />
+                        <img id="barcoGrande2" ref={barcoGrandeRef2} style={{ height: '30px', width: calculaWidth(3), cursor: 'pointer' }} src={temaBarcoGrandeSrc} onClick={() => handleBarcoOnClick(barcoGrandeRef2, 3)} />
+                        <img id="barcoGigante" ref={barcoGiganteRef1} style={{ height: '30px', width: calculaWidth(4), cursor: 'pointer' }} src={temaBarcoGiganteSrc} onClick={() => handleBarcoOnClick(barcoGiganteRef1, 4)} />
                     </div>
                 </div>
                 <Button disabled={!podeSelecionarPosicoes} onClick={handleEnviarNavioOnClick}> Enviar navio para a posição </Button>

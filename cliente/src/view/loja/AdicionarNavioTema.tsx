@@ -23,6 +23,7 @@ const EncVnTextField = styled(TextField)({
 interface AdicionarNavioTemaProps {
     onCancelar: () => void;
     onSalvar: (navioTema: MdDetalheNavioTema) => void;
+    naviosAdicionados: number[]
 }
 
 const AdicionarNavioTema = (props: AdicionarNavioTemaProps) => {
@@ -30,7 +31,6 @@ const AdicionarNavioTema = (props: AdicionarNavioTemaProps) => {
 
     // const userState = new UserState();
     // const clientRest = new ClientRest();
-
     const [tamnQuadradosAsString, setTamnQuadradosAsString] = useState('');
     const [nomePersonalizado, setNomePersonalizado] = useState('');
     const [bytesImagem, setBytesImagem] = useState<Blob | null>(null);
@@ -54,8 +54,19 @@ const AdicionarNavioTema = (props: AdicionarNavioTemaProps) => {
         setNumeroRecuperacaoImagem(_ => StringUteis.gerarNovoIdDe24Caracteres());
     }
 
+    const naviosFiltrados = ()=>{
+        if (props.naviosAdicionados.length == 0){
+            return LiteralNavio.listar()
+        }
+        else{
+            return LiteralNavio.listar().filter((navio) => {
+                return !props.naviosAdicionados.includes(navio.tamnQuadrados)
+            })
+        }
+    }
+
     const handleClickSalvar = async () => {
-        
+
         // Validaçao
         let camposNulos: string[] = [];
         let tamnQuadradosAsNumber = 0;
@@ -78,6 +89,7 @@ const AdicionarNavioTema = (props: AdicionarNavioTemaProps) => {
             setErroEstaAberto(_ => true);
             return;
         }
+        
         let novoNavioTema = new MdDetalheNavioTema();
         novoNavioTema.tamnQuadrados = tamnQuadradosAsNumber;
         novoNavioTema.nomePersonalizado = nomePersonalizado;
@@ -97,12 +109,12 @@ const AdicionarNavioTema = (props: AdicionarNavioTemaProps) => {
                             <MenuItem value="">
                                 <span>Selecione...</span>
                             </MenuItem>
-                            {LiteralNavio.listar().map(iNavioLt => {
-                                return (
-                                    <MenuItem value={iNavioLt.tamnQuadrados.toString()}>
-                                        {iNavioLt.nome}
-                                    </MenuItem>
-                                )
+                            {naviosFiltrados().map(iNavioLt => {
+                                    return (
+                                        <MenuItem value={iNavioLt.tamnQuadrados.toString()}>
+                                            {iNavioLt.nome}
+                                        </MenuItem>
+                                    )
                             })}
                         </Select>
 

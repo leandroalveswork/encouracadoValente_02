@@ -25,6 +25,7 @@ interface AlterarNavioTemaProps {
     navioTemaInicial: MdDetalheNavioTema;
     onCancelar: () => void;
     onSalvar: (navioTema: MdDetalheNavioTema) => void;
+    naviosAdicionados: number[];
 }
 
 const AlterarNavioTema = (props: AlterarNavioTemaProps) => {
@@ -69,6 +70,17 @@ const AlterarNavioTema = (props: AlterarNavioTemaProps) => {
     const handleArquivoSelecionado = (event: any) => {
         setBytesImagem(_ => event.target.files[0]);
         setNumeroRecuperacaoImagem(_ => StringUteis.gerarNovoIdDe24Caracteres());
+    }
+
+    const naviosFiltrados = ()=>{
+        if (props.naviosAdicionados.length == 0){
+            return LiteralNavio.listar()
+        }
+        else{
+            return LiteralNavio.listar().filter((navio) => {
+                return !props.naviosAdicionados.includes(navio.tamnQuadrados)
+            })
+        }
     }
 
     const handleClickSalvar = async () => {
@@ -120,7 +132,7 @@ const AlterarNavioTema = (props: AlterarNavioTemaProps) => {
                             <MenuItem value="">
                                 <span>Selecione...</span>
                             </MenuItem>
-                            {LiteralNavio.listar().map(iNavioLt => {
+                            {naviosFiltrados().map(iNavioLt => {
                                 return (
                                     <MenuItem value={iNavioLt.tamnQuadrados.toString()}>
                                         {iNavioLt.nome}
