@@ -1,0 +1,6 @@
+.posicao-container-previa {
+    display: flex; 
+    flex-direction: row; 
+    flex-wrap: wrap; 
+    width: 210px;
+}

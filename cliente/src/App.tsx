@@ -2,29 +2,57 @@ import './App.css';
 import TelaJogo from './view/TelaJogo'
 import Home from './view/Home'
 import {
-  createBrowserRouter,
-  createRoutesFromElements,
-  RouterProvider,
   Route,
+  Routes,
 } from "react-router-dom";
 import Entrar from './view/auth/Entrar';
-import { GoogleOAuthProvider } from '@react-oauth/google';
-import EncVnAuthProvedor from './integracao/EncVnAuthProvedor';
+
+import IndexLoja from './view/loja/IndexLoja';
+import IndexMochila from './view/mochila/IndexMochila';
+import IndexLiberacao from './view/liberacao/IndexLiberacao';
+import AdicionarTema from './view/loja/AdicionarTema';
+import DetalheTema from './view/loja/DetalheTema';
+import LiberarCreditos from './view/liberacao/LiberarCreditos';
+import Header from './components/Header';
+import Footer from './components/Footer';
+import PreparacaoJogo from './view/PreparacaoJogo';
+import Perfil from './view/auth/Perfil';
+import ProtectedRoute from './routes/ProtectedRoute';
+import { useState } from "react";
+import UserState from "./integracao/UserState";
+import ListagemSalas from "./view/ListagemSalas"
 
 function App() {
-  const encVnAuthProvedor = new EncVnAuthProvedor();
-  const router =
-    createBrowserRouter(
-      createRoutesFromElements([
-        <Route path="/auth/entrar" element={<Entrar encVnAuthProvedor={encVnAuthProvedor} />} />,
-        <Route path="/" element={<Home />} />,
-        <Route path="/game/:roomId" element={<TelaJogo backendUrl={`ws://${process.env.REACT_APP_url_do_servidor_backend as string}/room`} />} />,
-      ]))
-      //TODO: Não disponibilizar chaves sensíveis no arquivo .env quando commitar o código . Sofrerão replace no processo de CI
+  const userState = new UserState();
+  
+  const [username, setUsername] = useState(userState.localStorageUser?.nome ?? '');
+  
+  //TODO: Não disponibilizar chaves sensíveis no arquivo .env quando commitar o código . Sofrerão replace no processo de CI
   return (
-    <GoogleOAuthProvider clientId={process.env.REACT_APP_GOOGLE_CLIENT_ID as string}> 
-      <RouterProvider router={router} />
-    </GoogleOAuthProvider>
+    <>
+      <Header username={username} />
+      <div className='app'>
+        <Routes>
+          <Route path="/auth/entrar" element={<Entrar />} />,
+          <Route path="/loja" element={<ProtectedRoute><IndexLoja /></ProtectedRoute>} />,
+          <Route path="/loja/adicionarTema" element={<ProtectedRoute><AdicionarTema /></ProtectedRoute>} />,
+          <Route path="/loja/detalheTema" element={<ProtectedRoute><DetalheTema /></ProtectedRoute>} />,
+          <Route path="/mochila" element={<ProtectedRoute><IndexMochila /></ProtectedRoute>} />,
+          <Route path="/liberacao" element={<ProtectedRoute><IndexLiberacao /></ProtectedRoute>} />,
+          <Route path="/liberacao/liberarCreditos" element={<ProtectedRoute><LiberarCreditos /></ProtectedRoute>} />,
+          <Route path="/" element={<Home />} />,
+          <Route path="/game/play/:roomId" element={<ProtectedRoute><TelaJogo backendUrl={`ws://${process.env.REACT_APP_url_do_servidor_backend as string}/room`} /></ProtectedRoute>} />,
+          <Route path="/game/prepare/:roomId" element={<ProtectedRoute><PreparacaoJogo
+            tokenAuth={userState.localStorageUser?.token ?? ''}
+            rotaWs={'ws://' + (process.env.REACT_APP_url_do_servidor_backend as string) + '/ws'} /></ProtectedRoute> } />,
+          <Route path="/perfil" element={<ProtectedRoute><Perfil setUsername={setUsername} /></ProtectedRoute> } />,
+          <Route path="/salas" element={<ProtectedRoute><ListagemSalas 
+            tokenAuth={userState.localStorageUser?.token ?? ''}
+            rotaWs={'ws://' + (process.env.REACT_APP_url_do_servidor_backend as string) + '/ws'} /></ProtectedRoute>} />,
+        </Routes>
+      </div>
+      {/* <Footer /> */} 
+    </>
   )
 }
 

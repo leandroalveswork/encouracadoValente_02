@@ -1,20 +1,22 @@
 import { useGoogleLogin } from '@react-oauth/google';
 import { Button } from "@mui/material";
 import { useNavigate } from 'react-router-dom';
-import EncVnAuthProvedor from '../integracao/EncVnAuthProvedor';
 import { IUsuarioGoogle } from '../modelos/importarBack/IUsuarioGoogle';
+import ClientRest from '../integracao/ClientRest';
+import { MdUsuarioLogado } from '../modelos/importarBack/MdUsuarioLogado';
+import UserState from '../integracao/UserState';
 
 interface UserObj {
     access_token: string;
     expires_in: number;
 }
 
-interface PropsGoogleauthBotao {
-    encVnAuthProvedor: EncVnAuthProvedor
-}
+const GoogleAuthBotao = () => {
+    const navigate = useNavigate();
 
-const GoogleAuthBotao = (props: PropsGoogleauthBotao) => {
-    const navigate = useNavigate()
+    const userState = new UserState();
+    const clientRest = new ClientRest();
+
     const onSuccessLogin = async ({ access_token, expires_in }: UserObj) => {
         const userInfo = await fetch(process.env.REACT_APP_GOOGLE_USER_INFO_ENDPOINT as string, {
             headers: {
@@ -22,9 +24,13 @@ const GoogleAuthBotao = (props: PropsGoogleauthBotao) => {
             }
         }).then(res => res.json())
 
-        await props.encVnAuthProvedor.entrarUsuarioGoogle(userInfo as IUsuarioGoogle); // é a persistência no banco
-        // localStorage.setItem('user', JSON.stringify({ ...(userInfo as object), expires_in })) // o localStorage ja foi setado dentro do metodo entrarUsuarioGoogle()
-        navigate('/')
+        const respostaApi = await clientRest.callPost<MdUsuarioLogado>('/api/autorizacao/entrarUsuarioGoogle', userInfo as IUsuarioGoogle, new MdUsuarioLogado());
+        if (respostaApi.eOk) {
+            userState.localStorageUser = respostaApi.body;
+            navigate('/')
+
+            window.location.reload()
+        }
     }
 
     const login = useGoogleLogin({

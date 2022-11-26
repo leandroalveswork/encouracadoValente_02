@@ -6,6 +6,7 @@ export class MdUsuarioLogado {
         this.email = '';
         this.eSuperuser = false;
         this.eUsuarioGoogle = false;
+        this.creditos = 0;
     }
     id: string
     token: string
@@ -13,4 +14,5 @@ export class MdUsuarioLogado {
     email: string
     eSuperuser: boolean
     eUsuarioGoogle: boolean
+    creditos: number
 }

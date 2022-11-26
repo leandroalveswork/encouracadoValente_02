@@ -1,6 +1,5 @@
-import "./ErroModal.css";
-import { Button, Dialog, DialogActions, DialogContent, DialogContentText } from "@mui/material";
-
+import { Button, Dialog, DialogActions, DialogContent, DialogContentText, Icon } from "@mui/material";
+import CancelOutlinedIcon from '@mui/icons-material/CancelOutlined';
 interface PropsErro {
     estaAberto: boolean
     onFechar: () => void
@@ -16,9 +15,12 @@ const ErroModal = (propsErro: PropsErro) => {
             aria-describedby="alert-dialog-description"
         >
         <DialogContent>
-          <DialogContentText id="alert-dialog-description">
-            {propsErro.problema}
-          </DialogContentText>
+          <div className="d-flex">
+            <CancelOutlinedIcon color="error" className="me-3" />
+            <DialogContentText id="alert-dialog-description">
+              {propsErro.problema}
+            </DialogContentText>
+          </div>
         </DialogContent>
         <DialogActions>
           <Button onClick={propsErro.onFechar} autoFocus>

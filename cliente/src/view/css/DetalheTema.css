@@ -1,0 +1,13 @@
+h1 {
+    color: white;
+  }
+  
+  .box{
+    background-color: white;
+    width: 60%;
+    margin: auto;
+    margin-top: 1%;
+    border-radius: 5px;
+    padding-left: 10px;
+    padding-bottom: 10px;
+  }

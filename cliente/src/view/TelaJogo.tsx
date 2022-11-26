@@ -1,20 +1,18 @@
+import { Typography } from "@mui/material"
 import { useEffect } from "react"
 import { useParams } from "react-router"
 import useWebSocket from "react-use-websocket"
 import PosicaoContainer from "../components/PosicaoContainer"
-import EncVnAuthProvedor from "../integracao/EncVnAuthProvedor"
 import './css/TelaJogo.css'
 
 export interface TelaJogoProps {
     backendUrl: string;
 }
 
-const TelaJogo = ({backendUrl} : TelaJogoProps) => {
-    
-    const encVnAuthProvedor = new EncVnAuthProvedor();
+const TelaJogo = ({ backendUrl }: TelaJogoProps) => {
 
     const posicoesJaMarcadas: Array<string> = []
-    const {roomId} = useParams()
+    const { roomId } = useParams()
 
     const { lastMessage, sendJsonMessage } = useWebSocket(`${backendUrl}?id=${roomId}`)
 
@@ -22,7 +20,7 @@ const TelaJogo = ({backendUrl} : TelaJogoProps) => {
         if (!posicoesJaMarcadas.includes(event.currentTarget.id)) {
             event.currentTarget.style.backgroundColor = 'black'
             posicoesJaMarcadas.push(event.currentTarget.id)
-            sendJsonMessage({idPosicao: event.currentTarget.id, roomId})
+            sendJsonMessage({ idPosicao: event.currentTarget.id, roomId })
         }
     }
 
@@ -36,14 +34,16 @@ const TelaJogo = ({backendUrl} : TelaJogoProps) => {
     }, [lastMessage])
 
     return (
-        <div className="tela-jogo">
-            <div>
-                <span>Você</span>
-                <PosicaoContainer handlePosicaoOnClick={handlePosicaoOnClick} idPrefix='user' clickable={false} />
+        <div>
+            <div className='titulo-wrapper'>
+                <h1>ENCOURAÇADO VALENTE</h1>
             </div>
-            <div>
-                <span>Adversário</span>
-                <PosicaoContainer handlePosicaoOnClick={handlePosicaoOnClick} idPrefix='opponent' clickable={true} />
+            <div className="container-tabuleiros">
+                <Typography textAlign="center" style={{ fontFamily: "bungee", color: "black" }}>É HORA DO ATAQUE</Typography>
+                <div className="container-tabuleiros-element">
+                    <PosicaoContainer handlePosicaoOnClick={handlePosicaoOnClick} idPrefix='user' clickable={false} />
+                    <PosicaoContainer handlePosicaoOnClick={handlePosicaoOnClick} idPrefix='opponent' clickable={true} backgroundColor="#EBEBEB" />
+                </div>
             </div>
         </div>
     )

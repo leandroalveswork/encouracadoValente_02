@@ -4,6 +4,9 @@ import { LiteralServico } from "../literais/LiteralServico";
 import { DbUsuario } from "../modelos/DbUsuario";
 import { RepositorioCrud } from "./RepositorioCrud";
 import { ConfigBack } from "../ConfigBack";
+import { Document, Model, model, Query, Schema, Types } from "mongoose";
+import { throws } from "assert";
+import { config } from "dotenv";
 
 @injectable()
 class UsuarioRepositorio extends RepositorioCrud<DbUsuario> {
@@ -11,15 +14,25 @@ class UsuarioRepositorio extends RepositorioCrud<DbUsuario> {
         @inject(LiteralServico.ConfigBack) configBack: ConfigBack
     ) {
         super(configBack);
-        this._nomeColecaoRegistrosMock = 'usuario';
-        this.inicializarRegistrosMock();
+        const schema = new Schema<DbUsuario>({
+            id: Types.ObjectId,
+            idUsuarioFezInclusao: { type: String, required: true },
+            horaInclusao: { type: Date, required: true },
+            idUsuarioFezUltimaAtualizacao: String,
+            horaUltimaAtualizacao: Date,
+            nome: { type: String, required: true },
+            email: { type: String, required: true },
+            senha: String, // não pode ter required, porque contas integradas com Google não tem senha
+            eSuperuser: { type: Boolean, required: true },
+            eUsuarioGoogle: { type: Boolean, required: true },
+            creditos: Number
+        });
+        this.inicializarMongo('Usuario', schema);
     }
-    selectByEmailOrDefaultAsync(email: string): Promise<DbUsuario | null> {
-        const usuario = RepositorioCrud._bancoMock[this._nomeColecaoRegistrosMock].find(x => x.email == email);
-        if (usuario == undefined) {
-            return Promise.resolve(null);
-        }
-        return Promise.resolve(usuario);
+
+    selectByEmailOrDefault = (email: string) => {
+        let query = this._modelMongo.findOne({ email: email });
+        return query;
     }
 }
 
