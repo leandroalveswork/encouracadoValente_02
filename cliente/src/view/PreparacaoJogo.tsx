@@ -89,6 +89,12 @@ const PreparacaoJogo = (props: PreparacaoJogoProps) => {
         });
         
         carregarSala();
+      
+        // Preparar o UserWebSocket no WS
+        let preparacaoUsuarioLogadoWs = new WsEnvelope();
+        preparacaoUsuarioLogadoWs.numeroTipoAtualizacao = LiteralTipoAtualizacao.PrepararUsuarioLogadoWs;
+        preparacaoUsuarioLogadoWs.tokenAuth = props.tokenAuth;
+        sendJsonMessage({ ...preparacaoUsuarioLogadoWs });
     }, []);
     
     useEffect(() => {
