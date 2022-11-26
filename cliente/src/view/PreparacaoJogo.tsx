@@ -35,7 +35,7 @@ const PreparacaoJogo = (props: PreparacaoJogoProps) => {
     const barcoGrandeRef2 = useRef<any>()
     const barcoGiganteRef1 = useRef<any>()
     
-    const QUANTIDADE_ESTRATEGIAS_PARA_SALVAR = 10;
+    const QUANTIDADE_ESTRATEGIAS_PARA_SALVAR = 3; // TODO: Voltar para = 10
     
     const { roomId } = useParams()
 
@@ -58,11 +58,13 @@ const PreparacaoJogo = (props: PreparacaoJogoProps) => {
     
     const [salaJogando, setSalaJogando] = useState<MdSalaDetalhada | null>(null);
     const [estaEsperando, setEstaEsperando] = useState(false);
+    const [oponenteCarregouFluxo, setOponenteCarregouFluxo] = useState(false);
 
     const { lastJsonMessage, sendJsonMessage } = useWebSocket(props.rotaWs + '?id=' + roomId);
     
     const [erroEstaAberto, setErroEstaAberto] = useState(false);
     const [problemaErro, setProblemaErro] = useState('');
+    const [erroOponenteSaiuEstaAberto, setErroOponenteSaiuEstaAberto] = useState(false);
     
     const carregarSala = () => {
         clientRest.callGetAutorizado<MdSalaDetalhada>('/api/fluxoMultiplayer/detalharSala', new MdSalaDetalhada())
@@ -104,6 +106,32 @@ const PreparacaoJogo = (props: PreparacaoJogoProps) => {
                 carregarSala();
         }
     }, [lastJsonMessage]);
+    
+    useEffect(() => {
+        if (salaJogando != null) {
+            if (salaJogando.totalJogadores < 2) {
+                setErroOponenteSaiuEstaAberto(_ => true);
+                return;
+            }
+            if (salaJogando.oponenteCarregouFluxo) {
+                setOponenteCarregouFluxo(_ => true);
+                if (estaEsperando) {
+                    
+                    // Cancelar proxima Saida
+                    clientRest.callPutAutorizado<undefined>('/api/sala/cancelarProximaSaida', {}, undefined)
+                        .then(rCancelarSaida => {
+                            if (!rCancelarSaida.eOk) {
+                                setProblemaErro(_ => rCancelarSaida.problema);
+                                setErroEstaAberto(_ => true);
+                                return;
+                            }
+                                    
+                            navigate('/game/play/' + roomId);
+                        });
+                }
+            }
+        }
+    }, [salaJogando]);
 
     const calculaWidth = (tamanho: number) => {
         return `${tamanho * 30}px`
@@ -222,10 +250,10 @@ const PreparacaoJogo = (props: PreparacaoJogoProps) => {
             posicaoEstrategiaASalvarHorz.tamanhoQuadradosNavio = tamanhoBarcoAtual;
             posicaoEstrategiaASalvarHorz.numeroLinha = menorTiroHorz.numeroLinha;
             posicaoEstrategiaASalvarHorz.numeroColuna = menorTiroHorz.numeroColuna;
-            posicaoEstrategiaASalvarHorz.orientacao = LiteralOrientacao.Baixo;
+            posicaoEstrategiaASalvarHorz.orientacao = LiteralOrientacao.Direita;
             setLNaviosParaEnviar(previousState => [...previousState, posicaoEstrategiaASalvarHorz ]);
         }
-
+    
         posicaoParaMover.event.target.appendChild(barcoMovido)
         barcoSelecionado.style.border = 'none'
         barcoSelecionado.style.opacity = '0.2'
@@ -250,20 +278,50 @@ const PreparacaoJogo = (props: PreparacaoJogoProps) => {
         
         // Enviar para Api
         clientRest.callPutAutorizado<undefined>('/api/fluxoMultiplayer/atualizarEstrategias', lNaviosParaEnviar, undefined)
-            .then(rAtualizacao => {
+            .then(async (rAtualizacao) => {
                 if (!rAtualizacao.eOk) {
                     setErroEstaAberto(_ => true);
                     setProblemaErro(_ => rAtualizacao.problema);
                     return;
                 }
                 
+                
+                if (oponenteCarregouFluxo) {
+                
+                    // Notificar outros clients
+                    let pedidoAtualizarListagemSala = new WsEnvelope();
+                    pedidoAtualizarListagemSala.numeroTipoAtualizacao = LiteralTipoAtualizacao.ListagemSalas;
+                    pedidoAtualizarListagemSala.tokenAuth = props.tokenAuth;
+                    sendJsonMessage({ ...pedidoAtualizarListagemSala });
+                    
+                    // Cancelar proxima Saida
+                    let rCancelarSaida = await clientRest.callPutAutorizado<undefined>('/api/sala/cancelarProximaSaida', {}, undefined);
+                    if (!rCancelarSaida.eOk) {
+                        setProblemaErro(_ => rCancelarSaida.problema);
+                        setErroEstaAberto(_ => true);
+                        return;
+                    }
+                            
+                    navigate('/game/play/' + roomId);
+                    return;
+                }
+                
                 // Notificar outros clients
-                let pedidoAtualizarListagemSala = new WsEnvelope();
-                pedidoAtualizarListagemSala.numeroTipoAtualizacao = LiteralTipoAtualizacao.ListagemSalas;
-                pedidoAtualizarListagemSala.tokenAuth = props.tokenAuth;
-                sendJsonMessage({ ...pedidoAtualizarListagemSala });
+                let pedidoAtualizarListagemSalaEsperando = new WsEnvelope();
+                pedidoAtualizarListagemSalaEsperando.numeroTipoAtualizacao = LiteralTipoAtualizacao.ListagemSalas;
+                pedidoAtualizarListagemSalaEsperando.tokenAuth = props.tokenAuth;
+                sendJsonMessage({ ...pedidoAtualizarListagemSalaEsperando });
+                
+                setEstaEsperando(_ => true);
             });
     }
+    
+    const handleFecharErroOponenteSaiuOnClick = () => {
+        setErroEstaAberto(_ => false);
+        navigate('/salas');
+    }
+    
+    let podeSalvarEstrategia = lNaviosParaEnviar.length == QUANTIDADE_ESTRATEGIAS_PARA_SALVAR;
     
     //TODO: Tratar para carregar o tema de acordo com o escolhido pelo usuário
     //TODO: Tratar para organizar os elementos corretamente em tela
@@ -273,7 +331,7 @@ const PreparacaoJogo = (props: PreparacaoJogoProps) => {
                 <h1>ENCOURAÇADO VALENTE</h1>
             </div>
             <div className="container-tabuleiros">
-                {!estaEsperando && <>
+                <>
                     <Typography textAlign="center" style={{ fontFamily: "bungee", color: "black" }}>É HORA DE PREPARAR A SUA ESTRATÉGIA</Typography>
                     <div style={{ alignContent: 'center', paddingLeft: '5%', display: 'flex', flexDirection: 'row' }}>
                         <PosicaoContainer handlePosicaoOnClick={handlePosicaoOnClick} idPrefix='user' clickable={podeSelecionarPosicoes} />
@@ -290,24 +348,26 @@ const PreparacaoJogo = (props: PreparacaoJogoProps) => {
                             <img id="barcoGigante" ref={barcoGiganteRef1} style={{ height: '30px', width: calculaWidth(4), cursor: 'pointer' }} src={temaBarcoGiganteSrc} onClick={() => handleBarcoOnClick(barcoGiganteRef1, 4)} />
                         </div>
                     </div>
-                    <div className="row g-0">
-                        <Button disabled={!podeSelecionarPosicoes} onClick={handleEnviarNavioOnClick}> Enviar navio para a posição </Button>
-                        <Button disabled={!podeSelecionarPosicoes} onClick={handleSalvarEstrategiaOnClick}> Salvar Estrategia </Button>
+                    <div className="row g-0 botoes-envio-tabuleiro">
+                        {!estaEsperando && <Card sx={{ textAlign: 'center' }}>
+                            <Button disabled={!podeSelecionarPosicoes} onClick={handleEnviarNavioOnClick} sx={{ marginRight: '32px' }}> Enviar navio para a posição </Button>
+                            <Button disabled={!podeSalvarEstrategia} onClick={handleSalvarEstrategiaOnClick} variant="contained"> Salvar Estrategia </Button>
+                        </Card>}
+                        {estaEsperando && <Card sx={{ textAlign: 'center' }}>
+                            <CardContent sx={{margin: 0, border: 0, paddingBottom: 0}}>
+                            <Typography align="center" sx={{ fontFamily: 'Bungee' }} gutterBottom variant="h6">
+                                Aguardando o oponente...
+                            </Typography>
+                            </CardContent>
+                            <CardActions>
+                                <Button size="small" variant="contained" color="error" onClick={() => navigate('/salas')}>SAIR</Button>
+                            </CardActions>
+                        </Card>}
                     </div>
-                </>}
-                {estaEsperando && <Card sx={{ border: 1, borderColor: '#9D9D9D', height: '100%' }}>
-                    <CardContent sx={{margin: 0, border: 0, paddingBottom: 0}}>
-                    <Typography align="center" sx={{ fontFamily: 'Bungee' }} gutterBottom variant="h6">
-                        Aguardando o oponente...
-                    </Typography>
-                    </CardContent>
-                    <CardActions>
-                    <Button size="small" variant="contained" color="error" onClick={() => navigate('/salas')}>SAIR</Button>
-                    </CardActions>
-        
-                </Card>}
+                </>
             </div>
             <ErroModal estaAberto={erroEstaAberto} onFechar={() => setErroEstaAberto(_ => false)} problema={problemaErro} />
+            <ErroModal estaAberto={erroOponenteSaiuEstaAberto} onFechar={() => handleFecharErroOponenteSaiuOnClick()} problema='O seu oponente se desconectou!' />
         </div>
     )
 }
