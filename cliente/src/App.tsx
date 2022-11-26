@@ -1,6 +1,5 @@
 import './App.css';
 import TelaJogo from './view/TelaJogo'
-import Home from './view/Home'
 import {
   Route,
   Routes,
@@ -26,6 +25,9 @@ function App() {
 
   const [username, setUsername] = useState(userState.localStorageUser?.nome ?? '');
 
+  const salasElement = <ListagemSalas tokenAuth={userState.localStorageUser?.token ?? ''}
+    rotaWs={(process.env.REACT_APP_url_do_servidor_backend_ws as string) + '/ws'} />
+
   //TODO: Não disponibilizar chaves sensíveis no arquivo .env quando commitar o código . Sofrerão replace no processo de CI
   return (
     <>
@@ -35,19 +37,17 @@ function App() {
           <Route path="/auth/entrar" element={<Entrar />} />,
           <Route path="/loja" element={<ProtectedRoute><IndexLoja /></ProtectedRoute>} />,
           <Route path="/loja/adicionarTema" element={<ProtectedRoute><AdicionarTema /></ProtectedRoute>} />,
+          <Route path="/" element={<ProtectedRoute>{salasElement}</ProtectedRoute>} />,
           <Route path="/loja/detalheTema" element={<ProtectedRoute><DetalheTema /></ProtectedRoute>} />,
           <Route path="/mochila" element={<ProtectedRoute><IndexMochila /></ProtectedRoute>} />,
           <Route path="/liberacao" element={<ProtectedRoute><IndexLiberacao /></ProtectedRoute>} />,
           <Route path="/liberacao/liberarCreditos" element={<ProtectedRoute><LiberarCreditos /></ProtectedRoute>} />,
-          <Route path="/" element={<Home />} />,
           <Route path="/game/play/:roomId" element={<ProtectedRoute><TelaJogo backendUrl={`${process.env.REACT_APP_url_do_servidor_backend_ws as string}/room`} /></ProtectedRoute>} />,
           <Route path="/game/prepare/:roomId" element={<ProtectedRoute><PreparacaoJogo
             tokenAuth={userState.localStorageUser?.token ?? ''}
             rotaWs={(process.env.REACT_APP_url_do_servidor_backend_ws as string) + '/ws'} /></ProtectedRoute>} />,
           <Route path="/perfil" element={<ProtectedRoute><Perfil setUsername={setUsername} /></ProtectedRoute>} />,
-          <Route path="/salas" element={<ProtectedRoute><ListagemSalas
-            tokenAuth={userState.localStorageUser?.token ?? ''}
-            rotaWs={(process.env.REACT_APP_url_do_servidor_backend_ws as string) + '/ws'} /></ProtectedRoute>} />,
+          <Route path="/salas" element={<ProtectedRoute>{salasElement}</ProtectedRoute>} />,
         </Routes>
       </div>
     </>
