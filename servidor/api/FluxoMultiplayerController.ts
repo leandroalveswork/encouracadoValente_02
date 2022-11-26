@@ -144,7 +144,9 @@ class FluxoMultiplayerController extends ControllerBase {
             posicaoFluxoParaPush.numeroLinha = iEstrategia.numeroLinha;
             posicaoFluxoParaPush.numeroColuna = iEstrategia.numeroColuna;
             posicaoFluxoParaPush.orientacao = iEstrategia.orientacao;
+            posicoesFluxo.push(posicaoFluxoParaPush);
         }
+        // console.table(posicoesFluxo);
         
         // Salvar no mongodb
         await this._salaFluxoRepositorio.updatePorOperador(salaUsuarioAtual, idUsuarioLogado);

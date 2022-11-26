@@ -36,7 +36,7 @@ const PreparacaoJogo = (props: PreparacaoJogoProps) => {
     const barcoGrandeRef2 = useRef<any>()
     const barcoGiganteRef1 = useRef<any>()
 
-    const QUANTIDADE_ESTRATEGIAS_PARA_SALVAR = 10;
+    const QUANTIDADE_ESTRATEGIAS_PARA_SALVAR = 3; // TODO: Voltar para = 10
     const BORDA_NAVIO_SELECIONADO = "1px solid red"
 
     const { roomId } = useParams()
@@ -61,7 +61,9 @@ const PreparacaoJogo = (props: PreparacaoJogoProps) => {
     const clientRest = new ClientRest();
 
     const [salaJogando, setSalaJogando] = useState<MdSalaDetalhada | null>(null);
+    
     const [estaEsperando, setEstaEsperando] = useState(false);
+    const [oponenteCarregouFluxo, setOponenteCarregouFluxo] = useState(false);
     const [podeEnviarEstrategia, setPodeEnviarEstrategia] = useState(false)
     const [barcoParaReposicionar, setBarcoParaReposicionar] = useState<any>()
 
@@ -69,7 +71,8 @@ const PreparacaoJogo = (props: PreparacaoJogoProps) => {
 
     const [erroEstaAberto, setErroEstaAberto] = useState(false);
     const [problemaErro, setProblemaErro] = useState('');
-
+    const [erroOponenteSaiuEstaAberto, setErroOponenteSaiuEstaAberto] = useState(false);
+    
     const carregarSala = () => {
         clientRest.callGetAutorizado<MdSalaDetalhada>('/api/fluxoMultiplayer/detalharSala', new MdSalaDetalhada())
             .then(rSala => {
@@ -109,6 +112,32 @@ const PreparacaoJogo = (props: PreparacaoJogoProps) => {
                 carregarSala();
         }
     }, [lastJsonMessage]);
+    
+    useEffect(() => {
+        if (salaJogando != null) {
+            if (salaJogando.totalJogadores < 2) {
+                setErroOponenteSaiuEstaAberto(_ => true);
+                return;
+            }
+            if (salaJogando.oponenteCarregouFluxo) {
+                setOponenteCarregouFluxo(_ => true);
+                if (estaEsperando) {
+                    
+                    // Cancelar proxima Saida
+                    clientRest.callPutAutorizado<undefined>('/api/sala/cancelarProximaSaida', {}, undefined)
+                        .then(rCancelarSaida => {
+                            if (!rCancelarSaida.eOk) {
+                                setProblemaErro(_ => rCancelarSaida.problema);
+                                setErroEstaAberto(_ => true);
+                                return;
+                            }
+                                    
+                            navigate('/game/play/' + roomId);
+                        });
+                }
+            }
+        }
+    }, [salaJogando]);
 
     useEffect(() => {
         if (lNaviosParaEnviar.length == QUANTIDADE_ESTRATEGIAS_PARA_SALVAR) {
@@ -279,10 +308,10 @@ const PreparacaoJogo = (props: PreparacaoJogoProps) => {
             posicaoEstrategiaASalvarHorz.tamanhoQuadradosNavio = tamanhoBarcoAtual;
             posicaoEstrategiaASalvarHorz.numeroLinha = menorTiroHorz.numeroLinha;
             posicaoEstrategiaASalvarHorz.numeroColuna = menorTiroHorz.numeroColuna;
-            posicaoEstrategiaASalvarHorz.orientacao = LiteralOrientacao.Baixo;
-            setLNaviosParaEnviar(previousState => [...previousState, posicaoEstrategiaASalvarHorz]);
+            posicaoEstrategiaASalvarHorz.orientacao = LiteralOrientacao.Direita;
+            setLNaviosParaEnviar(previousState => [...previousState, posicaoEstrategiaASalvarHorz ]);
         }
-
+    
         posicaoParaMover.event.target.appendChild(barcoMovido)
         barcoSelecionado.style.border = 'none'
         barcoSelecionado.style.opacity = '0.2'
@@ -323,21 +352,47 @@ const PreparacaoJogo = (props: PreparacaoJogoProps) => {
 
         // Enviar para Api
         clientRest.callPutAutorizado<undefined>('/api/fluxoMultiplayer/atualizarEstrategias', lNaviosParaEnviar, undefined)
-            .then(rAtualizacao => {
+            .then(async (rAtualizacao) => {
                 if (!rAtualizacao.eOk) {
                     setErroEstaAberto(_ => true);
                     setProblemaErro(_ => rAtualizacao.problema);
                     return;
                 }
-
+                if (oponenteCarregouFluxo) {
+                
+                    // Notificar outros clients
+                    let pedidoAtualizarListagemSala = new WsEnvelope();
+                    pedidoAtualizarListagemSala.numeroTipoAtualizacao = LiteralTipoAtualizacao.ListagemSalas;
+                    pedidoAtualizarListagemSala.tokenAuth = props.tokenAuth;
+                    sendJsonMessage({ ...pedidoAtualizarListagemSala });
+                    
+                    // Cancelar proxima Saida
+                    let rCancelarSaida = await clientRest.callPutAutorizado<undefined>('/api/sala/cancelarProximaSaida', {}, undefined);
+                    if (!rCancelarSaida.eOk) {
+                        setProblemaErro(_ => rCancelarSaida.problema);
+                        setErroEstaAberto(_ => true);
+                        return;
+                    }
+                            
+                    navigate('/game/play/' + roomId);
+                    return;
+                }
+                
                 // Notificar outros clients
-                let pedidoAtualizarListagemSala = new WsEnvelope();
-                pedidoAtualizarListagemSala.numeroTipoAtualizacao = LiteralTipoAtualizacao.ListagemSalas;
-                pedidoAtualizarListagemSala.tokenAuth = props.tokenAuth;
-                sendJsonMessage({ ...pedidoAtualizarListagemSala });
+                let pedidoAtualizarListagemSalaEsperando = new WsEnvelope();
+                pedidoAtualizarListagemSalaEsperando.numeroTipoAtualizacao = LiteralTipoAtualizacao.ListagemSalas;
+                pedidoAtualizarListagemSalaEsperando.tokenAuth = props.tokenAuth;
+                sendJsonMessage({ ...pedidoAtualizarListagemSalaEsperando });
+                
+                setEstaEsperando(_ => true);
             });
     }
-
+    
+    const handleFecharErroOponenteSaiuOnClick = () => {
+        setErroEstaAberto(_ => false);
+        navigate('/salas');
+    }
+    
     //TODO: Tratar para organizar os elementos corretamente em tela
     return (
         <div>
@@ -411,10 +466,11 @@ const PreparacaoJogo = (props: PreparacaoJogoProps) => {
                                 onClick={() => !idBarcosSelecionados.includes('barcoGigante') && handleBarcoOnClick(barcoGiganteRef1, 4)} />
                         </div>
                     </div>
-                    <div className="row g-0">
-                        <Button disabled={!podeSelecionarPosicoes} onClick={handleEnviarNavioOnClick}> Enviar navio para a posição </Button>
-                        <Button disabled={!podeEnviarEstrategia} onClick={handleSalvarEstrategiaOnClick}> Salvar Estrategia </Button>
-                    </div>
+
+                    <Card sx={{ textAlign: 'center' }}>
+                        <Button disabled={!podeSelecionarPosicoes} onClick={handleEnviarNavioOnClick} sx={{ marginRight: '32px' }}> Enviar navio para a posição </Button>
+                        <Button disabled={!podeEnviarEstrategia} onClick={handleSalvarEstrategiaOnClick} variant="contained"> Salvar Estrategia </Button>
+                    </Card>
                 </>}
                 {estaEsperando && <Card sx={{ border: 1, borderColor: '#9D9D9D', height: '100%' }}>
                     <CardContent sx={{ margin: 0, border: 0, paddingBottom: 0 }}>
@@ -427,10 +483,12 @@ const PreparacaoJogo = (props: PreparacaoJogoProps) => {
                     </CardActions>
 
                 </Card>}
+
             </div>
             <ErroModal estaAberto={erroEstaAberto} onFechar={() => setErroEstaAberto(_ => false)} problema={problemaErro} />
+            <ErroModal estaAberto={erroOponenteSaiuEstaAberto} onFechar={() => handleFecharErroOponenteSaiuOnClick()} problema='O seu oponente se desconectou!' />
         </div>
     )
 }
 
-export default PreparacaoJogo
+export default PreparacaoJogo;

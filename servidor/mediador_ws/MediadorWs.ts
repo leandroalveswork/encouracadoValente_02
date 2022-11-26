@@ -43,10 +43,10 @@ class MediadorWs {
             return;
         if (ws.idUsuarioLogado == undefined || ws.idUsuarioLogado == null || ws.idUsuarioLogado == '')
             ws.idUsuarioLogado = idUsuarioLogado; 
-        console.log('ws.idUsuarioLogado = ' + ws.idUsuarioLogado);
+        // console.log('ws.idUsuarioLogado = ' + ws.idUsuarioLogado);
         if (payloadWs.numeroTipoAtualizacao == LiteralTipoAtualizacao.PrepararUsuarioLogadoWs)
             return;
-        console.table(payloadWs);
+        // console.table(payloadWs);
         if (payloadWs.numeroTipoAtualizacao == LiteralTipoAtualizacao.ListagemSalas) {
             
             // Encaminhar para os outros clientes exceto a si mesmo
@@ -62,10 +62,10 @@ class MediadorWs {
         }
     }
     limparDadosUsuarioDesconectado = (wsServer: WebSocketServer, ws: UserWebSocket, req: IncomingMessage) => {
-        console.log('iniciou limpar()');
+        // console.log('iniciou limpar()');
         if (ws.idUsuarioLogado == undefined || ws.idUsuarioLogado == '')
             return;
-        console.log('ws.idUsuarioLogado populado com ' + ws.idUsuarioLogado);
+        // console.log('ws.idUsuarioLogado populado com ' + ws.idUsuarioLogado);
         this._salaFluxoRepositorio.selectByUsuarioJogandoOrDefault(ws.idUsuarioLogado)
             .then(async (salaDb) => {
                 // console.log('salaDb found!');
