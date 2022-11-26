@@ -18,7 +18,6 @@ import useWebSocket from "react-use-websocket";
 import ErroModal from '../components/erroModal/ErroModal';
 
 interface ListagemSalasProps {
-  idUsuarioLogado: string;
   tokenAuth: string;
   rotaWs: string;
 }
@@ -132,7 +131,7 @@ export default function ListagemSalas(props: ListagemSalasProps) {
         return;
       }
             
-      navigate('/game/prepare/' + roomIdEspera?.toString() ?? '');
+      navigate('/game/prepare/' + numeroRecuperacaoUrlSala);
       return;
     }
     

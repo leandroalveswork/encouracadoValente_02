@@ -120,6 +120,9 @@ class SalaController extends ControllerBase {
         if (salaDb.idPlayer1 != null) {
             
             // Entrar como player2
+            console.log(salaDb.idPlayer1);
+            console.log(salaDb.idPlayer2);
+            console.log('new = ' + idUsuarioLogado);
             let salaAtualP2 = new DbSalaFluxo();
             salaAtualP2 = salaDb;
             salaAtualP2.idPlayer2 = idUsuarioLogado;
@@ -131,6 +134,9 @@ class SalaController extends ControllerBase {
         }
         
         // Entrar como player1
+            console.log(salaDb.idPlayer1);
+            console.log(salaDb.idPlayer2);
+            console.log('new = ' + idUsuarioLogado);
         let salaAtualP1 = new DbSalaFluxo();
         salaAtualP1 = salaDb;
         salaAtualP1.idPlayer1 = idUsuarioLogado;
