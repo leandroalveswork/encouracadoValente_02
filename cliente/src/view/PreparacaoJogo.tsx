@@ -5,7 +5,6 @@ import React, { useEffect, useRef, useState } from "react";
 import "../components/imagem/ImgNavioVertical.css"
 import ClientRest from '../integracao/ClientRest';
 import { MdResumoTema } from "../modelos/importarBack/MdResumoTema";
-import { MdSalaDisponivel } from "../modelos/importarBack/MdSalaDisponivel";
 import { MdSalaDetalhada } from "../modelos/importarBack/MdSalaDetalhada";
 import { PutPosicaoEstrategia } from "../modelos/importarBack/PutPosicaoEstrategia";
 import { MdTiro } from "../modelos/importarBack/MdTiro";
