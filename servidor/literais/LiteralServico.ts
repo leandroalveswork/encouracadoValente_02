@@ -21,6 +21,7 @@ const LiteralServico = {
     LiberacaoController: Symbol.for('LiberacaoController'),
     ArquivoController: Symbol.for('ArquivoController'),
     FluxoMultiplayerController: Symbol.for('FluxoMultiplayerController'),
+    SalaController: Symbol.for('SalaController'),
 };
 
 export { LiteralServico };

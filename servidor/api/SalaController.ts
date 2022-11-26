@@ -53,10 +53,31 @@ class SalaController extends ControllerBase {
 
     // codifique as actions:
     
+    private retificarSalas = async (idUsuarioLogado: string): Promise<void> => {
+        let indxSala = 1;
+        let saveSalas: DbSalaFluxo[] = [];
+        for (let _ of Array(10)) {
+            let insertSala = new DbSalaFluxo();
+            insertSala.id = StringUteis.gerarNovoIdDe24Caracteres();
+            insertSala.numeroRecuperacaoUrl = indxSala;
+            insertSala.idPlayer1 = null;
+            insertSala.idPlayer2 = null;
+            insertSala.player1CarregouFluxo = false;
+            insertSala.player2CarregouFluxo = false;
+            insertSala.horaCancelamentoSaidaPlayer1 = null;
+            insertSala.horaCancelamentoSaidaPlayer2 = null;
+            saveSalas.push(insertSala);
+            indxSala++;
+        }
+        await this._salaFluxoRepositorio.insertMuitosPorOperador(saveSalas, idUsuarioLogado);
+    }
+    
     // autorizado
     // get
     listarDisponiveis = async (): Promise<MdSalaDisponivel[]> => {
         const salasDb = await this._salaFluxoRepositorio.selectAll();
+        // if (salasDb.length === 0)
+        //     await this.retificarSalas(idUsuarioLogado);
         let salasDisponiveis: MdSalaDisponivel[] = [];
         for (let iSalaDb of salasDb) {
             if (iSalaDb.idPlayer1 != null && iSalaDb.idPlayer2 != null)
