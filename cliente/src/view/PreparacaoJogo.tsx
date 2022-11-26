@@ -1,7 +1,7 @@
 import { Button, Typography, Card, CardActions, CardContent } from "@mui/material"
 import PosicaoContainer from "../components/PosicaoContainer"
 import './css/TelaJogo.css'
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import "../components/imagem/ImgNavioVertical.css"
 import ClientRest from '../integracao/ClientRest';
 import { MdResumoTema } from "../modelos/importarBack/MdResumoTema";
@@ -23,6 +23,7 @@ interface PreparacaoJogoProps {
 const PreparacaoJogo = (props: PreparacaoJogoProps) => {
 
     const navigate = useNavigate();
+    const audioBarcoChegando = new Audio('/assets/som_barco_chegando.mp3')
 
     const barcoPequenoRef1 = useRef<any>()
     const barcoPequenoRef2 = useRef<any>()
@@ -34,7 +35,6 @@ const PreparacaoJogo = (props: PreparacaoJogoProps) => {
     const barcoGrandeRef1 = useRef<any>()
     const barcoGrandeRef2 = useRef<any>()
     const barcoGiganteRef1 = useRef<any>()
-    const reposicaoRef = useRef<any>()
 
     const QUANTIDADE_ESTRATEGIAS_PARA_SALVAR = 10;
     const BORDA_NAVIO_SELECIONADO = "1px solid red"
@@ -48,6 +48,7 @@ const PreparacaoJogo = (props: PreparacaoJogoProps) => {
     const [totalPosicoesOcupadas, setTotalPosicoesOcupadas] = useState<Array<Array<number>>>([]);
     const [posicaoParaMover, setPosicaoParaMover] = useState<any>()
     const [tamanhoBarcoAtual, setTamanhoBarcoAtual] = useState<number>(0)
+    const [eReposicao, setEReposicao] = useState<boolean>(false)
 
     const [lNaviosParaEnviar, setLNaviosParaEnviar] = useState<PutPosicaoEstrategia[]>([]);
 
@@ -62,6 +63,7 @@ const PreparacaoJogo = (props: PreparacaoJogoProps) => {
     const [salaJogando, setSalaJogando] = useState<MdSalaDetalhada | null>(null);
     const [estaEsperando, setEstaEsperando] = useState(false);
     const [podeEnviarEstrategia, setPodeEnviarEstrategia] = useState(false)
+    const [barcoParaReposicionar, setBarcoParaReposicionar] = useState<any>()
 
     const { lastJsonMessage, sendJsonMessage } = useWebSocket(props.rotaWs + '?id=' + roomId);
 
@@ -108,6 +110,29 @@ const PreparacaoJogo = (props: PreparacaoJogoProps) => {
         }
     }, [lNaviosParaEnviar])
 
+    useEffect(() => {
+        if (barcoParaReposicionar && !barcoSelecionado) {
+            const barco = barcoParaReposicionar.barco
+            barco.style.border = BORDA_NAVIO_SELECIONADO
+            barco.style.borderRadius = '5px'
+
+            if (barcoSelecionado && barcoSelecionado == barco) {
+                setPosicoesJaMarcadasParaOBarcoAtual([])
+                setPodeSelecionarPosicoes(false)
+                setTamanhoBarcoAtual(0)
+                barco.style.border = 'none'
+                resetFundoPosicoes(posicoesJaMarcadasParaOBarcoAtual)
+                setPosicaoParaMover(null)
+                setEReposicao(false)
+            }
+            else {
+                setPodeSelecionarPosicoes(true)
+                setBarcoSelecionado(barco)
+                setTamanhoBarcoAtual(barcoParaReposicionar.tamanhoBarco)
+            }
+        }
+    }, [barcoParaReposicionar]) //Gambeta para que o React renderize corretamente os estados no componente criado a partir do DOM nativo
+
     const calculaWidth = (tamanho: number) => {
         return `${tamanho * 30}px`
     }
@@ -115,7 +140,6 @@ const PreparacaoJogo = (props: PreparacaoJogoProps) => {
     const handleBarcoOnClick = (barcoRef: React.MutableRefObject<any>, tamanhoBarco: number) => {
         barcoRef.current.style.border = BORDA_NAVIO_SELECIONADO
         barcoRef.current.style.borderRadius = '5px'
-
         if (barcoSelecionado) {
             barcoSelecionado.style.border = 'none'
             resetFundoPosicoes(posicoesJaMarcadasParaOBarcoAtual)
@@ -135,6 +159,11 @@ const PreparacaoJogo = (props: PreparacaoJogoProps) => {
         }
     }
 
+    const handleReposicionarNavio = (event: any, tamanhoBarco: number) => {
+        setEReposicao(true)
+        setBarcoParaReposicionar({ barco: event.currentTarget, tamanhoBarco })
+    }
+
     const resetFundoPosicoes = (posicoes: Array<number>) => {
         for (let posicao of posicoes) {
             const posicaoSelecionada = document.getElementById(`user-${posicao < 10 ? '0' + posicao : posicao}`)
@@ -147,7 +176,6 @@ const PreparacaoJogo = (props: PreparacaoJogoProps) => {
         let ePosicaoValida = true
         let errorMessage: string | null = null
 
-
         if (totalPosicoesOcupadas.flat().includes(idPosicaoSelecionada)) {
             ePosicaoValida = false
             errorMessage = "Posição já ocupada por outra embarcação."
@@ -157,7 +185,7 @@ const PreparacaoJogo = (props: PreparacaoJogoProps) => {
             if (posicoesJaMarcadasParaOBarcoAtual.length == 1) {
                 ePosicaoValida = idPosicaoSelecionada == ultimaPosicaoMarcada + 10
                     || idPosicaoSelecionada == ultimaPosicaoMarcada - 10
-                    || idPosicaoSelecionada == ultimaPosicaoMarcada + 1
+                    || idPosicaoSelecionada == ultimaPosicaoMarcada + 1 //TODO: TRATAR PARA PERMITIR MARCAR SOMENTE DIREÇÕES HORIZONTAIS OU VERTICAIS CERTINHO (BUG EM ALGUNS CASOS)
                     || idPosicaoSelecionada == ultimaPosicaoMarcada - 1
 
                 errorMessage = !ePosicaoValida ? "Posição inválida. Selecione uma posição adjacente à última posição selecionada." : errorMessage
@@ -218,6 +246,8 @@ const PreparacaoJogo = (props: PreparacaoJogoProps) => {
         barcoMovido.style.width = `${calculaWidth(tamanhoBarcoAtual)}`
         barcoMovido.style.left = posicaoParaMover.x + 15 + 'px'
         barcoMovido.style.top = posicaoParaMover.y + 'px'
+        barcoMovido.onclick = (event) => handleReposicionarNavio(event, tamanhoBarcoAtual)
+        barcoMovido.style.cursor = 'pointer'
         posicaoParaMover.event.target.style.zIndex = '1000'
 
 
@@ -259,8 +289,22 @@ const PreparacaoJogo = (props: PreparacaoJogoProps) => {
         resetFundoPosicoes(posicoesJaMarcadasParaOBarcoAtual)
         setPosicoesJaMarcadasParaOBarcoAtual([])
         setTamanhoBarcoAtual(0)
-        setIdBarcosSelecionados(previousState => [...previousState, barcoSelecionado.id])
+        if (eReposicao) {
+            console.log("eReposicao", eReposicao)
+            setEReposicao(false)
+            console.log(lNaviosParaEnviar.filter(navio => posicoesJaMarcadasParaOBarcoAtual
+                .find(posicao => posicao.toString()[0] == navio.numeroLinha.toString() && posicao.toString()[1] == navio.numeroColuna.toString()) == undefined))
+            setTotalPosicoesOcupadas(totalPosicoesOcupadas.filter(posicoes => posicoes.includes(posicoesJaMarcadasParaOBarcoAtual[0])))
+            //TODO: TRATAR PARA REMOVER O NAVIO DA LISTA NO CASO DE REPOSICIONAMENTO (NAS DUAS ESTRUTURAS - ENVIO PARA A API E LISTA DE CONTROLE)
+            //TODO: ESSA TRATATIVA CORRIGIRÁ O BUG CASO SE TENTE REPOSICIONAR O NAVIO E ELE PERMITE SELECIONAR A POSIÇÃO EM QUE ESTÁ A OUTRA EMBARCAÇÃO
+            //TODO: TRATAR PARA PERMITIR MARCAR SOMENTE DIREÇÕES HORIZONTAIS OU VERTICAIS CERTINHO (BUG EM ALGUNS CASOS)
+            barcoSelecionado.style.display = 'none'
+        }
+        else {
+            setIdBarcosSelecionados(previousState => [...previousState, barcoSelecionado.id])
+        }
         setBarcoSelecionado(null)
+        audioBarcoChegando.play()
     }
 
     const handleSalvarEstrategiaOnClick = () => {
