@@ -62,7 +62,7 @@ const AdicionarTema = () => {
     // useEffect(() => { precoAsFormatado = formatarPreco(preco) }, [preco]);
 
     const handleClickSalvar = async () => {
-        if (!validarNavios(lNaviosTema.map(navio => navio.tamnQuadrados))){
+        if (!validarNavios(lNaviosTema)){
             setProblemaErro(_ => 'Verifique se todos os navios foram adicionados ou não contém duplicatas');
             setErroEstaAberto(_ => true);
             return;

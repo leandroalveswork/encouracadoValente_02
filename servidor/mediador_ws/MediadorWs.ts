@@ -43,15 +43,15 @@ class MediadorWs {
             return;
         if (ws.idUsuarioLogado == undefined || ws.idUsuarioLogado == null || ws.idUsuarioLogado == '')
             ws.idUsuarioLogado = idUsuarioLogado; 
-        // console.log('ws.idUsuarioLogado = ' + ws.idUsuarioLogado);
+        console.log('ws.idUsuarioLogado = ' + ws.idUsuarioLogado);
         if (payloadWs.numeroTipoAtualizacao == LiteralTipoAtualizacao.PrepararUsuarioLogadoWs)
             return;
-        // console.table(payloadWs);
+        console.table(payloadWs);
         if (payloadWs.numeroTipoAtualizacao == LiteralTipoAtualizacao.ListagemSalas) {
             
             // Encaminhar para os outros clientes exceto a si mesmo
-            const eOutroClient = (client: UserWebSocket) => client !== ws && client.readyState == WebSocket.OPEN;
-            const outrosJogadores = Array.from(wsServer.clients).filter(client => eOutroClient(client as UserWebSocket));
+            const eClient = (client: UserWebSocket) => client !== ws && client.readyState == WebSocket.OPEN;
+            const outrosJogadores = Array.from(wsServer.clients).filter(client => eClient(client as UserWebSocket));
             outrosJogadores.forEach(x => x.send(dadosAsString));
         } else {
             
@@ -62,24 +62,25 @@ class MediadorWs {
         }
     }
     limparDadosUsuarioDesconectado = (wsServer: WebSocketServer, ws: UserWebSocket, req: IncomingMessage) => {
-        // console.log('iniciou limpar()');
+        console.log('iniciou limpar()');
         if (ws.idUsuarioLogado == undefined || ws.idUsuarioLogado == '')
             return;
-        // console.log('ws.idUsuarioLogado populado com ' + ws.idUsuarioLogado);
+        console.log('ws.idUsuarioLogado populado com ' + ws.idUsuarioLogado);
         this._salaFluxoRepositorio.selectByUsuarioJogandoOrDefault(ws.idUsuarioLogado)
             .then(async (salaDb) => {
-                // console.log('salaDb found!');
+                console.log('salaDb found!');
                 if (salaDb == null)
                     return;
-                // console.log('salaDb not null');
+                console.log('salaDb not null');
                 if (salaDb.idPlayer1 == ws.idUsuarioLogado) {
                     
                     // Usuario logado e player1
                     // Se houve cancelamento de saida ha 5 segs, nao sair
-                    // console.log('verificando player1 se n houve cancelamento');
+                    console.log('verificando player1 se n houve cancelamento');
+                    console.log(new Date().getTime() - (salaDb.horaCancelamentoSaidaPlayer1 == undefined ? 0 : salaDb.horaCancelamentoSaidaPlayer1.getTime()));
                     if (salaDb.horaCancelamentoSaidaPlayer1 != null && new Date().getTime() - salaDb.horaCancelamentoSaidaPlayer1.getTime() < 5 * 1000)
                         return;
-                    // console.log('n houve cancelamento');
+                    console.log('n houve cancelamento');
                         
                     // Sair da sala
                     let salaAtual = new DbSalaFluxo();
@@ -87,26 +88,27 @@ class MediadorWs {
                     salaAtual.horaCancelamentoSaidaPlayer1 = null;
                     salaAtual.idPlayer1 = null;
                     await this._salaFluxoRepositorio.updatePorOperador(salaAtual, ws.idUsuarioLogado);
-                    // console.log('saiu da sala');
+                    console.log('saiu da sala');
                     
-                    // Notificar os outros clientes
-                    const eOutroClient = (client: UserWebSocket) => client !== ws && client.readyState == WebSocket.OPEN;
-                    const outrosJogadores = Array.from(wsServer.clients).filter(client => eOutroClient(client as UserWebSocket));
+                    // Notificar todos os clientes
+                    const eClient = (client: UserWebSocket) => client.readyState == WebSocket.OPEN;
+                    const todosClients = Array.from(wsServer.clients).filter(client => eClient(client as UserWebSocket));
                     let pedidoAtualizarListagemSala = new WsEnvelope();
                     pedidoAtualizarListagemSala.numeroTipoAtualizacao = LiteralTipoAtualizacao.ListagemSalas;
                     pedidoAtualizarListagemSala.tokenAuth = '';
                     let pedidoAtualizarStringified = JSON.stringify(pedidoAtualizarListagemSala);
-                    outrosJogadores.forEach(x => x.send(pedidoAtualizarStringified));
-                    // console.log('notificando outros ws');
+                    todosClients.forEach(x => x.send(pedidoAtualizarStringified));
+                    console.log('notificando outros ws');
                     return;
                 }
                     
                 // Usuario logado e player2
                 // Se houve cancelamento de saida ha 5 segs, nao sair
-                // console.log('verificando player2 se n houve cancelamento');
+                console.log('verificando player2 se n houve cancelamento');
+                console.log(new Date().getTime() - (salaDb.horaCancelamentoSaidaPlayer2 == undefined ? 0 : salaDb.horaCancelamentoSaidaPlayer2.getTime()));
                 if (salaDb.horaCancelamentoSaidaPlayer2 != null && new Date().getTime() - salaDb.horaCancelamentoSaidaPlayer2.getTime() < 5 * 1000)
                     return;
-                // console.log('n houve cancelamento');
+                console.log('n houve cancelamento');
                         
                 // Sair da sala
                 let salaAtualP2 = new DbSalaFluxo();
@@ -114,17 +116,17 @@ class MediadorWs {
                 salaAtualP2.horaCancelamentoSaidaPlayer2 = null;
                 salaAtualP2.idPlayer2 = null;
                 await this._salaFluxoRepositorio.updatePorOperador(salaAtualP2, ws.idUsuarioLogado ?? '');
-                // console.log('saiu da sala');
+                console.log('saiu da sala');
                     
                 // Notificar os outros clientes
-                const eOutroClientP2 = (client: UserWebSocket) => client !== ws && client.readyState == WebSocket.OPEN;
-                const outrosJogadoresP2 = Array.from(wsServer.clients).filter(client => eOutroClientP2(client as UserWebSocket));
+                const eClientP2 = (client: UserWebSocket) => client !== ws && client.readyState == WebSocket.OPEN;
+                const todosClientsP2 = Array.from(wsServer.clients).filter(client => eClientP2(client as UserWebSocket));
                 let pedidoAtualizarListagemSalaP2 = new WsEnvelope();
                 pedidoAtualizarListagemSalaP2.numeroTipoAtualizacao = LiteralTipoAtualizacao.ListagemSalas;
                 pedidoAtualizarListagemSalaP2.tokenAuth = '';
                 let pedidoAtualizarStringifiedP2 = JSON.stringify(pedidoAtualizarListagemSalaP2);
-                outrosJogadoresP2.forEach(x => x.send(pedidoAtualizarStringifiedP2));
-                // console.log('notificando outros ws');
+                todosClientsP2.forEach(x => x.send(pedidoAtualizarStringifiedP2));
+                console.log('notificando outros ws');
             });
     }
     private obterIdUsuarioLogado = (tokenAuth: string | undefined): string | null => {
@@ -136,7 +138,8 @@ class MediadorWs {
         } catch (exc) {
             return null;
         }
+    
     }
 }
 
-export { MediadorWs };
+export { MediadorWs }

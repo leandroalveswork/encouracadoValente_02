@@ -41,8 +41,11 @@ function App() {
           <Route path="/liberacao" element={<ProtectedRoute><IndexLiberacao /></ProtectedRoute>} />,
           <Route path="/liberacao/liberarCreditos" element={<ProtectedRoute><LiberarCreditos /></ProtectedRoute>} />,
           <Route path="/" element={<Home />} />,
-          <Route path="/game/:roomId" element={<ProtectedRoute><TelaJogo backendUrl={`ws://${process.env.REACT_APP_url_do_servidor_backend as string}/room`} /></ProtectedRoute>} />,
-          <Route path="/game/prepare" element={<ProtectedRoute><PreparacaoJogo/></ProtectedRoute> } />,
+          <Route path="/game/play/:roomId" element={<ProtectedRoute><TelaJogo backendUrl={`ws://${process.env.REACT_APP_url_do_servidor_backend as string}/room`} /></ProtectedRoute>} />,
+          <Route path="/game/prepare/:roomId" element={<ProtectedRoute><PreparacaoJogo
+            idUsuarioLogado={userState.localStorageUser?.id ?? ''}
+            tokenAuth={userState.localStorageUser?.token ?? ''}
+            rotaWs={'ws://' + (process.env.REACT_APP_url_do_servidor_backend as string) + '/ws'} /></ProtectedRoute> } />,
           <Route path="/perfil" element={<ProtectedRoute><Perfil setUsername={setUsername} /></ProtectedRoute> } />,
           <Route path="/salas" element={<ProtectedRoute><ListagemSalas 
             idUsuarioLogado={userState.localStorageUser?.id ?? ''}

@@ -5,8 +5,19 @@ import React, { useEffect, useRef, useState } from "react";
 import "../components/imagem/ImgNavioVertical.css"
 import ClientRest from '../integracao/ClientRest';
 import { MdResumoTema } from "../modelos/importarBack/MdResumoTema";
+import { MdSalaDisponivel } from "../modelos/importarBack/MdSalaDisponivel";
+import { LiteralTipoAtualizacao } from '../modelos/LiteralTipoAtualizacao';
+import useWebSocket from "react-use-websocket";
+import { useParams } from "react-router-dom";
+import { WsEnvelope } from "../modelos/importarBack/WsEnvelope";
 
-const PreparacaoJogo = () => {
+interface PreparacaoJogoProps {
+  idUsuarioLogado: string;
+  tokenAuth: string;
+  rotaWs: string;
+}
+
+const PreparacaoJogo = (props: PreparacaoJogoProps) => {
     const barcoPequenoRef1 = useRef<any>()
     const barcoPequenoRef2 = useRef<any>()
     const barcoPequenoRef3 = useRef<any>()
@@ -17,6 +28,8 @@ const PreparacaoJogo = () => {
     const barcoGrandeRef1 = useRef<any>()
     const barcoGrandeRef2 = useRef<any>()
     const barcoGiganteRef1 = useRef<any>()
+    
+    const { roomId } = useParams()
 
     const [podeSelecionarPosicoes, setPodeSelecionarPosicoes] = useState<boolean>(false);
     const [barcoSelecionado, setBarcoSelecionado] = useState<any>();
@@ -31,8 +44,30 @@ const PreparacaoJogo = () => {
     const [temaBarcoGiganteSrc, setTemaBarcoGiganteSrc] = useState<string>();
 
     const fundoDefault = "#DFF4FF"
-    const clientRest = new ClientRest()
+    const clientRest = new ClientRest();
+    
+    const [lSalas, setLSalas] = useState<MdSalaDisponivel[]>([]);
+    const [carregouSalas, setCarregouSalas] = useState(false);
 
+    const { lastJsonMessage, sendJsonMessage } = useWebSocket(props.rotaWs + '?id=' + roomId);
+    
+    const [erroEstaAberto, setErroEstaAberto] = useState(false);
+    const [problemaErro, setProblemaErro] = useState('');
+    
+    const carregarSalas = () => {
+        clientRest.callGetAutorizado<MdSalaDisponivel[]>('/api/sala/listarDisponiveis', [])
+            .then(rLista => {
+                // console.log('salas carregadas');
+                if (rLista.eOk) {
+                    setLSalas(_ => rLista.body ?? []);
+                    setCarregouSalas(_ => true);
+                } else {
+                    setProblemaErro(_ => rLista.problema);
+                    setErroEstaAberto(_ => true);
+                }
+            });
+    }
+    
     useEffect(() => { //TODO: Tratar para criar endpoint que busque somente o tema a partir do ID
         clientRest.callGetAutorizado<MdResumoTema[]>('/api/compra/listarPorIdUsuarioLogado', []).then(async (response) => {
             const idTemaEquipado = await clientRest.callGetAutorizado<string>('/api/compra/obterIdTemaEquipadoUsuarioLogadoOrDefault', '');
@@ -42,8 +77,18 @@ const PreparacaoJogo = () => {
             setTemaBarcoMedioSrc("data:image/*;base64," + temaEquipado?.previas.find(x => x.tamanhoQuadrados == 2)?.arquivo?.dadosBase64)
             setTemaBarcoGrandeSrc("data:image/*;base64," + temaEquipado?.previas.find(x => x.tamanhoQuadrados == 3)?.arquivo?.dadosBase64)
             setTemaBarcoGiganteSrc("data:image/*;base64," + temaEquipado?.previas.find(x => x.tamanhoQuadrados == 4)?.arquivo?.dadosBase64)
-        })
-    }, [])
+        });
+        
+        carregarSalas();
+    }, []);
+    
+    useEffect(() => {
+        if (lastJsonMessage) {
+            const pedidoAtualizacao = (lastJsonMessage as unknown) as WsEnvelope;
+            if (pedidoAtualizacao.numeroTipoAtualizacao == LiteralTipoAtualizacao.ListagemSalas)
+                carregarSalas();
+        }
+    }, [lastJsonMessage]);
 
     const calculaWidth = (tamanho: number) => {
         return `${tamanho * 30}px`
