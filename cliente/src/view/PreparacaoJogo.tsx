@@ -236,7 +236,7 @@ const PreparacaoJogo = (props: PreparacaoJogoProps) => {
             return [...previousState, [...posicoesJaMarcadasParaOBarcoAtual]]
         })
         resetFundoPosicoes(posicoesJaMarcadasParaOBarcoAtual)
-        // setPosicoesJaMarcadasParaOBarcoAtual([])
+        setPosicoesJaMarcadasParaOBarcoAtual([])
     }
     
     const handleSalvarEstrategiaOnClick = () => {
