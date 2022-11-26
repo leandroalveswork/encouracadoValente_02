@@ -25,7 +25,7 @@ class SalaController extends ControllerBase {
         this.router.get('/listarDisponiveis', async (req, res) => {
             try {
                 const idUsuarioLogado = await this.obterIdUsuarioLogado(req);
-                const salasDisponiveis = await this.listarDisponiveis();
+                const salasDisponiveis = await this.listarDisponiveis(idUsuarioLogado);
                 res.send(salasDisponiveis);
             } catch (exc) {
                 MdExcecao.enviarExcecao(req, res, exc);
@@ -53,28 +53,10 @@ class SalaController extends ControllerBase {
 
     // codifique as actions:
     
-    private retificarSalas = async (idUsuarioLogado: string): Promise<void> => {
-        let indxSala = 1;
-        let saveSalas: DbSalaFluxo[] = [];
-        for (let _ of Array(10)) {
-            let insertSala = new DbSalaFluxo();
-            insertSala.id = StringUteis.gerarNovoIdDe24Caracteres();
-            insertSala.numeroRecuperacaoUrl = indxSala;
-            insertSala.idPlayer1 = null;
-            insertSala.idPlayer2 = null;
-            insertSala.player1CarregouFluxo = false;
-            insertSala.player2CarregouFluxo = false;
-            insertSala.horaCancelamentoSaidaPlayer1 = null;
-            insertSala.horaCancelamentoSaidaPlayer2 = null;
-            saveSalas.push(insertSala);
-            indxSala++;
-        }
-        await this._salaFluxoRepositorio.insertMuitosPorOperador(saveSalas, idUsuarioLogado);
-    }
-    
     // autorizado
     // get
-    listarDisponiveis = async (): Promise<MdSalaDisponivel[]> => {
+    listarDisponiveis = async (idUsuarioLogado: string): Promise<MdSalaDisponivel[]> => {
+        await this._salaFluxoRepositorio.consertarDb(idUsuarioLogado);
         const salasDb = await this._salaFluxoRepositorio.selectAll();
         // if (salasDb.length === 0)
         //     await this.retificarSalas(idUsuarioLogado);
@@ -115,6 +97,8 @@ class SalaController extends ControllerBase {
             ex.problema = 'Sala cheia';
             throw ex;
         }
+        if (salaDb.idPlayer1 == idUsuarioLogado || salaDb.idPlayer2 == idUsuarioLogado)
+            return; // Se o usuario entrar na sala denovo, nao fazer nada
         
         // Salvar entrada de sala no mongodb
         if (salaDb.idPlayer1 != null) {
