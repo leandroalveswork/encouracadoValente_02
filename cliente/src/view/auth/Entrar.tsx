@@ -19,7 +19,6 @@ const EncVnTextField = styled(TextField)({
 });
 
 const Entrar = () => {
-
     const navigate = useNavigate();
 
     const clientRest = new ClientRest();
