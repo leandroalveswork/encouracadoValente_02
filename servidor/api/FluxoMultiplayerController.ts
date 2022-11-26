@@ -23,6 +23,7 @@ import { PutTema } from "../modelos/PutTema";
 import { UtilUrl } from "../UtilUrl";
 import { DbNavioTema } from "../modelos/DbNavioTema";
 import { DbCompra } from "../modelos/DbCompra";
+import { DbSalaFluxo } from "../modelos/DbSalaFluxo";
 import { MdDetalheNavioTema } from "../modelos/MdDetalheNavioTema";
 import { PutPosicaoEstrategia } from "../modelos/PutPosicaoEstrategia";
 import { SalaFluxoRepositorio } from "../repositorio/SalaFluxoRepositorio";
@@ -33,6 +34,7 @@ import { DbTiroFluxo } from "../modelos/DbTiroFluxo";
 import { LiteralOrientacao } from "../literais/LiteralOrientacao";
 import { MdTiro } from "../modelos/MdTiro";
 import { MdProgressoNaviosJogador } from "../modelos/MdProgressoNaviosJogador";
+import { MdSalaDetalhada } from "../modelos/MdSalaDetalhada";
 import { PostTiroFluxo } from "../modelos/PostTiroFluxo";
 
 @injectable()
@@ -66,6 +68,15 @@ class FluxoMultiplayerController extends ControllerBase {
                 const idUsuarioLogado = await this.obterIdUsuarioLogado(req);
                 await this.atualizarEstrategias(req.body, idUsuarioLogado);
                 res.send();
+            } catch (exc) {
+                MdExcecao.enviarExcecao(req, res, exc);
+            }
+        });
+        this.router.get('/detalharSala', async (req, res) => {
+            try {
+                const idUsuarioLogado = await this.obterIdUsuarioLogado(req);
+                const salaDetalhada = await this.detalharSala(idUsuarioLogado);
+                res.send(salaDetalhada);
             } catch (exc) {
                 MdExcecao.enviarExcecao(req, res, exc);
             }
@@ -114,6 +125,14 @@ class FluxoMultiplayerController extends ControllerBase {
             throw ex;
         }
         
+        // Informar que o jogador carregou suas estrategias
+        let salaUsuarioAtual = new DbSalaFluxo();
+        salaUsuarioAtual = salaUsuarioLogadoDb;
+        if (salaUsuarioAtual.idPlayer1 == idUsuarioLogado)
+            salaUsuarioAtual.player1CarregouFluxo = true;
+        else
+            salaUsuarioAtual.player2CarregouFluxo = true;
+        
         // Parse cada resultado
         let posicoesFluxo: DbPosicaoFluxo[] = [];
         for (let iEstrategia of estrategias) {
@@ -128,6 +147,7 @@ class FluxoMultiplayerController extends ControllerBase {
         }
         
         // Salvar no mongodb
+        await this._salaFluxoRepositorio.updatePorOperador(salaUsuarioAtual, idUsuarioLogado);
         await this._posicaoFluxoRepositorio.updateByNumeroRecuperacaoUrlSala(salaUsuarioLogadoDb.numeroRecuperacaoUrl, posicoesFluxo, idUsuarioLogado);
     }
     
@@ -213,6 +233,31 @@ class FluxoMultiplayerController extends ControllerBase {
         
         // Verificar se todas as posicoes estao acertadas
         return posicoesTotais.every(x => x.acertou);
+    }
+    
+    // autorizado
+    // get
+    detalharSala = async (idUsuarioLogado: string): Promise<MdSalaDetalhada> => {
+        
+        // Validaçoes
+        const salaDb = await this._salaFluxoRepositorio.selectByUsuarioJogandoOrDefault(idUsuarioLogado);
+        if (salaDb == null) {
+            let ex = new MdExcecao();
+            ex.codigoExcecao = 404;
+            ex.problema = 'Voce ainda nao entrou em uma sala';
+            throw ex;
+        }
+        
+        let totalJogadores = 0;
+        if (salaDb.idPlayer1 != null)
+            totalJogadores++;
+        if (salaDb.idPlayer2 != null)
+            totalJogadores++;
+            
+        if (salaDb.idPlayer1 == idUsuarioLogado)
+            return { numeroRecuperacaoUrl: salaDb.numeroRecuperacaoUrl, totalJogadores: totalJogadores, oponenteCarregouFluxo: salaDb.player2CarregouFluxo };
+        else
+            return { numeroRecuperacaoUrl: salaDb.numeroRecuperacaoUrl, totalJogadores: totalJogadores, oponenteCarregouFluxo: salaDb.player1CarregouFluxo };
     }
     
     // autorizado

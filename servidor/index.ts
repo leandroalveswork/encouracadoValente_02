@@ -23,6 +23,7 @@ import { SalaFluxoRepositorio } from './repositorio/SalaFluxoRepositorio';
 import { PosicaoFluxoRepositorio } from './repositorio/PosicaoFluxoRepositorio';
 import { TiroFluxoRepositorio } from './repositorio/TiroFluxoRepositorio';
 import { FluxoMultiplayerController } from './api/FluxoMultiplayerController';
+import { SalaController } from './api/SalaController';
 
 const iocProvedor = new Container();
 iocProvedor.bind<ConfigBack>(LiteralServico.ConfigBack).to(ConfigBack).inSingletonScope();
@@ -44,6 +45,7 @@ iocProvedor.bind<CompraController>(LiteralServico.CompraController).to(CompraCon
 iocProvedor.bind<LiberacaoController>(LiteralServico.LiberacaoController).to(LiberacaoController).inRequestScope();
 iocProvedor.bind<ArquivoController>(LiteralServico.ArquivoController).to(ArquivoController).inRequestScope();
 iocProvedor.bind<FluxoMultiplayerController>(LiteralServico.FluxoMultiplayerController).to(FluxoMultiplayerController).inRequestScope();
+iocProvedor.bind<SalaController>(LiteralServico.SalaController).to(SalaController).inRequestScope();
 
 const app = express();
 
@@ -55,6 +57,7 @@ const compraController = iocProvedor.get<CompraController>(LiteralServico.Compra
 const liberacaoController = iocProvedor.get<CompraController>(LiteralServico.LiberacaoController);
 const arquivoController = iocProvedor.get<ArquivoController>(LiteralServico.ArquivoController);
 const fluxoMultiplayerController = iocProvedor.get<FluxoMultiplayerController>(LiteralServico.FluxoMultiplayerController);
+const salaController = iocProvedor.get<SalaController>(LiteralServico.SalaController);
 
 mongoose.connect(configBack.conexaoMongodb, { dbName: 'EncVn' })
   .then(async () => {
@@ -70,6 +73,7 @@ mongoose.connect(configBack.conexaoMongodb, { dbName: 'EncVn' })
     app.use('/api/liberacao', liberacaoController.router);
     app.use('/api/arquivo', arquivoController.router);
     app.use('/api/fluxoMultiplayer', fluxoMultiplayerController.router);
+    app.use('/api/sala', salaController.router);
     // _gerenciadorRequisicoesApi.useTodasRouters(app);
     // app.use(ExControllerMiddleware.middleware);
     
@@ -78,13 +82,13 @@ mongoose.connect(configBack.conexaoMongodb, { dbName: 'EncVn' })
       console.log('🚀 Servidor escutando na url: http://' + configBack.hostDoBackend);
     });
     
-    const getWsServer = (server: Server, path = '/room') => new WebSocketServer({ server, path });
+    const getWsServer = (server: Server, path = '/ws') => new WebSocketServer({ server, path });
     const wsServer = getWsServer(server);
     wsServer.on('connection', (ws: UserWebSocket, req: IncomingMessage) => {
       mediadorWs.prepararUserWebSocket(ws, req);
       ws.on('message', (dados: RawData, naoEBinario: boolean) => { mediadorWs.reencaminharOutroClient(wsServer, ws, req, dados, naoEBinario); })
       ws.on('error', (error) => console.error(error))
-      ws.on('close', () => console.log('🔌😢 Um cliente se desconectou do Websocket!'))
+      ws.on('close', () => mediadorWs.limparDadosUsuarioDesconectado(wsServer, ws, req));
       // _gerenciadorConnecWs.onConnection(wsServer, ws, req);
     });
   });

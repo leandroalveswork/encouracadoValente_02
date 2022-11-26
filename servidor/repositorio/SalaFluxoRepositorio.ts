@@ -25,7 +25,9 @@ class SalaFluxoRepositorio extends RepositorioCrud<DbSalaFluxo> {
             idPlayer1: String,
             idPlayer2: String,
             player1CarregouFluxo: { type: Boolean, required: true },
-            player2CarregouFluxo: { type: Boolean, required: true }
+            player2CarregouFluxo: { type: Boolean, required: true },
+            horaCancelamentoSaidaPlayer1: Date,
+            horaCancelamentoSaidaPlayer2: Date
         });
         this.inicializarMongo('SalaFluxo', schema);
     }
@@ -36,6 +38,26 @@ class SalaFluxoRepositorio extends RepositorioCrud<DbSalaFluxo> {
             { idPlayer2: idUsuarioJogando.toString() }
         ] });
         return query;
+    }
+    
+    selectByNumeroRecuperacaoUrl = (numeroRecuperacaoUrl: number) => {
+        let query = this._modelMongo.findOne({ numeroRecuperacaoUrl: numeroRecuperacaoUrl });
+        return query;
+    }
+    
+    insertMuitosPorOperador = async (muitasSalas: DbSalaFluxo[], idUsuarioOperador: string): Promise<string[]> => {
+        let modelsSave: any[] = [];
+        for (let iSala of muitasSalas) {
+            iSala.idUsuarioFezInclusao = idUsuarioOperador;
+            iSala.horaInclusao = new Date();
+            iSala.idUsuarioFezUltimaAtualizacao = '';
+            iSala.horaUltimaAtualizacao = null;
+            const inserido = new this._modelMongo({...iSala});
+            inserido.isNew = true;
+            modelsSave.push(inserido);            
+        }
+        this._modelMongo.bulkSave(modelsSave);
+        return modelsSave.map(x => x.id);
     }
 }
 

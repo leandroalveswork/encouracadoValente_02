@@ -15,8 +15,8 @@ export class MdExcecao {
         res: Response<any, Record<string, any>>,
         exc: any
     ) => {
-        console.log(' olha o erro async');
-        console.log(exc);
+        // console.log(' olha o erro async');
+        // console.log(exc);
         if (exc instanceof MdExcecao) {
             res.status(exc.codigoExcecao).send(exc.problema);
         } else {
