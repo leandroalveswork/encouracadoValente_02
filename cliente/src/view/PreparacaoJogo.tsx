@@ -389,7 +389,7 @@ const PreparacaoJogo = (props: PreparacaoJogoProps) => {
     }
     
     const handleFecharErroOponenteSaiuOnClick = () => {
-        setErroEstaAberto(_ => false);
+        setErroOponenteSaiuEstaAberto(_ => false);
         navigate('/salas');
     }
     
