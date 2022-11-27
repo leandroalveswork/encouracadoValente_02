@@ -5,4 +5,6 @@ export class MdProgressoNaviosJogador {
     tiros: MdTiro[] = [];
     naviosTotais: PutPosicaoEstrategia[] = [];
     estaNaVezDoJogador: boolean = false;
+    horaRecomecoTimer: Date = new Date();
+    estaoTodosAfundados: boolean = false;
 }

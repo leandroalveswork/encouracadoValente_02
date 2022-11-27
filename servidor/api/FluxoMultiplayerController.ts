@@ -260,6 +260,13 @@ class FluxoMultiplayerController extends ControllerBase {
             ex.problema = 'Oponente nao encontrado';
             throw ex;
         }
+        const usuarioInimigoDb = await this._usuarioRepositorio.selectByIdOrDefault(idUsuarioOponente);
+        if (usuarioInimigoDb == null) {
+            let ex = new MdExcecao();
+            ex.codigoExcecao = 404;
+            ex.problema = 'Oponente nao encontrado';
+            throw ex;
+        }
         const idTemaInimigo = (await this._compraRepositorio.selectCompraEquipadaByIdUsuarioOrDefault(idUsuarioOponente))?.idTema ?? '';
         
         let totalJogadores = 0;
@@ -268,10 +275,14 @@ class FluxoMultiplayerController extends ControllerBase {
         if (salaDb.idPlayer2 != null)
             totalJogadores++;
             
-        if (salaDb.idPlayer1 == idUsuarioLogado)
-            return { numeroRecuperacaoUrl: salaDb.numeroRecuperacaoUrl, totalJogadores: totalJogadores, oponenteCarregouFluxo: salaDb.player2CarregouFluxo, idTemaInimigo: idTemaInimigo };
-        else
-            return { numeroRecuperacaoUrl: salaDb.numeroRecuperacaoUrl, totalJogadores: totalJogadores, oponenteCarregouFluxo: salaDb.player1CarregouFluxo, idTemaInimigo: idTemaInimigo };
+        let salaDetalhe = new MdSalaDetalhada();
+        salaDetalhe.numeroRecuperacaoUrl = salaDb.numeroRecuperacaoUrl;
+        salaDetalhe.totalJogadores = totalJogadores;
+        salaDetalhe.oponenteCarregouFluxo = (salaDb.idPlayer1 == idUsuarioLogado) ? salaDb.player2CarregouFluxo : salaDb.player1CarregouFluxo;
+        salaDetalhe.idTemaInimigo = idTemaInimigo;
+        salaDetalhe.nomeUsuarioInimigo = usuarioInimigoDb.nome.split(' ')[0];
+        
+        return salaDetalhe;
     }
     
     // autorizado
@@ -304,12 +315,14 @@ class FluxoMultiplayerController extends ControllerBase {
         const posicoesFluxoDbInimigo = await this._posicaoFluxoRepositorio.selectByNumeroRecuperacaoUrlSalaFluxoQueTenhaIdUsuarioOrDefault(salaUsuarioLogadoDb.numeroRecuperacaoUrl, idUsuarioOponente);
         
         let progressoJogadorLogado = new MdProgressoNaviosJogador();
+        const tirosFluxoDbQueNaoSaoVezPassada = tirosFluxoDb.filter(x => x.numeroLinha > -1);
         progressoJogadorLogado.naviosTotais = posicoesFluxoDb.map(iPosicaoFluxo => {
             return { tamanhoQuadradosNavio: iPosicaoFluxo.tamanhoQuadradosNavio, numeroLinha: iPosicaoFluxo.numeroLinha, numeroColuna: iPosicaoFluxo.numeroColuna, orientacao: iPosicaoFluxo.orientacao };
         });
-        progressoJogadorLogado.tiros = tirosFluxoDb.map(iTiroFluxo => {
+        progressoJogadorLogado.tiros = tirosFluxoDbQueNaoSaoVezPassada.filter(x => x.numeroLinha > -1).map(iTiroFluxo => {
             return { numeroLinha: iTiroFluxo.numeroLinha, numeroColuna: iTiroFluxo.numeroColuna, acertou: this.eTiroAcertado(iTiroFluxo, posicoesFluxoDb) };
         });
+        progressoJogadorLogado.estaoTodosAfundados = posicoesFluxoDb.every(x => this.eNavioAfundadoPorCompleto(x, tirosFluxoDbQueNaoSaoVezPassada));
         
         // Calcular de quem e a vez
         let idTiroDbMaisRecente = '';
@@ -328,8 +341,9 @@ class FluxoMultiplayerController extends ControllerBase {
             progressoJogadorLogado.estaNaVezDoJogador = idJogadorAlvoTiroMaisRecente == idUsuarioLogado;
         }
         
-        // Verificar se foi um tiro certeiro - se sim, inveter o valor logico pois assim continua na vez de quem atirou
         if ([...tirosFluxoDb, ...tirosFluxoDbInimigo].length > 0) {
+            
+            // Verificar se foi um tiro certeiro - se sim, inveter o valor logico pois assim continua na vez de quem atirou
             if (progressoJogadorLogado.estaNaVezDoJogador) {
                 
                 // Ultimo tiro foi do inimigo, entao verificar entre os navios do jogador logado
@@ -343,6 +357,14 @@ class FluxoMultiplayerController extends ControllerBase {
                 if (ultimoTiroDbJogadorLogado != undefined && this.eTiroAcertado(ultimoTiroDbJogadorLogado, posicoesFluxoDbInimigo))
                     progressoJogadorLogado.estaNaVezDoJogador = !progressoJogadorLogado.estaNaVezDoJogador;
             }
+            
+            // Marcar a partir de qual instante o timer precisa contar quando for no Front com a hora do ultimo tiro
+            const ultimoTiroDb = [...tirosFluxoDb, ...tirosFluxoDbInimigo].find(x => x.id == idTiroDbMaisRecente);
+            progressoJogadorLogado.horaRecomecoTimer = ultimoTiroDb?.horaInclusao ?? new Date();                
+        } else {
+            
+            // Marcar a partir de qual instante o timer precisa contar quando for no Front com a hora que o jogador saiu da rota /game/prepare
+            progressoJogadorLogado.horaRecomecoTimer = salaUsuarioLogadoDb.horaCancelamentoSaidaPlayer1 ?? new Date();             
         }
         
         return progressoJogadorLogado;
@@ -374,52 +396,66 @@ class FluxoMultiplayerController extends ControllerBase {
         // Buscar no mongodb
         const tirosFluxoDb = await this._tiroFluxoRepositorio.selectByNumeroRecuperacaoUrlSalaFluxoQueTenhaIdUsuarioOrDefault(salaUsuarioLogadoDb.numeroRecuperacaoUrl, idUsuarioOponente);
         const posicoesFluxoDb = await this._posicaoFluxoRepositorio.selectByNumeroRecuperacaoUrlSalaFluxoQueTenhaIdUsuarioOrDefault(salaUsuarioLogadoDb.numeroRecuperacaoUrl, idUsuarioOponente);
-        const tirosFluxoDbInimigo = await this._tiroFluxoRepositorio.selectByNumeroRecuperacaoUrlSalaFluxoQueTenhaIdUsuarioOrDefault(salaUsuarioLogadoDb.numeroRecuperacaoUrl, idUsuarioOponente);
-        const posicoesFluxoDbInimigo = await this._posicaoFluxoRepositorio.selectByNumeroRecuperacaoUrlSalaFluxoQueTenhaIdUsuarioOrDefault(salaUsuarioLogadoDb.numeroRecuperacaoUrl, idUsuarioOponente);
+        
+        // (!) Esses dados ja sao carregados no endpoint de progresso do jogador logado 
+        // const tirosFluxoDbInimigo = await this._tiroFluxoRepositorio.selectByNumeroRecuperacaoUrlSalaFluxoQueTenhaIdUsuarioOrDefault(salaUsuarioLogadoDb.numeroRecuperacaoUrl, idUsuarioOponente);
+        // const posicoesFluxoDbInimigo = await this._posicaoFluxoRepositorio.selectByNumeroRecuperacaoUrlSalaFluxoQueTenhaIdUsuarioOrDefault(salaUsuarioLogadoDb.numeroRecuperacaoUrl, idUsuarioOponente);
         
         let progressoJogadorOponente = new MdProgressoNaviosJogador();
+        const tirosFluxoDbQueNaoSaoVezPassada = tirosFluxoDb.filter(x => x.numeroLinha > -1);
         progressoJogadorOponente.naviosTotais = posicoesFluxoDb
-            .filter(iPosicaoFluxo => this.eNavioAfundadoPorCompleto(iPosicaoFluxo, tirosFluxoDb)) // Revelar apenas os navios afundados completamente
+            .filter(iPosicaoFluxo => this.eNavioAfundadoPorCompleto(iPosicaoFluxo, tirosFluxoDbQueNaoSaoVezPassada)) // Revelar apenas os navios afundados completamente
             .map(iPosicaoFluxo => {
                 return { tamanhoQuadradosNavio: iPosicaoFluxo.tamanhoQuadradosNavio, numeroLinha: iPosicaoFluxo.numeroLinha, numeroColuna: iPosicaoFluxo.numeroColuna, orientacao: iPosicaoFluxo.orientacao };
             });
-        progressoJogadorOponente.tiros = tirosFluxoDb.map(iTiroFluxo => {
+        progressoJogadorOponente.tiros = tirosFluxoDbQueNaoSaoVezPassada.map(iTiroFluxo => {
             return { numeroLinha: iTiroFluxo.numeroLinha, numeroColuna: iTiroFluxo.numeroColuna, acertou: this.eTiroAcertado(iTiroFluxo, posicoesFluxoDb) };
         });
+        progressoJogadorOponente.estaoTodosAfundados = progressoJogadorOponente.naviosTotais.length == posicoesFluxoDb.length;
         
-        // Calcular de quem e a vez
-        let idTiroDbMaisRecente = '';
-        if ([...tirosFluxoDb, ...tirosFluxoDbInimigo].length == 0) {
-            progressoJogadorOponente.estaNaVezDoJogador = salaUsuarioLogadoDb.idPlayer1 != idUsuarioLogado;
-        } else {
-            let idJogadorAlvoTiroMaisRecente = '';
-            let horaMaisRecente = Number.MIN_SAFE_INTEGER;
-            for (let iTiro of [...tirosFluxoDb, ...tirosFluxoDbInimigo]) {
-                if (horaMaisRecente < iTiro.horaInclusao.getTime()) {
-                    idJogadorAlvoTiroMaisRecente = iTiro.idUsuarioAlvo;
-                    idTiroDbMaisRecente = iTiro.id;
-                    horaMaisRecente = iTiro.horaInclusao.getTime();
-                }
-            }
-            progressoJogadorOponente.estaNaVezDoJogador = idJogadorAlvoTiroMaisRecente != idUsuarioLogado;
-        }
+        // (!) Esses dados ja sao carregados no endpoint progresso do jogador logado 
+        // // Calcular de quem e a vez
+        // let idTiroDbMaisRecente = '';
+        // if ([...tirosFluxoDb, ...tirosFluxoDbInimigo].length == 0) {
+        //     progressoJogadorOponente.estaNaVezDoJogador = salaUsuarioLogadoDb.idPlayer1 != idUsuarioLogado;
+        // } else {
+        //     let idJogadorAlvoTiroMaisRecente = '';
+        //     let horaMaisRecente = Number.MIN_SAFE_INTEGER;
+        //     for (let iTiro of [...tirosFluxoDb, ...tirosFluxoDbInimigo]) {
+        //         if (horaMaisRecente < iTiro.horaInclusao.getTime()) {
+        //             idJogadorAlvoTiroMaisRecente = iTiro.idUsuarioAlvo;
+        //             idTiroDbMaisRecente = iTiro.id;
+        //             horaMaisRecente = iTiro.horaInclusao.getTime();
+        //         }
+        //     }
+        //     progressoJogadorOponente.estaNaVezDoJogador = idJogadorAlvoTiroMaisRecente != idUsuarioLogado;
+        // }
         
-        // Verificar se foi um tiro certeiro - se sim, inveter o valor logico pois assim continua na vez de quem atirou
-        if ([...tirosFluxoDb, ...tirosFluxoDbInimigo].length > 0) {
-            if (progressoJogadorOponente.estaNaVezDoJogador) {
+        // if ([...tirosFluxoDb, ...tirosFluxoDbInimigo].length > 0) {
+            
+        //     // Verificar se foi um tiro certeiro - se sim, inveter o valor logico pois assim continua na vez de quem atirou
+        //     if (progressoJogadorOponente.estaNaVezDoJogador) {
                 
-                // Ultimo tiro foi do inimigo, entao verificar entre os navios do jogador logado
-                const ultimoTiroDbInimigo = [...tirosFluxoDb, ...tirosFluxoDbInimigo].find(x => x.id == idTiroDbMaisRecente);
-                if (ultimoTiroDbInimigo != undefined && this.eTiroAcertado(ultimoTiroDbInimigo, posicoesFluxoDb))
-                    progressoJogadorOponente.estaNaVezDoJogador = !progressoJogadorOponente.estaNaVezDoJogador;
-            } else {
+        //         // Ultimo tiro foi do inimigo, entao verificar entre os navios do jogador logado
+        //         const ultimoTiroDbInimigo = [...tirosFluxoDb, ...tirosFluxoDbInimigo].find(x => x.id == idTiroDbMaisRecente);
+        //         if (ultimoTiroDbInimigo != undefined && this.eTiroAcertado(ultimoTiroDbInimigo, posicoesFluxoDb))
+        //             progressoJogadorOponente.estaNaVezDoJogador = !progressoJogadorOponente.estaNaVezDoJogador;
+        //     } else {
                 
-                // Ultimo tiro foi do jogador logado, entao verificar entre os navios do inimigo
-                const ultimoTiroDbJogadorLogado = [...tirosFluxoDb, ...tirosFluxoDbInimigo].find(x => x.id == idTiroDbMaisRecente);
-                if (ultimoTiroDbJogadorLogado != undefined && this.eTiroAcertado(ultimoTiroDbJogadorLogado, posicoesFluxoDbInimigo))
-                    progressoJogadorOponente.estaNaVezDoJogador = !progressoJogadorOponente.estaNaVezDoJogador;
-            }
-        }
+        //         // Ultimo tiro foi do jogador logado, entao verificar entre os navios do inimigo
+        //         const ultimoTiroDbJogadorLogado = [...tirosFluxoDb, ...tirosFluxoDbInimigo].find(x => x.id == idTiroDbMaisRecente);
+        //         if (ultimoTiroDbJogadorLogado != undefined && this.eTiroAcertado(ultimoTiroDbJogadorLogado, posicoesFluxoDbInimigo))
+        //             progressoJogadorOponente.estaNaVezDoJogador = !progressoJogadorOponente.estaNaVezDoJogador;
+        //     }
+            
+        //     // Marcar a partir de qual instante o timer precisa contar quando for no Front com a hora do ultimo tiro
+        //     const ultimoTiroDb = [...tirosFluxoDb, ...tirosFluxoDbInimigo].find(x => x.id == idTiroDbMaisRecente);
+        //     progressoJogadorOponente.horaRecomecoTimer = ultimoTiroDb?.horaInclusao ?? new Date();
+        // } else {
+            
+        //     // Marcar a partir de qual instante o timer precisa contar quando for no Front com a hora que o jogador saiu da rota /game/prepare
+        //     progressoJogadorOponente.horaRecomecoTimer = salaUsuarioLogadoDb.horaCancelamentoSaidaPlayer1 ?? new Date();             
+        // }
         
         return progressoJogadorOponente;
     }

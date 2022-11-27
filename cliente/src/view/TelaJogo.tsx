@@ -1,4 +1,4 @@
-import { Typography } from "@mui/material"
+import { CircularProgressProps, Typography, Box, CircularProgress } from "@mui/material"
 import CircleOutlinedIcon from '@mui/icons-material/CircleOutlined';
 import CloseOutlinedIcon from '@mui/icons-material/CloseOutlined';
 import { useEffect, useState } from "react"
@@ -19,6 +19,36 @@ import ImgNavioHorizontal from '../components/imagem/ImgNavioHorizontal';
 import { PostTiroFluxo } from "../modelos/importarBack/PostTiroFluxo";
 import { MdDetalheTema } from "../modelos/importarBack/MdDetalheTema";
 
+const SEGUNDOS_TIMER = 15;
+
+const CircularProgressWithLabel = (
+  props: CircularProgressProps & { value: number },
+) => {
+  return (
+    <Box sx={{ position: 'relative', display: 'inline-flex' }}>
+      <CircularProgress variant="determinate" {...props} />
+      <Box
+        sx={{
+          top: 0,
+          left: 0,
+          bottom: 0,
+          right: 0,
+          position: 'absolute',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        <Typography
+          variant="caption"
+          component="div"
+          color="text.secondary"
+        >{`${Math.ceil((1 - props.value * 0.01) * SEGUNDOS_TIMER)}s`}</Typography>
+      </Box>
+    </Box>
+  );
+}
+
 export interface TelaJogoProps {
     tokenAuth: string;
     rotaWs: string;
@@ -26,6 +56,8 @@ export interface TelaJogoProps {
 
 const TelaJogo = (props: TelaJogoProps) => {
 
+    const DESTAQUE_FUNDO_VEZ_JOGADOR = "#FBE9E7";
+    
     const posicoesJaMarcadas: Array<string> = []
     
     const navigate = useNavigate();
@@ -47,6 +79,11 @@ const TelaJogo = (props: TelaJogoProps) => {
     const [temaBarcoMedioSrcInimigo, setTemaBarcoMedioSrcInimigo] = useState<string>();
     const [temaBarcoGrandeSrcInimigo, setTemaBarcoGrandeSrcInimigo] = useState<string>();
     const [temaBarcoGiganteSrcInimigo, setTemaBarcoGiganteSrcInimigo] = useState<string>();
+    const [nomeInimigo, setNomeInimigo] = useState('Inimigo');
+    
+    const [comecoTimerCalculado, setComecoTimerCalculado] = useState((new Date()).getTime());
+    const [dateAgoraExato, setDateAgoraExato] = useState(new Date());
+    const [progressTimer, setProgressTimer] = useState(0);
 
     const { lastJsonMessage, sendJsonMessage } = useWebSocket(props.rotaWs + '?id=' + roomId);
 
@@ -104,6 +141,7 @@ const TelaJogo = (props: TelaJogoProps) => {
                 if (rSala.eOk) {
                     setSalaJogando(_ => rSala.body ?? new MdSalaDetalhada());
                     if (precisaCarregarTemaInimigo) {
+                        setNomeInimigo(_ => rSala.body?.nomeUsuarioInimigo ?? 'Inimigo');
                         const temaInimigo = (await clientRest.callGetAutorizado<MdDetalheTema>('/api/tema/detalharPorId?id=' + (rSala.body?.idTemaInimigo ?? ''), new MdDetalheTema()))?.body;
                         if (temaInimigo == undefined || temaInimigo == null) {
                             setTemaBarcoPequenoSrcInimigo(_ => temaBarcoPequenoSrc);
@@ -135,11 +173,13 @@ const TelaJogo = (props: TelaJogoProps) => {
             .then(([rJogadorLogado, rJogadorOponente]) => {
                 let estaExibindoErro = false;
                 if (rJogadorLogado.eOk) {
-                    setProgressoJogadorLogado(_ => rJogadorLogado.body ?? new MdProgressoNaviosJogador());
+                    setProgressoJogadorLogado(_ => (rJogadorLogado.body ?? new MdProgressoNaviosJogador()));
                     if ((rJogadorLogado.body ?? new MdProgressoNaviosJogador()).estaNaVezDoJogador)
                         setEstaEsperandoInimigoAtirar(_ => false);
                     else
                         setEstaEsperandoInimigoAtirar(_ => true);
+                    const horaRecomecoAsDate = new Date((rJogadorLogado.body ?? new MdProgressoNaviosJogador()).horaRecomecoTimer);
+                    setComecoTimerCalculado(_ => horaRecomecoAsDate.getTime());
                 } else {
                     setProblemaErro(_ => rJogadorLogado.problema);
                     setErroEstaAberto(_ => true);
@@ -175,8 +215,49 @@ const TelaJogo = (props: TelaJogoProps) => {
         preparacaoUsuarioLogadoWs.numeroTipoAtualizacao = LiteralTipoAtualizacao.PrepararUsuarioLogadoWs;
         preparacaoUsuarioLogadoWs.tokenAuth = props.tokenAuth;
         sendJsonMessage({ ...preparacaoUsuarioLogadoWs });
+        
+        // Timer
+        const timer = setInterval(() => {
+            setDateAgoraExato(_ => new Date());
+        }, 66);
+        return () => clearInterval(timer);
     }, []);
-
+    
+    // Timer
+    useEffect(() => {
+        const millisegundosPassados = dateAgoraExato.getTime() - comecoTimerCalculado;
+        setProgressTimer(_ => millisegundosPassados < SEGUNDOS_TIMER * 1000 ? ((millisegundosPassados / (SEGUNDOS_TIMER * 1000)) * 100) : 100);
+    }, [comecoTimerCalculado, dateAgoraExato]);
+    useEffect(() => {
+        if (progressTimer === 100) {
+            if (estaEsperandoInimigoAtirar)
+                return;
+                
+            setEstaEsperandoInimigoAtirar(_ => true);
+            
+            // Enviar tiro que e vez passada (numeroLinha igual a -1)
+            const payloadTiro = new PostTiroFluxo();
+            payloadTiro.numeroLinha = -1;
+            payloadTiro.numeroColuna = 0;
+            clientRest.callPostAutorizado<string>('/api/fluxoMultiplayer/adicionarTiro', payloadTiro, '')
+                .then(rTiro => {
+                    if (!rTiro.eOk) {
+                        setProblemaErro(_ => rTiro.problema);
+                        setErroEstaAberto(_ => true);
+                        return;
+                    }
+                        
+                    carregarProgressos();
+                    
+                    // Notificar outros clients
+                    let notificarTiro = new WsEnvelope();
+                    notificarTiro.numeroTipoAtualizacao = LiteralTipoAtualizacao.FluxoJogo;
+                    notificarTiro.tokenAuth = props.tokenAuth;
+                    sendJsonMessage({ ...notificarTiro });
+                });
+        }
+    }, [progressTimer]);
+    
     useEffect(() => {
         if (lastJsonMessage) {
             const pedidoAtualizacao = (lastJsonMessage as unknown) as WsEnvelope;
@@ -231,7 +312,7 @@ const TelaJogo = (props: TelaJogoProps) => {
             <div className="container-tabuleiros">
                 <Typography textAlign="center" style={{ fontFamily: "bungee", color: "black" }}>É HORA DO ATAQUE</Typography>
                 <div className="d-flex justify-content-between">
-                    <div>
+                    <div style={{ backgroundColor: estaEsperandoInimigoAtirar ? 'initial' : DESTAQUE_FUNDO_VEZ_JOGADOR }}>
                         <Typography textAlign="center" style={{ fontFamily: "bungee", color: "gray" }}>VOCE</Typography>
                         <div style={{ position: 'relative' }}>
                             <PosicaoContainer handlePosicaoOnClick={handlePosicaoOnClick} idPrefix='user' clickable={false} />
@@ -277,7 +358,12 @@ const TelaJogo = (props: TelaJogoProps) => {
                         </div>
                     </div>
                     <div>
-                        <Typography textAlign="center" style={{ fontFamily: "bungee", color: "gray" }}>INIMIGO</Typography>
+                        <div style={{ height: '100px' }}>
+                        </div>
+                        <CircularProgressWithLabel value={progressTimer} />
+                    </div>
+                    <div style={{ backgroundColor: estaEsperandoInimigoAtirar ? DESTAQUE_FUNDO_VEZ_JOGADOR : 'initial' }}>
+                        <Typography textAlign="center" style={{ fontFamily: "bungee", color: "gray" }}>{nomeInimigo}</Typography>
                         <div style={{ position: 'relative' }}>
                             <PosicaoContainer handlePosicaoOnClick={handlePosicaoOnClick} idPrefix='opponent' clickable={!estaEsperandoInimigoAtirar} backgroundColor="#EBEBEB" />
                             {progressoJogadorInimigo != null && progressoJogadorInimigo.naviosTotais.map((iNavio, idxNavio) => {

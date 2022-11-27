@@ -3,4 +3,5 @@ export class MdSalaDetalhada {
     totalJogadores: number = 0;
     oponenteCarregouFluxo: boolean = false;
     idTemaInimigo: string = '';
+    nomeUsuarioInimigo: string = '';
 }
