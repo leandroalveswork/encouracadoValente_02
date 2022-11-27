@@ -2,6 +2,7 @@ import { Router } from "express";
 import { inject, injectable, postConstruct } from "inversify";
 import "reflect-metadata";
 import { LiteralServico } from "../literais/LiteralServico";
+import { LiteralPadroes } from "../literais/LiteralPadroes";
 import { PostLoginUsuario } from "../modelos/PostLoginUsuario";
 import { MdExcecao } from "./MdExcecao";
 import bcrypt from "bcrypt";
@@ -111,7 +112,7 @@ class TemaController extends ControllerBase {
                     ex.problema = 'Formato da url incorreta';
                     throw ex;
                 }
-                await this.excluirPorId(idTema);
+                await this.excluirPorId(idTema, idUsuarioLogado);
                 res.send();
             } catch (exc) {
                 MdExcecao.enviarExcecao(req, res, exc);
@@ -316,20 +317,27 @@ class TemaController extends ControllerBase {
 
     // autorizado
     // delete
-    excluirPorId = async (id: string): Promise<void> => {
-        const temaDb = await this._temaRepositorio.selectByIdOrDefault(id);
+    excluirPorId = async (idTema: string, idUsuarioLogado: string): Promise<void> => {
+        if (idTema == LiteralPadroes.IdTemaPadrao) {
+            let ex = new MdExcecao();
+            ex.codigoExcecao = 404;
+            ex.problema = 'O tema padrão não pode ser excluído.';
+            throw ex;
+        }
+        const temaDb = await this._temaRepositorio.selectByIdOrDefault(idTema);
         if (temaDb == null) {
             let ex = new MdExcecao();
             ex.codigoExcecao = 404;
             ex.problema = 'Tema não encontrado.';
             throw ex;
         }
-        const naviosTemaDb = await this._navioTemaRepositorio.selectMuitosNaviosTemaByTemaId(id);
+        const naviosTemaDb = await this._navioTemaRepositorio.selectMuitosNaviosTemaByTemaId(idTema);
         const numerosRecuperacaoNaviosTemaDb = naviosTemaDb.map(x => x.numeroRecuperacaoArquivoImagemNavio);
         
-        await this._temaRepositorio.deleteById(id);
-        await this._navioTemaRepositorio.deleteMuitosNaviosTemaByTemaId(id);
+        await this._temaRepositorio.deleteById(idTema);
+        await this._navioTemaRepositorio.deleteMuitosNaviosTemaByTemaId(idTema);
         await this._arquivoRepositorio.deleteByListaNumerosRecuperacao(numerosRecuperacaoNaviosTemaDb);
+        await this._compraRepositorio.deleteMuitosByIdTema(idTema, idUsuarioLogado);
     }
 }
 

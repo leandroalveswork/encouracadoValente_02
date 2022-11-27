@@ -155,6 +155,8 @@ const DetalheTema = () => {
                 {idxTab == 0 && <> */}
                     <div className="row g-0">
                         <EncVnTextField label="Nome" variant="outlined" className="mt-4" sx={{ width: 350 }} onChange={ev => setNome(_ => ev.target.value)} value={nome} disabled={!eAlteracao} />
+                    </div>
+                    <div className="row g-0">
                         <EncVnTextField label="Preço" type="number" variant="outlined" className="mt-4" sx={{ width: 350 }} onChange={ev => setPreco(_ => UtilNumber.parseFloatOrDefault(ev.target.value))} value={precoAsFormatado} disabled={!eAlteracao}
                             InputProps={{
                                 startAdornment: <InputAdornment position="start">R$</InputAdornment>,

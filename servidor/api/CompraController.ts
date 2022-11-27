@@ -164,6 +164,7 @@ class CompraController extends ControllerBase {
     // autorizado
     // get
     listarPorIdUsuarioLogado = async (idUsuarioLogado: string): Promise<MdResumoTema[]> => {
+        // await this._compraRepositorio.consertarDb(idUsuarioLogado);
         
         // Obter os temas comprados pelo usuario, montar uma lista de ids de temas para recuperar tanto os temas quanto os navioTema e montar uma lista de numerosRecuperacao dos naviosTema para recuperar os arquivos
         const comprasDb = await this._compraRepositorio.selectMuitasComprasByIdUsuario(idUsuarioLogado);
@@ -218,6 +219,7 @@ class CompraController extends ControllerBase {
     // autorizado
     // get
     detalharTemaEquipadoUsuarioLogadoOrDefault = async (idUsuarioLogado: string): Promise<MdDetalheTemaAnulavel> => {
+        // await this._compraRepositorio.consertarDb(idUsuarioLogado);
         const compraEquipada = await this._compraRepositorio.selectCompraEquipadaByIdUsuarioOrDefault(idUsuarioLogado);
         if (compraEquipada == null)
             return new MdDetalheTemaAnulavel();
@@ -278,6 +280,7 @@ class CompraController extends ControllerBase {
     // autorizado
     // get
     obterIdTemaEquipadoUsuarioLogadoOrDefault = async (idUsuarioLogado: string): Promise<string> => {
+        // await this._compraRepositorio.consertarDb(idUsuarioLogado);
         const compraEquipada = await this._compraRepositorio.selectCompraEquipadaByIdUsuarioOrDefault(idUsuarioLogado);
         if (compraEquipada == null)
             return '';

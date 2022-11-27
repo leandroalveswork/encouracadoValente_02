@@ -15,17 +15,23 @@ import { UsuarioRepositorio } from "../repositorio/UsuarioRepositorio";
 import { IUsuarioGoogle } from "../modelos/IUsuarioGoogle";
 import { ControllerBase } from "./ControllerBase";
 import { PutUpdateUsuario } from "../modelos/PutUpdateUsuario";
+import { CompraRepositorio } from "../repositorio/CompraRepositorio";
+import { DbCompra } from "../modelos/DbCompra";
+import { LiteralPadroes } from "../literais/LiteralPadroes";
 
 @injectable()
 class AutorizacaoController extends ControllerBase {
     private _usuarioRepositorio: UsuarioRepositorio
+    private _compraRepositorio: CompraRepositorio
     constructor(
         @inject(LiteralServico.ConfigBack) configBack: ConfigBack,
-        @inject(LiteralServico.UsuarioRepositorio) usuarioRepositorio: UsuarioRepositorio
+        @inject(LiteralServico.UsuarioRepositorio) usuarioRepositorio: UsuarioRepositorio,
+        @inject(LiteralServico.CompraRepositorio) compraRepositorio: CompraRepositorio
     ) {
         super(configBack);
         this._configBack = configBack;
         this._usuarioRepositorio = usuarioRepositorio;
+        this._compraRepositorio = compraRepositorio;
         this.router = Router();
         this.router.post('/entrarUsuarioEncVn', async (req, res) => {
             try {
@@ -68,7 +74,7 @@ class AutorizacaoController extends ControllerBase {
             } catch (exc) {
                 MdExcecao.enviarExcecao(req, res, exc);
             }
-        })
+        });
     }
 
     tempoSessao: number = 20 * 60 * 50;
@@ -129,6 +135,15 @@ class AutorizacaoController extends ControllerBase {
         usuarioLogado.creditos = usuarioDb.creditos ?? 0;
         return usuarioLogado;
     }
+    
+    private cadastrarCompraComTemaPadrao = async (idUsuarioCadastrado: string): Promise<void> => {
+        let insertCompra = new DbCompra();
+        insertCompra.id = StringUteis.gerarNovoIdDe24Caracteres();
+        insertCompra.idTema = LiteralPadroes.IdTemaPadrao;
+        insertCompra.idUsuarioComprador = idUsuarioCadastrado;
+        insertCompra.estaEquipado = true;
+        await this._compraRepositorio.insertPorOperador(insertCompra, idUsuarioCadastrado);
+    }
 
     // post
     entrarUsuarioGoogle = async (usuarioGoogle: IUsuarioGoogle): Promise<MdUsuarioLogado> => {
@@ -146,7 +161,6 @@ class AutorizacaoController extends ControllerBase {
         const token = jsonwebtoken.sign({ id: usuarioDb.id }, this._configBack.salDoJwt, {
             expiresIn: this.tempoSessao
         });
-        const username = this._configBack;  
         let usuarioLogado = new MdUsuarioLogado();
         usuarioLogado.id = usuarioDb.id;
         usuarioLogado.token = token;
@@ -169,6 +183,7 @@ class AutorizacaoController extends ControllerBase {
         usuarioInsert.creditos = 0;
         // console.table(usuarioInsert);
         await this._usuarioRepositorio.insertPorOperador(usuarioInsert, usuarioInsert.id);
+        await this.cadastrarCompraComTemaPadrao(usuarioInsert.id);
         const token = jsonwebtoken.sign({ id: usuarioInsert.id }, this._configBack.salDoJwt, {
             expiresIn: this.tempoSessao
         });
@@ -225,6 +240,7 @@ class AutorizacaoController extends ControllerBase {
         usuarioInsert.creditos = 0;
         // console.table(usuarioInsert);
         await this._usuarioRepositorio.insertPorOperador(usuarioInsert, usuarioInsert.id);
+        await this.cadastrarCompraComTemaPadrao(usuarioInsert.id);
         const token = jsonwebtoken.sign({ id: usuarioInsert.id }, this._configBack.salDoJwt, {
             expiresIn: this.tempoSessao
         });

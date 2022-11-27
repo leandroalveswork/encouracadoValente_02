@@ -10,6 +10,7 @@ import ClientRest from '../../integracao/ClientRest';
 import UserState from '../../integracao/UserState';
 import { MdResumoTema } from '../../modelos/importarBack/MdResumoTema';
 import { PostNovaCompra } from '../../modelos/importarBack/PostNovaCompra';
+import { LiteralPadroes } from '../../modelos/LiteralPadroes';
 import { UtilPagina } from '../../util/UtilPagina';
 import AddIcon from '@mui/icons-material/Add';
 import FormGroup from '@mui/material/FormGroup';
@@ -138,11 +139,14 @@ const IndexLoja = () => {
                                     </div>
                                 </CardContent>
                                 <CardActions>
-                                    {!iResumoTema.foiCompradoPorUsuarioLogado && <Button size="medium" variant="contained" onClick={() => handleClickComprar(iResumoTema.id)}>{'Comprar - R$ ' + iResumoTema.preco}</Button>}
-                                    {iResumoTema.foiCompradoPorUsuarioLogado && <Button size="medium" color="inherit" disabled>Comprado</Button>}
+                                    {iResumoTema.id == LiteralPadroes.IdTemaPadrao && <Button size="medium" color="inherit" disabled>Padrão</Button>}
+                                    {iResumoTema.id != LiteralPadroes.IdTemaPadrao && <>
+                                        {!iResumoTema.foiCompradoPorUsuarioLogado && <Button size="medium" variant="contained" onClick={() => handleClickComprar(iResumoTema.id)}>{'Comprar - R$ ' + iResumoTema.preco}</Button>}
+                                        {iResumoTema.foiCompradoPorUsuarioLogado && <Button size="medium" color="inherit" disabled>Comprado</Button>}
+                                    </>}
                                     <Button size="medium" onClick={() => navigate('/loja/detalheTema?id=' + iResumoTema.id)}>Ver mais</Button>
                                     {(userState.localStorageUser?.eSuperuser ?? true) && <Button size="medium" variant="contained" onClick={() => navigate('/loja/detalheTema?id=' + iResumoTema.id + '&eAlteracao=S')}>Alterar</Button>}
-                                    {(userState.localStorageUser?.eSuperuser ?? true) && <Button size="medium" variant="contained" color="error" onClick={() => handleClickExcluir(iResumoTema.id)}>Excluir</Button>}
+                                    {iResumoTema.id != LiteralPadroes.IdTemaPadrao && (userState.localStorageUser?.eSuperuser ?? true) && <Button size="medium" variant="contained" color="error" onClick={() => handleClickExcluir(iResumoTema.id)}>Excluir</Button>}
                                 </CardActions>
                             </Card>
                         </div>)

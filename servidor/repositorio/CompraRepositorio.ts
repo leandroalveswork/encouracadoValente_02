@@ -8,6 +8,8 @@ import { throws } from "assert";
 import { config } from "dotenv";
 import { DbNavioTema } from "../modelos/DbNavioTema";
 import { DbCompra } from "../modelos/DbCompra";
+import { LiteralPadroes } from "../literais/LiteralPadroes";
+import { StringUteis } from "../uteis/StringUteis";
 
 @injectable()
 class CompraRepositorio extends RepositorioCrud<DbCompra> {
@@ -70,6 +72,62 @@ class CompraRepositorio extends RepositorioCrud<DbCompra> {
             }
         }
         await this._modelMongo.bulkSave(lComprasParaSalvar);
+    }
+    
+    private parseInsertedHydratedDocument = (novaCompra: DbCompra, idOperador: string): HydratedDocument<DbCompra, {}, unknown> => {
+        novaCompra.idUsuarioFezInclusao = idOperador;
+        novaCompra.horaInclusao = new Date();
+        novaCompra.idUsuarioFezUltimaAtualizacao = '';
+        novaCompra.horaUltimaAtualizacao = null;
+        let insertNavio = new this._modelMongo({ ...novaCompra });
+        insertNavio.isNew = true;
+        return insertNavio;
+    }
+    
+    consertarDb = async (idUsuarioOperador: string): Promise<void> => {
+        const todasCompras = await this.selectAll();
+        let comprasMapeadasPorComprador: { idComprador: string, comprasRelacionadas: HydratedDocument<DbCompra, {}, unknown>[] }[] = [];
+        for (let iCompra of todasCompras) {
+            let mapaJaExistente = comprasMapeadasPorComprador.find(x => x.idComprador == iCompra.idUsuarioComprador);
+            if (mapaJaExistente == undefined)
+                comprasMapeadasPorComprador.push({ idComprador: iCompra.idUsuarioComprador, comprasRelacionadas: [ iCompra ] });
+            else
+                mapaJaExistente.comprasRelacionadas.push(iCompra);
+        }
+        let lComprasParaSalvar: HydratedDocument<DbCompra, {}, unknown>[] = [];
+        for (let iMapa of comprasMapeadasPorComprador) {
+            if (iMapa.comprasRelacionadas.length == 0) {
+                let primeiraCompraTemaPadrao = new DbCompra();
+                primeiraCompraTemaPadrao.id = StringUteis.gerarNovoIdDe24Caracteres();
+                primeiraCompraTemaPadrao.idTema = LiteralPadroes.IdTemaPadrao;
+                primeiraCompraTemaPadrao.idUsuarioComprador = iMapa.idComprador;
+                primeiraCompraTemaPadrao.estaEquipado = true;
+                lComprasParaSalvar.push(this.parseInsertedHydratedDocument(primeiraCompraTemaPadrao, idUsuarioOperador));
+                continue;
+            }
+            const compraRelacionadaTemaPadrao = iMapa.comprasRelacionadas.find(x => x.idTema == LiteralPadroes.IdTemaPadrao);
+            if (compraRelacionadaTemaPadrao != undefined) {
+                if (iMapa.comprasRelacionadas.every(x => !x.estaEquipado)) {
+                    compraRelacionadaTemaPadrao.estaEquipado = true;
+                    compraRelacionadaTemaPadrao.idUsuarioFezUltimaAtualizacao = idUsuarioOperador;
+                    compraRelacionadaTemaPadrao.horaUltimaAtualizacao = new Date();
+                    lComprasParaSalvar.push(compraRelacionadaTemaPadrao);
+                }
+                continue;
+            }
+            let compraTemaPadrao = new DbCompra();
+            compraTemaPadrao.id = StringUteis.gerarNovoIdDe24Caracteres();
+            compraTemaPadrao.idTema = LiteralPadroes.IdTemaPadrao;
+            compraTemaPadrao.idUsuarioComprador = iMapa.idComprador;
+            compraTemaPadrao.estaEquipado = iMapa.comprasRelacionadas.every(x => !x.estaEquipado);
+            lComprasParaSalvar.push(this.parseInsertedHydratedDocument(compraTemaPadrao, idUsuarioOperador));
+        }
+        await this._modelMongo.bulkSave(lComprasParaSalvar);
+    }
+    
+    deleteMuitosByIdTema = async (idTema: string, idUsuarioOperador: string): Promise<void> => {
+        await this._modelMongo.deleteMany({ idTema: idTema });
+        await this.consertarDb(idUsuarioOperador);
     }
 }
 
