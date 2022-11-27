@@ -7,6 +7,7 @@ import { StringUteis } from "../uteis/StringUteis";
 import { ConfigBack } from "../ConfigBack";
 import { ControllerBase } from "./ControllerBase";
 import { SalaFluxoRepositorio } from "../repositorio/SalaFluxoRepositorio";
+import { TiroFluxoRepositorio } from "../repositorio/TiroFluxoRepositorio";
 import { MdSalaDisponivel } from "../modelos/MdSalaDisponivel";
 import { DbSalaFluxo } from "../modelos/DbSalaFluxo";
 import { PutEntrarSala } from "../modelos/PutEntrarSala";
@@ -14,13 +15,16 @@ import { PutEntrarSala } from "../modelos/PutEntrarSala";
 @injectable()
 class SalaController extends ControllerBase {
     private _salaFluxoRepositorio: SalaFluxoRepositorio
+    private _tiroFluxoRepositorio: TiroFluxoRepositorio
     constructor(
         @inject(LiteralServico.ConfigBack) configBack: ConfigBack,
         @inject(LiteralServico.SalaFluxoRepositorio) salaFluxoRepositorio: SalaFluxoRepositorio,
+        @inject(LiteralServico.TiroFluxoRepositorio) tiroFluxoRepositorio: TiroFluxoRepositorio,
     ) {
         super(configBack);
         this._configBack = configBack;
         this._salaFluxoRepositorio = salaFluxoRepositorio;
+        this._tiroFluxoRepositorio = tiroFluxoRepositorio;
         this.router = Router();
         this.router.get('/listarDisponiveis', async (req, res) => {
             try {
@@ -113,6 +117,7 @@ class SalaController extends ControllerBase {
             salaAtualP2.horaCancelamentoSaidaPlayer2 = null;
             salaAtualP2.player1CarregouFluxo = false;
             salaAtualP2.player2CarregouFluxo = false;
+            await this._tiroFluxoRepositorio.deleteMuitosByNumeroRecuperacaoUrl(salaDb.numeroRecuperacaoUrl);
             await this._salaFluxoRepositorio.updatePorOperador(salaAtualP2, idUsuarioLogado);
             return;
         }
