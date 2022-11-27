@@ -12,6 +12,7 @@ import { MdResumoTema } from '../../modelos/importarBack/MdResumoTema';
 import { PostNovaCompra } from '../../modelos/importarBack/PostNovaCompra';
 import { UtilPagina } from '../../util/UtilPagina';
 import AddIcon from '@mui/icons-material/Add';
+import FormGroup from '@mui/material/FormGroup';
 
 const EncVnTextField = styled(TextField)({
     '& input + fieldset': {
@@ -93,6 +94,11 @@ const IndexLoja = () => {
             setProblemaErro(rCompra.problema);
             setErroEstaAberto(_ => true);
         }
+
+        let userToChange = userState.localStorageUser;
+        if (userToChange == null)
+            return;
+        userState.localStorageUser = userToChange;
     }
     
     return (
@@ -135,8 +141,10 @@ const IndexLoja = () => {
                                     {!iResumoTema.foiCompradoPorUsuarioLogado && <Button size="medium" variant="contained" onClick={() => handleClickComprar(iResumoTema.id)}>{'Comprar - R$ ' + iResumoTema.preco}</Button>}
                                     {iResumoTema.foiCompradoPorUsuarioLogado && <Button size="medium" color="inherit" disabled>Comprado</Button>}
                                     <Button size="medium" onClick={() => navigate('/loja/detalheTema?id=' + iResumoTema.id)}>Ver mais</Button>
+                                    {(userState.localStorageUser?.eSuperuser ?? true) && <FormGroup>
                                     <Button size="medium" variant="contained" onClick={() => navigate('/loja/detalheTema?id=' + iResumoTema.id + '&eAlteracao=S')}>Alterar</Button>
                                     <Button size="medium" variant="contained" color="error" onClick={() => handleClickExcluir(iResumoTema.id)}>Excluir</Button>
+                                    </FormGroup>}
                                 </CardActions>
                             </Card>
                         </div>)
@@ -147,9 +155,11 @@ const IndexLoja = () => {
                 </div>
             </>}
             {carregouTemas && lTemas.length == 0 && <span style={{color: 'white'}}>Nenhum tema adicionado ainda.</span>}
+           {(userState.localStorageUser?.eSuperuser ?? true) && <FormGroup>
             <div className="d-flex justify-content-center pt-4">
                 <Fab size="medium" variant='extended'  onClick={() => navigate('/loja/adicionarTema')}> Adicionar tema <AddIcon sx={{mr: 1}} style={{marginBottom: '5px'}}/></Fab>
             </div>
+            </FormGroup>}
 
             <ConfirmacaoModal estaAberto={confirmacaoExclusaoEstaAberto} onFecharOuCancelar={() => setConfirmacaoExclusaoEstaAberto(_ => false)} onConfirmar={() => handleClickConfirmarExclusao()}
                 mensagem='Deseja excluir este tema? Isso causará a exclusão das personalizações deste tema.' />
