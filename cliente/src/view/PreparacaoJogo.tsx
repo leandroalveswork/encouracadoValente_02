@@ -41,7 +41,7 @@ const PreparacaoJogo = (props: PreparacaoJogoProps) => {
     const barcoGrandeRef2 = useRef<any>()
     const barcoGiganteRef1 = useRef<any>()
 
-    const QUANTIDADE_ESTRATEGIAS_PARA_SALVAR = 2;
+    const QUANTIDADE_ESTRATEGIAS_PARA_SALVAR = 10;
     const BORDA_NAVIO_SELECIONADO = "1px solid red"
 
     const { roomId } = useParams()
