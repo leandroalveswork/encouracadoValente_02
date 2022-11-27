@@ -18,7 +18,7 @@ const PosicaoContainerPrevia = ({idPrefix, backgroundColor}: PosicaoContainerPre
     }
 
     return (
-        <div className="posicao-container-previa">
+        <div className="posicao-container-previa" style={{ minWidth: '210px' }} >
             {calcularPosicoes()}
         </div>
     )

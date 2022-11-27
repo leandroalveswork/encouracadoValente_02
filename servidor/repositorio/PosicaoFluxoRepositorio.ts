@@ -8,6 +8,7 @@ import { throws } from "assert";
 import { config } from "dotenv";
 import { DbArquivo } from "../modelos/DbArquivo";
 import { DbPosicaoFluxo } from "../modelos/DbPosicaoFluxo";
+import { StringUteis } from "../uteis/StringUteis";
 
 @injectable()
 class PosicaoFluxoRepositorio extends RepositorioCrud<DbPosicaoFluxo> {
@@ -31,25 +32,29 @@ class PosicaoFluxoRepositorio extends RepositorioCrud<DbPosicaoFluxo> {
         this.inicializarMongo('PosicaoFluxo', schema);
     }
     
-    updateByNumeroRecuperacaoUrlSala = async (numeroRecuperacaoUrlSala: number, posicoesEstrategia: DbPosicaoFluxo[], idUsuarioOperador: string): Promise<void> => {
-        let lPosicoesEstrategiaParaSalvar: HydratedDocument<DbPosicaoFluxo, {}, unknown>[] = [];
-        for (let iPosicaoEstrategia of posicoesEstrategia) {
-            // Inserir posiçao
-            iPosicaoEstrategia.idUsuarioFezInclusao = idUsuarioOperador;
-            iPosicaoEstrategia.horaInclusao = new Date();
-            iPosicaoEstrategia.idUsuarioFezUltimaAtualizacao = '';
-            iPosicaoEstrategia.horaUltimaAtualizacao = null;
-            let insertPosicaoEstrategia = new this._modelMongo({ ...iPosicaoEstrategia });
-            insertPosicaoEstrategia.isNew = true;
-            lPosicoesEstrategiaParaSalvar.push(insertPosicaoEstrategia);
-        }
-        await this._modelMongo.deleteMany({ numeroRecuperacaoUrlSalaFluxo: numeroRecuperacaoUrlSala });
-        await this._modelMongo.bulkSave(lPosicoesEstrategiaParaSalvar);
+    updateByNumeroRecuperacaoUrlSalaQueTenhaIdUsuario = async (numeroRecuperacaoUrlSala: number, idUsuarioFiltro: string, posicoesEstrategia: DbPosicaoFluxo[], idUsuarioOperador: string): Promise<void> => {
+        await this._modelMongo.deleteMany({ numeroRecuperacaoUrlSalaFluxo: numeroRecuperacaoUrlSala, idUsuarioEnviador: idUsuarioFiltro });
+        await this.insertMuitosPorOperador(posicoesEstrategia, idUsuarioOperador);
     }
 
     selectByNumeroRecuperacaoUrlSalaFluxoQueTenhaIdUsuarioOrDefault = (numeroRecuperacaoUrlSalaFluxo: number, idUsuarioLogado: string) => {
         let query = this._modelMongo.find({ numeroRecuperacaoUrlSalaFluxo: numeroRecuperacaoUrlSalaFluxo, idUsuarioEnviador: idUsuarioLogado });
         return query;
+    }
+    
+    insertMuitosPorOperador = async (muitasEstrategias: DbPosicaoFluxo[], idUsuarioOperador: string): Promise<string[]> => {
+        let modelsSave: HydratedDocument<DbPosicaoFluxo, {}, unknown>[] = [];
+        for (let iEstrategia of muitasEstrategias) {
+            iEstrategia.idUsuarioFezInclusao = idUsuarioOperador;
+            iEstrategia.horaInclusao = new Date();
+            iEstrategia.idUsuarioFezUltimaAtualizacao = '';
+            iEstrategia.horaUltimaAtualizacao = null;
+            const inserido = new this._modelMongo({...iEstrategia});
+            inserido.isNew = true;
+            modelsSave.push(inserido);            
+        }
+        await this._modelMongo.bulkSave(modelsSave);
+        return modelsSave.map(x => x.id);
     }
 }
 

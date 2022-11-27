@@ -29,12 +29,12 @@ class ClientRest {
     }
 
     callGet = async <TRes>(urlRelativa: string, resExemplo: TRes) => {
-        let r = await fetch('http://' + (process.env.REACT_APP_url_do_servidor_backend as string) + urlRelativa);
+        let r = await fetch((process.env.REACT_APP_url_do_servidor_backend as string) + urlRelativa);
         return await this.handleRes<TRes>(r, resExemplo);
     }
 
     callPost = async <TRes>(urlRelativa: string, payload: any, resExemplo: TRes) => {
-        let r = await fetch('http://' + (process.env.REACT_APP_url_do_servidor_backend as string) + urlRelativa, {
+        let r = await fetch((process.env.REACT_APP_url_do_servidor_backend as string) + urlRelativa, {
             method: 'post',
             body: JSON.stringify(payload),
             headers: { 'Content-type': 'application/json; charset=UTF-8' }
@@ -43,7 +43,7 @@ class ClientRest {
     }
 
     callPut = async <TRes>(urlRelativa: string, payload: any, resExemplo: TRes) => {
-        let r = await fetch('http://' + (process.env.REACT_APP_url_do_servidor_backend as string) + urlRelativa, {
+        let r = await fetch((process.env.REACT_APP_url_do_servidor_backend as string) + urlRelativa, {
             method: 'put',
             body: JSON.stringify(payload),
             headers: { 'Content-type': 'application/json; charset=UTF-8' }
@@ -52,21 +52,21 @@ class ClientRest {
     }
 
     callDelete = async <TRes>(urlRelativa: string, resExemplo: TRes) => {
-        let r = await fetch('http://' + (process.env.REACT_APP_url_do_servidor_backend as string) + urlRelativa, {
+        let r = await fetch((process.env.REACT_APP_url_do_servidor_backend as string) + urlRelativa, {
             method: 'delete'
         });
         return await this.handleRes<TRes>(r, resExemplo);
     }
 
     callGetAutorizado = async <TRes>(urlRelativa: string, resExemplo: TRes) => {
-        let r = await fetch('http://' + (process.env.REACT_APP_url_do_servidor_backend as string) + urlRelativa, {
+        let r = await fetch((process.env.REACT_APP_url_do_servidor_backend as string) + urlRelativa, {
             headers: { 'x-access-token': this._userState.localStorageUser?.token ?? '' }
         });
         return await this.handleRes<TRes>(r, resExemplo);
     }
 
     callPostAutorizado = async <TRes>(urlRelativa: string, payload: any, resExemplo: TRes) => {
-        let r = await fetch('http://' + (process.env.REACT_APP_url_do_servidor_backend as string) + urlRelativa, {
+        let r = await fetch((process.env.REACT_APP_url_do_servidor_backend as string) + urlRelativa, {
             method: 'post',
             body: JSON.stringify(payload),
             headers: {
@@ -78,7 +78,7 @@ class ClientRest {
     }
 
     callPutAutorizado = async <TRes>(urlRelativa: string, payload: any, resExemplo: TRes) => {
-        let r = await fetch('http://' + (process.env.REACT_APP_url_do_servidor_backend as string) + urlRelativa, {
+        let r = await fetch((process.env.REACT_APP_url_do_servidor_backend as string) + urlRelativa, {
             method: 'put',
             body: JSON.stringify(payload),
             headers: {
@@ -90,7 +90,7 @@ class ClientRest {
     }
 
     callDeleteAutorizado = async <TRes>(urlRelativa: string, resExemplo: TRes) => {
-        let r = await fetch('http://' + (process.env.REACT_APP_url_do_servidor_backend as string) + urlRelativa, {
+        let r = await fetch((process.env.REACT_APP_url_do_servidor_backend as string) + urlRelativa, {
             method: 'delete',
             headers: { 'x-access-token': this._userState.localStorageUser?.token ?? '' }
         });
@@ -113,7 +113,7 @@ class ClientRest {
 
         formData.append("file", arquivoRaw);
     
-        let r = await axios.postForm('http://' + (process.env.REACT_APP_url_do_servidor_backend as string) + '/api/arquivo/upload', formData, {
+        let r = await axios.postForm((process.env.REACT_APP_url_do_servidor_backend as string) + '/api/arquivo/upload', formData, {
             headers: {
                 "x-access-token": this._userState.localStorageUser?.token ?? '',
                 "numero-recuperacao": numeroRecuperacao

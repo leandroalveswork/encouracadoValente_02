@@ -1,6 +1,6 @@
 import { Button, Card, CardActions, CardContent, styled, TextField } from "@mui/material";
 import ErroModal from "../../components/erroModal/ErroModal";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from 'react-router-dom';
 import GoogleAuthBotao from '../../components/GoogleAuthBotao';
 import "./Entrar.css";
@@ -19,7 +19,6 @@ const EncVnTextField = styled(TextField)({
 });
 
 const Entrar = () => {
-
     const navigate = useNavigate();
 
     const clientRest = new ClientRest();
@@ -48,6 +47,7 @@ const Entrar = () => {
         if (respostaLogin.eOk) {
             userState.localStorageUser = respostaLogin.body;
             navigate('/');
+            window.location.reload();
         } else {
             setProblemaErro(_ => respostaLogin.problema);
             setErroEstaAberto(_ => true);

@@ -29,17 +29,17 @@ class CompraRepositorio extends RepositorioCrud<DbCompra> {
     }
 
     selectMuitasComprasByIdUsuario = async (idUsuario: string) => {
-        let query = this._modelMongo.find({ idUsuario: idUsuario });
+        let query = this._modelMongo.find({ idUsuarioComprador: idUsuario });
         return query;
     }
     
     selectCompraEquipadaByIdUsuarioOrDefault = async (idUsuario: string) => {
-        let query = this._modelMongo.findOne({ idUsuario: idUsuario, estaEquipado: true });
+        let query = this._modelMongo.findOne({ idUsuarioComprador: idUsuario, estaEquipado: true });
         return query;
     }
     
     selectCompraByIdTemaQueTenhaIdUsuarioOrDefault = async (idTema: string, idUsuario: string) => {
-        let query = this._modelMongo.findOne({ idTema: idTema, idUsuario: idUsuario });
+        let query = this._modelMongo.findOne({ idTema: idTema, idUsuarioComprador: idUsuario });
         return query;
     }
     

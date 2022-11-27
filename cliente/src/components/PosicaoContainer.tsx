@@ -20,7 +20,7 @@ const PosicaoContainer = ({clickable, idPrefix, handlePosicaoOnClick, background
     }
 
     return (
-        <div className="posicao-container">
+        <div className="posicao-container" style={{ minWidth: '300px' }}>
             {calcularPosicoes()}
         </div>
     )

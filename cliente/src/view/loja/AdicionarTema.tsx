@@ -50,7 +50,8 @@ const AdicionarTema = () => {
         if (navios.some((navio) => navio.tamnQuadrados == 4) &&
             navios.some((navio) => navio.tamnQuadrados == 3) &&
             navios.some((navio) => navio.tamnQuadrados == 2) &&
-            navios.some((navio) => navio.tamnQuadrados == 1)){
+            navios.some((navio) => navio.tamnQuadrados == 1) &&
+            (new Set(navios).size == navios.length)){
                 return true
             }
         else{
@@ -62,7 +63,7 @@ const AdicionarTema = () => {
 
     const handleClickSalvar = async () => {
         if (!validarNavios(lNaviosTema)){
-            setProblemaErro(_ => 'Faltam navios a serem adicionados');
+            setProblemaErro(_ => 'Verifique se todos os navios foram adicionados ou não contém duplicatas');
             setErroEstaAberto(_ => true);
             return;
         }
