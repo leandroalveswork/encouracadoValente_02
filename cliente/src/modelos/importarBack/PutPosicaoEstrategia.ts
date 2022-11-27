@@ -1,4 +1,5 @@
 export class PutPosicaoEstrategia {
+    idNavio: string = "";
     tamanhoQuadradosNavio: number = 0;
     numeroLinha: number = 0;
     numeroColuna: number = 0;

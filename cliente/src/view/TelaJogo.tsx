@@ -59,10 +59,11 @@ const TelaJogo = (props: TelaJogoProps) => {
     const DESTAQUE_FUNDO_VEZ_JOGADOR = "#FBE9E7";
     
     const posicoesJaMarcadas: Array<string> = []
-    
+    const musicaJogo = new Audio('/assets/music.mp3')
+
     const navigate = useNavigate();
     const { roomId } = useParams()
-    
+
     const clientRest = new ClientRest();
 
     const [salaJogando, setSalaJogando] = useState<MdSalaDetalhada | null>(null);
@@ -74,7 +75,7 @@ const TelaJogo = (props: TelaJogoProps) => {
     const [temaBarcoMedioSrc, setTemaBarcoMedioSrc] = useState<string>();
     const [temaBarcoGrandeSrc, setTemaBarcoGrandeSrc] = useState<string>();
     const [temaBarcoGiganteSrc, setTemaBarcoGiganteSrc] = useState<string>();
-    
+
     const [temaBarcoPequenoSrcInimigo, setTemaBarcoPequenoSrcInimigo] = useState<string>();
     const [temaBarcoMedioSrcInimigo, setTemaBarcoMedioSrcInimigo] = useState<string>();
     const [temaBarcoGrandeSrcInimigo, setTemaBarcoGrandeSrcInimigo] = useState<string>();
@@ -90,7 +91,16 @@ const TelaJogo = (props: TelaJogoProps) => {
     const [erroEstaAberto, setErroEstaAberto] = useState(false);
     const [problemaErro, setProblemaErro] = useState('');
     const [erroOponenteSaiuEstaAberto, setErroOponenteSaiuEstaAberto] = useState(false);
-    
+
+
+    useEffect(() => {
+        musicaJogo.loop = true;
+        musicaJogo.play();
+        return () => {
+            musicaJogo.pause();
+        }
+    }, [])
+
     const parseCoordenadaAsTiro = (coordenada: number): PostTiroFluxo => {
         let coordAsString: string = coordenada + '';
         if (coordAsString.length == 1)
@@ -103,13 +113,13 @@ const TelaJogo = (props: TelaJogoProps) => {
             return;
         if (posicoesJaMarcadas.includes(event.currentTarget.id))
             return;
-            
+
         setEstaEsperandoInimigoAtirar(_ => true);
         // Estilizaçao
         event.currentTarget.style.opacity = 0.2;
-        
+
         posicoesJaMarcadas.push(event.currentTarget.id);
-            
+
         // Enviar para Api
         const coordenadaSelecionada = Number(event.currentTarget.id.replace("opponent-", ""));
         // console.log(event.currentTarget.id);
@@ -122,19 +132,20 @@ const TelaJogo = (props: TelaJogoProps) => {
                     setErroEstaAberto(_ => true);
                     return;
                 }
-                     
+
                 carregarProgressos();
-                
+
                 // Notificar outros clients
                 let notificarTiro = new WsEnvelope();
                 notificarTiro.numeroTipoAtualizacao = LiteralTipoAtualizacao.FluxoJogo;
                 notificarTiro.tokenAuth = props.tokenAuth;
                 sendJsonMessage({ ...notificarTiro });
-                
+
+
                 // sendJsonMessage({ idPosicao: event.currentTarget.id, roomId })
             });
     }
-    
+
     const carregarSala = (precisaCarregarTemaInimigo: boolean = false) => {
         clientRest.callGetAutorizado<MdSalaDetalhada>('/api/fluxoMultiplayer/detalharSala', new MdSalaDetalhada())
             .then(async (rSala) => {
@@ -161,19 +172,19 @@ const TelaJogo = (props: TelaJogoProps) => {
                 }
             });
     }
-    
+
     const carregarCallbacksProgressos = async () => {
         return [
             await clientRest.callGetAutorizado<MdProgressoNaviosJogador>('/api/fluxoMultiplayer/detalharProgressoJogadorLogado', new MdProgressoNaviosJogador()),
             await clientRest.callGetAutorizado<MdProgressoNaviosJogador>('/api/fluxoMultiplayer/detalharProgressoJogadorOponente', new MdProgressoNaviosJogador())
         ];
-    }    
+    }
     const carregarProgressos = () => {
         carregarCallbacksProgressos()
             .then(([rJogadorLogado, rJogadorOponente]) => {
                 let estaExibindoErro = false;
                 if (rJogadorLogado.eOk) {
-                    setProgressoJogadorLogado(_ => (rJogadorLogado.body ?? new MdProgressoNaviosJogador()));
+                    setProgressoJogadorLogado(_ => rJogadorLogado.body ?? new MdProgressoNaviosJogador());
                     if ((rJogadorLogado.body ?? new MdProgressoNaviosJogador()).estaNaVezDoJogador)
                         setEstaEsperandoInimigoAtirar(_ => false);
                     else
@@ -267,14 +278,14 @@ const TelaJogo = (props: TelaJogoProps) => {
                 carregarProgressos();
         }
     }, [lastJsonMessage]);
-    
+
     useEffect(() => {
         if (salaJogando != null) {
             if (salaJogando.totalJogadores < 2)
                 setErroOponenteSaiuEstaAberto(_ => true);
         }
     }, [salaJogando]);
-    
+
     const calcularSrc = (tamanhoQuadrados: number): string => {
         if (tamanhoQuadrados == 1)
             return temaBarcoPequenoSrc ?? '';
@@ -286,7 +297,7 @@ const TelaJogo = (props: TelaJogoProps) => {
             return temaBarcoGiganteSrc ?? '';
         return '';
     }
-    
+
     const calcularSrcInimigo = (tamanhoQuadrados: number): string => {
         if (tamanhoQuadrados == 1)
             return temaBarcoPequenoSrcInimigo ?? '';
@@ -298,7 +309,7 @@ const TelaJogo = (props: TelaJogoProps) => {
             return temaBarcoGiganteSrcInimigo ?? '';
         return '';
     }
-    
+
     const handleFecharErroOponenteSaiuOnClick = () => {
         setErroOponenteSaiuEstaAberto(_ => false);
         navigate('/salas');
@@ -326,8 +337,8 @@ const TelaJogo = (props: TelaJogoProps) => {
                                             tamanhoQuadrados={iNavio.tamanhoQuadradosNavio}
                                             altImagem='seu navio'
                                             ePositionAbsolute={true}
-                                            cssLeftAsPx={(iNavio.numeroColuna)*30}
-                                            cssTopAsPx={(iNavio.numeroLinha)*30} />
+                                            cssLeftAsPx={(iNavio.numeroColuna) * 30}
+                                            cssTopAsPx={(iNavio.numeroLinha) * 30} />
                                     </div>);
                                 }
                                 if (iNavio.orientacao == LiteralOrientacao.Direita) {
@@ -339,21 +350,25 @@ const TelaJogo = (props: TelaJogoProps) => {
                                             tamanhoQuadrados={iNavio.tamanhoQuadradosNavio}
                                             altImagem='seu navio'
                                             ePositionAbsolute={true}
-                                            cssLeftAsPx={(iNavio.numeroColuna)*30}
-                                            cssTopAsPx={(iNavio.numeroLinha)*30} />
+                                            cssLeftAsPx={(iNavio.numeroColuna) * 30}
+                                            cssTopAsPx={(iNavio.numeroLinha) * 30} />
                                     </div>);
                                 }
                             })}
                             {progressoJogadorLogado != null && progressoJogadorLogado.tiros.map((iNavio, idxNavio) => (
                                 iNavio.acertou ? <CloseOutlinedIcon color="error" key={idxNavio}
-                                    sx={{ top: (iNavio.numeroLinha*30) + 'px',
-                                        left: (iNavio.numeroColuna*30) + 'px',
+                                    sx={{
+                                        top: (iNavio.numeroLinha * 30) + 'px',
+                                        left: (iNavio.numeroColuna * 30) + 'px',
                                         position: 'absolute',
-                                        fontSize: '30px' }} /> : <CircleOutlinedIcon color="error" key={idxNavio} 
-                                    sx={{ top: (iNavio.numeroLinha*30) + 'px',
-                                        left: (iNavio.numeroColuna*30) + 'px',
-                                        position: 'absolute',
-                                        fontSize: '30px' }} /> 
+                                        fontSize: '30px'
+                                    }} /> : <CircleOutlinedIcon color="error" key={idxNavio}
+                                        sx={{
+                                            top: (iNavio.numeroLinha * 30) + 'px',
+                                            left: (iNavio.numeroColuna * 30) + 'px',
+                                            position: 'absolute',
+                                            fontSize: '30px'
+                                        }} />
                             ))}
                         </div>
                     </div>
@@ -376,8 +391,8 @@ const TelaJogo = (props: TelaJogoProps) => {
                                             tamanhoQuadrados={iNavio.tamanhoQuadradosNavio}
                                             altImagem='navio inimigo'
                                             ePositionAbsolute={true}
-                                            cssLeftAsPx={(iNavio.numeroColuna)*30}
-                                            cssTopAsPx={(iNavio.numeroLinha)*30} />
+                                            cssLeftAsPx={(iNavio.numeroColuna) * 30}
+                                            cssTopAsPx={(iNavio.numeroLinha) * 30} />
                                     </div>);
                                 }
                                 if (iNavio.orientacao == LiteralOrientacao.Direita) {
@@ -389,25 +404,30 @@ const TelaJogo = (props: TelaJogoProps) => {
                                             tamanhoQuadrados={iNavio.tamanhoQuadradosNavio}
                                             altImagem='navio inimigo'
                                             ePositionAbsolute={true}
-                                            cssLeftAsPx={(iNavio.numeroColuna)*30}
-                                            cssTopAsPx={(iNavio.numeroLinha)*30} />
+                                            cssLeftAsPx={(iNavio.numeroColuna) * 30}
+                                            cssTopAsPx={(iNavio.numeroLinha) * 30} />
                                     </div>);
                                 }
                             })}
                             {progressoJogadorInimigo != null && progressoJogadorInimigo.tiros.map((iNavio, idxNavio) => (
                                 iNavio.acertou ? <CloseOutlinedIcon color="error" key={idxNavio}
-                                    sx={{ top: (iNavio.numeroLinha*30) + 'px',
-                                        left: (iNavio.numeroColuna*30) + 'px',
+                                    sx={{
+                                        top: (iNavio.numeroLinha * 30) + 'px',
+                                        left: (iNavio.numeroColuna * 30) + 'px',
                                         position: 'absolute',
-                                        fontSize: '30px' }} /> : <CircleOutlinedIcon color="error" key={idxNavio} 
-                                    sx={{ top: (iNavio.numeroLinha*30) + 'px',
-                                        left: (iNavio.numeroColuna*30) + 'px',
-                                        position: 'absolute',
-                                        fontSize: '30px' }} /> 
+                                        fontSize: '30px'
+                                    }} /> : <CircleOutlinedIcon color="error" key={idxNavio}
+                                        sx={{
+                                            top: (iNavio.numeroLinha * 30) + 'px',
+                                            left: (iNavio.numeroColuna * 30) + 'px',
+                                            position: 'absolute',
+                                            fontSize: '30px'
+                                        }} />
                             ))}
                         </div>
                     </div>
                 </div>
+                <Typography textAlign="center" style={{ fontFamily: "bungee", color: "gray" }}>{!estaEsperandoInimigoAtirar ? 'SUA VEZ' : 'AGUARDE O ADVERSÁRIO JOGAR'}</Typography>
             </div>
             <ErroModal estaAberto={erroEstaAberto} onFechar={() => setErroEstaAberto(_ => false)} problema={problemaErro} />
             <ErroModal estaAberto={erroOponenteSaiuEstaAberto} onFechar={() => handleFecharErroOponenteSaiuOnClick()} problema='O seu oponente se desconectou!' />

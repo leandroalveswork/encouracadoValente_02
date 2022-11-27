@@ -20,6 +20,11 @@ interface PreparacaoJogoProps {
     rotaWs: string;
 }
 
+type PosicoesOcupadas = {
+    idBarco: string,
+    posicoes: number[]
+}
+
 const PreparacaoJogo = (props: PreparacaoJogoProps) => {
 
     const navigate = useNavigate();
@@ -45,7 +50,7 @@ const PreparacaoJogo = (props: PreparacaoJogoProps) => {
     const [barcoSelecionado, setBarcoSelecionado] = useState<any>();
     const [posicoesJaMarcadasParaOBarcoAtual, setPosicoesJaMarcadasParaOBarcoAtual] = useState<Array<number>>([]);
     const [idBarcosSelecionados, setIdBarcosSelecionados] = useState<Array<string>>([]);
-    const [totalPosicoesOcupadas, setTotalPosicoesOcupadas] = useState<Array<Array<number>>>([]);
+    const [totalPosicoesOcupadas, setTotalPosicoesOcupadas] = useState<Array<PosicoesOcupadas>>([]);
     const [posicaoParaMover, setPosicaoParaMover] = useState<any>()
     const [tamanhoBarcoAtual, setTamanhoBarcoAtual] = useState<number>(0)
     const [eReposicao, setEReposicao] = useState<boolean>(false)
@@ -61,7 +66,7 @@ const PreparacaoJogo = (props: PreparacaoJogoProps) => {
     const clientRest = new ClientRest();
 
     const [salaJogando, setSalaJogando] = useState<MdSalaDetalhada | null>(null);
-    
+
     const [estaEsperando, setEstaEsperando] = useState(false);
     const [oponenteCarregouFluxo, setOponenteCarregouFluxo] = useState(false);
     const [podeEnviarEstrategia, setPodeEnviarEstrategia] = useState(false)
@@ -72,7 +77,7 @@ const PreparacaoJogo = (props: PreparacaoJogoProps) => {
     const [erroEstaAberto, setErroEstaAberto] = useState(false);
     const [problemaErro, setProblemaErro] = useState('');
     const [erroOponenteSaiuEstaAberto, setErroOponenteSaiuEstaAberto] = useState(false);
-    
+
     const carregarSala = () => {
         clientRest.callGetAutorizado<MdSalaDetalhada>('/api/fluxoMultiplayer/detalharSala', new MdSalaDetalhada())
             .then(rSala => {
@@ -97,7 +102,7 @@ const PreparacaoJogo = (props: PreparacaoJogoProps) => {
         });
 
         carregarSala();
-      
+
         // Preparar o UserWebSocket no WS
         let preparacaoUsuarioLogadoWs = new WsEnvelope();
         preparacaoUsuarioLogadoWs.numeroTipoAtualizacao = LiteralTipoAtualizacao.PrepararUsuarioLogadoWs;
@@ -112,7 +117,7 @@ const PreparacaoJogo = (props: PreparacaoJogoProps) => {
                 carregarSala();
         }
     }, [lastJsonMessage]);
-    
+
     useEffect(() => {
         if (salaJogando != null) {
             if (salaJogando.totalJogadores < 2) {
@@ -122,7 +127,7 @@ const PreparacaoJogo = (props: PreparacaoJogoProps) => {
             if (salaJogando.oponenteCarregouFluxo) {
                 setOponenteCarregouFluxo(_ => true);
                 if (estaEsperando) {
-                    
+
                     // Cancelar proxima Saida
                     clientRest.callPutAutorizado<undefined>('/api/sala/cancelarProximaSaida', {}, undefined)
                         .then(rCancelarSaida => {
@@ -131,7 +136,7 @@ const PreparacaoJogo = (props: PreparacaoJogoProps) => {
                                 setErroEstaAberto(_ => true);
                                 return;
                             }
-                                    
+
                             navigate('/game/play/' + roomId);
                         });
                 }
@@ -146,21 +151,24 @@ const PreparacaoJogo = (props: PreparacaoJogoProps) => {
     }, [lNaviosParaEnviar])
 
     useEffect(() => {
-        if (barcoParaReposicionar && !barcoSelecionado) {
+        if (barcoParaReposicionar) {
             const barco = barcoParaReposicionar.barco
-            barco.style.border = BORDA_NAVIO_SELECIONADO
-            barco.style.borderRadius = '5px'
 
-            if (barcoSelecionado && barcoSelecionado == barco) {
+            if (barcoSelecionado && barcoSelecionado.id == barco.id) {
                 setPosicoesJaMarcadasParaOBarcoAtual([])
                 setPodeSelecionarPosicoes(false)
-                setTamanhoBarcoAtual(0)
                 barco.style.border = 'none'
+                setTamanhoBarcoAtual(0)
                 resetFundoPosicoes(posicoesJaMarcadasParaOBarcoAtual)
                 setPosicaoParaMover(null)
+                setBarcoSelecionado(null)
                 setEReposicao(false)
             }
+            else if (barcoSelecionado && barcoSelecionado.id != barco.id)
+                return
             else {
+                barco.style.border = BORDA_NAVIO_SELECIONADO
+                barco.style.borderRadius = '5px'
                 setPodeSelecionarPosicoes(true)
                 setBarcoSelecionado(barco)
                 setTamanhoBarcoAtual(barcoParaReposicionar.tamanhoBarco)
@@ -211,30 +219,55 @@ const PreparacaoJogo = (props: PreparacaoJogoProps) => {
         let ePosicaoValida = true
         let errorMessage: string | null = null
 
-        if (totalPosicoesOcupadas.flat().includes(idPosicaoSelecionada)) {
+        if (eReposicao) {
+            const posicoesBarcoPreviamente = totalPosicoesOcupadas.find(x => x.idBarco == barcoSelecionado!.id)?.posicoes
+
+            if (posicoesBarcoPreviamente && posicoesBarcoPreviamente.includes(idPosicaoSelecionada)) {
+                return
+            }
+        }
+
+        if (totalPosicoesOcupadas.map(x => x.posicoes).flat().includes(idPosicaoSelecionada)) {
             ePosicaoValida = false
             errorMessage = "Posição já ocupada por outra embarcação."
         } else if (posicoesJaMarcadasParaOBarcoAtual.length > 0) {
             const ultimaPosicaoMarcada = posicoesJaMarcadasParaOBarcoAtual[posicoesJaMarcadasParaOBarcoAtual.length - 1]
 
-            if (posicoesJaMarcadasParaOBarcoAtual.length == 1) {
-                ePosicaoValida = idPosicaoSelecionada == ultimaPosicaoMarcada + 10
-                    || idPosicaoSelecionada == ultimaPosicaoMarcada - 10
-                    || idPosicaoSelecionada == ultimaPosicaoMarcada + 1 //TODO: TRATAR PARA PERMITIR MARCAR SOMENTE DIREÇÕES HORIZONTAIS OU VERTICAIS CERTINHO (BUG EM ALGUNS CASOS)
+            ePosicaoValida =
+                (      idPosicaoSelecionada == ultimaPosicaoMarcada + 1
                     || idPosicaoSelecionada == ultimaPosicaoMarcada - 1
+                    || idPosicaoSelecionada == ultimaPosicaoMarcada + 10
+                    || idPosicaoSelecionada == ultimaPosicaoMarcada - 10)
+                &&
+                (      
+                       idPosicaoSelecionada == posicoesJaMarcadasParaOBarcoAtual[0] + 10
+                    || idPosicaoSelecionada == posicoesJaMarcadasParaOBarcoAtual[0] + 20
+                    || idPosicaoSelecionada == posicoesJaMarcadasParaOBarcoAtual[0] + 30
+                    || idPosicaoSelecionada == posicoesJaMarcadasParaOBarcoAtual[0] + 40
+                    || idPosicaoSelecionada == posicoesJaMarcadasParaOBarcoAtual[0] - 10
+                    || idPosicaoSelecionada == posicoesJaMarcadasParaOBarcoAtual[0] - 20
+                    || idPosicaoSelecionada == posicoesJaMarcadasParaOBarcoAtual[0] - 30
+                    || idPosicaoSelecionada == posicoesJaMarcadasParaOBarcoAtual[0] - 40
+                    || idPosicaoSelecionada == posicoesJaMarcadasParaOBarcoAtual[0] + 1
+                    || idPosicaoSelecionada == posicoesJaMarcadasParaOBarcoAtual[0] + 2
+                    || idPosicaoSelecionada == posicoesJaMarcadasParaOBarcoAtual[0] + 3
+                    || idPosicaoSelecionada == posicoesJaMarcadasParaOBarcoAtual[0] + 4
+                    || idPosicaoSelecionada == posicoesJaMarcadasParaOBarcoAtual[0] - 1
+                    || idPosicaoSelecionada == posicoesJaMarcadasParaOBarcoAtual[0] - 2
+                    || idPosicaoSelecionada == posicoesJaMarcadasParaOBarcoAtual[0] - 3
+                    || idPosicaoSelecionada == posicoesJaMarcadasParaOBarcoAtual[0] - 4)
 
-                errorMessage = !ePosicaoValida ? "Posição inválida. Selecione uma posição adjacente à última posição selecionada." : errorMessage
-            }
+            errorMessage = !ePosicaoValida ? "Posição inválida. Selecione uma posição adjacente à última posição selecionada." : errorMessage
+        }
 
-            if (posicoesJaMarcadasParaOBarcoAtual.includes(idPosicaoSelecionada)) {
-                ePosicaoValida = false
-                errorMessage = "Posicão já selecionada. Selecione uma posição não selecionada anteriormente."
-            }
+        if (posicoesJaMarcadasParaOBarcoAtual.includes(idPosicaoSelecionada)) {
+            ePosicaoValida = false
+            errorMessage = "Posicão já selecionada. Selecione uma posição não selecionada anteriormente."
+        }
 
-            if (posicoesJaMarcadasParaOBarcoAtual.length >= tamanhoBarcoAtual) {
-                ePosicaoValida = false
-                errorMessage = "Você já selecionou o número máximo de casas para essa embarcação ocupar."
-            }
+        if (posicoesJaMarcadasParaOBarcoAtual.length >= tamanhoBarcoAtual) {
+            ePosicaoValida = false
+            errorMessage = "Você já selecionou o número máximo de casas para essa embarcação ocupar."
         }
 
         if (ePosicaoValida) {
@@ -299,6 +332,7 @@ const PreparacaoJogo = (props: PreparacaoJogoProps) => {
             posicaoEstrategiaASalvar.numeroLinha = menorTiro.numeroLinha;
             posicaoEstrategiaASalvar.numeroColuna = menorTiro.numeroColuna;
             posicaoEstrategiaASalvar.orientacao = LiteralOrientacao.Baixo;
+            posicaoEstrategiaASalvar.idNavio = barcoMovido.id;
             setLNaviosParaEnviar(previousState => [...previousState, posicaoEstrategiaASalvar]);
         } else {
             // Salvar para envio de navio horizontal
@@ -309,9 +343,10 @@ const PreparacaoJogo = (props: PreparacaoJogoProps) => {
             posicaoEstrategiaASalvarHorz.numeroLinha = menorTiroHorz.numeroLinha;
             posicaoEstrategiaASalvarHorz.numeroColuna = menorTiroHorz.numeroColuna;
             posicaoEstrategiaASalvarHorz.orientacao = LiteralOrientacao.Direita;
-            setLNaviosParaEnviar(previousState => [...previousState, posicaoEstrategiaASalvarHorz ]);
+            posicaoEstrategiaASalvarHorz.idNavio = barcoMovido.id; //Isso serve somente para a model do front para conseguir fazer o controle mais facilmente
+            setLNaviosParaEnviar(previousState => [...previousState, posicaoEstrategiaASalvarHorz]);
         }
-    
+
         posicaoParaMover.event.target.appendChild(barcoMovido)
         barcoSelecionado.style.border = 'none'
         barcoSelecionado.style.opacity = '0.2'
@@ -319,20 +354,20 @@ const PreparacaoJogo = (props: PreparacaoJogoProps) => {
         setPodeSelecionarPosicoes(false)
         setPosicaoParaMover(null)
         setTotalPosicoesOcupadas(previousState => {
-            return [...previousState, [...posicoesJaMarcadasParaOBarcoAtual]]
+            return [...previousState,
+            {
+                idBarco: barcoMovido.id,
+                posicoes: [...posicoesJaMarcadasParaOBarcoAtual]
+            }
+            ]
         })
         resetFundoPosicoes(posicoesJaMarcadasParaOBarcoAtual)
         setPosicoesJaMarcadasParaOBarcoAtual([])
         setTamanhoBarcoAtual(0)
         if (eReposicao) {
-            console.log("eReposicao", eReposicao)
             setEReposicao(false)
-            console.log(lNaviosParaEnviar.filter(navio => posicoesJaMarcadasParaOBarcoAtual
-                .find(posicao => posicao.toString()[0] == navio.numeroLinha.toString() && posicao.toString()[1] == navio.numeroColuna.toString()) == undefined))
-            setTotalPosicoesOcupadas(totalPosicoesOcupadas.filter(posicoes => posicoes.includes(posicoesJaMarcadasParaOBarcoAtual[0])))
-            //TODO: TRATAR PARA REMOVER O NAVIO DA LISTA NO CASO DE REPOSICIONAMENTO (NAS DUAS ESTRUTURAS - ENVIO PARA A API E LISTA DE CONTROLE)
-            //TODO: ESSA TRATATIVA CORRIGIRÁ O BUG CASO SE TENTE REPOSICIONAR O NAVIO E ELE PERMITE SELECIONAR A POSIÇÃO EM QUE ESTÁ A OUTRA EMBARCAÇÃO
-            //TODO: TRATAR PARA PERMITIR MARCAR SOMENTE DIREÇÕES HORIZONTAIS OU VERTICAIS CERTINHO (BUG EM ALGUNS CASOS)
+            setTotalPosicoesOcupadas(previousState => previousState.filter(posicao => posicao.idBarco != barcoSelecionado.id))
+            setLNaviosParaEnviar(previousState => previousState.filter(x => x.idNavio != barcoSelecionado.id))
             barcoSelecionado.style.display = 'none'
         }
         else {
@@ -359,13 +394,13 @@ const PreparacaoJogo = (props: PreparacaoJogoProps) => {
                     return;
                 }
                 if (oponenteCarregouFluxo) {
-                
+
                     // Notificar outros clients
                     let pedidoAtualizarListagemSala = new WsEnvelope();
                     pedidoAtualizarListagemSala.numeroTipoAtualizacao = LiteralTipoAtualizacao.ListagemSalas;
                     pedidoAtualizarListagemSala.tokenAuth = props.tokenAuth;
                     sendJsonMessage({ ...pedidoAtualizarListagemSala });
-                    
+
                     // Cancelar proxima Saida
                     let rCancelarSaida = await clientRest.callPutAutorizado<undefined>('/api/sala/cancelarProximaSaida', {}, undefined);
                     if (!rCancelarSaida.eOk) {
@@ -373,26 +408,26 @@ const PreparacaoJogo = (props: PreparacaoJogoProps) => {
                         setErroEstaAberto(_ => true);
                         return;
                     }
-                            
+
                     navigate('/game/play/' + roomId);
                     return;
                 }
-                
+
                 // Notificar outros clients
                 let pedidoAtualizarListagemSalaEsperando = new WsEnvelope();
                 pedidoAtualizarListagemSalaEsperando.numeroTipoAtualizacao = LiteralTipoAtualizacao.ListagemSalas;
                 pedidoAtualizarListagemSalaEsperando.tokenAuth = props.tokenAuth;
                 sendJsonMessage({ ...pedidoAtualizarListagemSalaEsperando });
-                
+
                 setEstaEsperando(_ => true);
             });
     }
-    
+
     const handleFecharErroOponenteSaiuOnClick = () => {
         setErroOponenteSaiuEstaAberto(_ => false);
         navigate('/salas');
     }
-    
+
     //TODO: Tratar para organizar os elementos corretamente em tela
     return (
         <div>
