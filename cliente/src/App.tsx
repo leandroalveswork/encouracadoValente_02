@@ -42,7 +42,9 @@ function App() {
           <Route path="/mochila" element={<ProtectedRoute><IndexMochila /></ProtectedRoute>} />,
           <Route path="/liberacao" element={<ProtectedRoute><IndexLiberacao /></ProtectedRoute>} />,
           <Route path="/liberacao/liberarCreditos" element={<ProtectedRoute><LiberarCreditos /></ProtectedRoute>} />,
-          <Route path="/game/play/:roomId" element={<ProtectedRoute><TelaJogo backendUrl={`${process.env.REACT_APP_url_do_servidor_backend_ws as string}/room`} /></ProtectedRoute>} />,
+          <Route path="/game/play/:roomId" element={<ProtectedRoute><TelaJogo
+            tokenAuth={userState.localStorageUser?.token ?? ''}
+            rotaWs={(process.env.REACT_APP_url_do_servidor_backend_ws as string) + '/ws'} /></ProtectedRoute>} />,
           <Route path="/game/prepare/:roomId" element={<ProtectedRoute><PreparacaoJogo
             tokenAuth={userState.localStorageUser?.token ?? ''}
             rotaWs={(process.env.REACT_APP_url_do_servidor_backend_ws as string) + '/ws'} /></ProtectedRoute>} />,
