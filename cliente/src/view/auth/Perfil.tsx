@@ -35,6 +35,7 @@ const Perfil = (props: PerfilProps) => {
     const clientRest = new ClientRest();
 
     const [nome, setNome] = useState(userState.localStorageUser?.nome ?? '');
+    const [creditos, setCreditos] = useState((userState.localStorageUser?.creditos + '') ?? '');
     const [eAlteracaoSenha, setEAlteracaoSenha] = useState(false);
     const [senhaAnterior, setSenhaAnterior] = useState('');
     const [senhaNova, setSenhaNova] = useState('');
@@ -42,6 +43,18 @@ const Perfil = (props: PerfilProps) => {
     const [erroEstaAberto, setErroEstaAberto] = useState(false);
     const [problemaErro, setProblemaErro] = useState('');
     const [sucessoAlteracaoEstaAberto, setSucessoAlteracaoEstaAberto] = useState(false);
+    
+    useEffect(() => {
+        clientRest.callGetAutorizado<string>('/api/autorizacao/consultarCreditos', '')
+            .then(rConsulta => {
+                if (rConsulta.eOk) {
+                    setCreditos(_ => rConsulta.body ?? '');
+                } else {
+                    setProblemaErro(_ => rConsulta.problema);
+                    setErroEstaAberto(_ => true);
+                }
+            });
+    }, []);
 
     const handleClickSalvar = async () => {
         // const tryIdTema = searchParams.get('id');
@@ -86,7 +99,7 @@ const Perfil = (props: PerfilProps) => {
                         <EncVnTextField label="Nome" variant="outlined" className="mt-4" sx={{ width: 350 }} onChange={ev => setNome(_ => ev.target.value)} value={nome} />
                     </div>
                     <div className="row g-0">
-                        <EncVnTextField label="Saldo Atual" type="number" variant="outlined" className="mt-4" sx={{ width: 350 }} value={'' + userState.localStorageUser?.creditos ?? '0'} disabled
+                        <EncVnTextField label="Saldo Atual" type="number" variant="outlined" className="mt-4" sx={{ width: 350 }} value={'' + creditos} disabled
                             InputProps={{
                                 startAdornment: <InputAdornment position="start">R$</InputAdornment>,
                             }} />
