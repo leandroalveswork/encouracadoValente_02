@@ -1,4 +1,4 @@
-import { Box, Button, Dialog, DialogActions, DialogContent, styled, Tab, Tabs, TextField } from '@mui/material';
+import { Box, Button, Dialog, DialogActions, DialogContent, InputAdornment, styled, Tab, Tabs, TextField } from '@mui/material';
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import ErroModal from '../../components/erroModal/ErroModal';
@@ -84,6 +84,12 @@ const Perfil = (props: PerfilProps) => {
             <Box className='box'>
                     <div className="row g-0">
                         <EncVnTextField label="Nome" variant="outlined" className="mt-4" sx={{ width: 350 }} onChange={ev => setNome(_ => ev.target.value)} value={nome} />
+                    </div>
+                    <div className="row g-0">
+                        <EncVnTextField label="Saldo Atual" type="number" variant="outlined" className="mt-4" sx={{ width: 350 }} value={'' + userState.localStorageUser?.creditos ?? '0'} disabled
+                            InputProps={{
+                                startAdornment: <InputAdornment position="start">R$</InputAdornment>,
+                            }} />
                     </div>
                     
                     {!(userState.localStorageUser?.eUsuarioGoogle ?? true) && <FormGroup>
