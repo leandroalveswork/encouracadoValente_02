@@ -215,10 +215,26 @@ const TelaJogo = (props: TelaJogoProps) => {
                 if (rJogadorLogado.eOk) {
                     setProgressoJogadorLogado(_ => rJogadorLogado.body ?? new MdProgressoNaviosJogador());
 
+                    // Verificar se o jogador logado perdeu
+                    if ((rJogadorLogado.body ?? new MdProgressoNaviosJogador()).estaoTodosAfundados) {
+
+                        // Notificar outros clients
+                        let notificarVitoria = new WsEnvelope();
+                        notificarVitoria.numeroTipoAtualizacao = LiteralTipoAtualizacao.GanharJogo;
+                        notificarVitoria.tokenAuth = props.tokenAuth;
+                        sendJsonMessage({ ...notificarVitoria });
+                        
+                        navigate('/game/end/N');
+                        return;
+                    }
+                    
+                    // Atualizar bloqueio/desbloqueio para atirar no inimigo
                     if ((rJogadorLogado.body ?? new MdProgressoNaviosJogador()).estaNaVezDoJogador)
                         setEstaEsperandoInimigoAtirar(_ => false);
                     else
                         setEstaEsperandoInimigoAtirar(_ => true);
+                        
+                    // Atualizar Timer
                     const horaRecomecoAsDate = new Date((rJogadorLogado.body ?? new MdProgressoNaviosJogador()).horaRecomecoTimer);
                     setComecoTimerCalculado(_ => horaRecomecoAsDate.getTime());
                 } else {
@@ -304,9 +320,10 @@ const TelaJogo = (props: TelaJogoProps) => {
             const pedidoAtualizacao = (lastJsonMessage as unknown) as WsEnvelope;
             if (pedidoAtualizacao.numeroTipoAtualizacao == LiteralTipoAtualizacao.ListagemSalas)
                 carregarSala();
-            if (pedidoAtualizacao.numeroTipoAtualizacao == LiteralTipoAtualizacao.FluxoJogo) {
+            if (pedidoAtualizacao.numeroTipoAtualizacao == LiteralTipoAtualizacao.FluxoJogo)
                 carregarProgressos();
-            }
+            if (pedidoAtualizacao.numeroTipoAtualizacao == LiteralTipoAtualizacao.GanharJogo)
+                navigate('/game/end/S');
         }
     }, [lastJsonMessage]);
 

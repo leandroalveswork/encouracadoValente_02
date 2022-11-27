@@ -19,6 +19,7 @@ import ProtectedRoute from './routes/ProtectedRoute';
 import { useState } from "react";
 import UserState from "./integracao/UserState";
 import ListagemSalas from "./view/ListagemSalas"
+import FinalJogo from './view/FinalJogo';
 
 function App() {
   const userState = new UserState();
@@ -45,12 +46,13 @@ function App() {
           {(userState.localStorageUser?.eSuperuser ?? true) &&
           <Route path="/liberacao/liberarCreditos" element={<ProtectedRoute><LiberarCreditos /></ProtectedRoute>} />
           },
-          <Route path="/game/play/:roomId" element={<ProtectedRoute><TelaJogo
-            tokenAuth={userState.localStorageUser?.token ?? ''}
-            rotaWs={(process.env.REACT_APP_url_do_servidor_backend_ws as string) + '/ws'} /></ProtectedRoute>} />,
           <Route path="/game/prepare/:roomId" element={<ProtectedRoute><PreparacaoJogo
             tokenAuth={userState.localStorageUser?.token ?? ''}
             rotaWs={(process.env.REACT_APP_url_do_servidor_backend_ws as string) + '/ws'} /></ProtectedRoute>} />,
+          <Route path="/game/play/:roomId" element={<ProtectedRoute><TelaJogo
+            tokenAuth={userState.localStorageUser?.token ?? ''}
+            rotaWs={(process.env.REACT_APP_url_do_servidor_backend_ws as string) + '/ws'} /></ProtectedRoute>} />,
+          <Route path="/game/end/:ganhou" element={<ProtectedRoute><FinalJogo/></ProtectedRoute>} />,
           <Route path="/perfil" element={<ProtectedRoute><Perfil setUsername={setUsername} /></ProtectedRoute>} />,
           <Route path="/salas" element={<ProtectedRoute>{salasElement}</ProtectedRoute>} />,
         </Routes>
