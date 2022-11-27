@@ -254,20 +254,22 @@ class FluxoMultiplayerController extends ControllerBase {
             throw ex;
         }
         const idUsuarioOponente = idUsuarioLogado == salaDb.idPlayer1 ? salaDb.idPlayer2 : salaDb.idPlayer1;
-        if (idUsuarioOponente == null) {
+        // if (idUsuarioOponente != null) {
+        //     let ex = new MdExcecao();
+        //     ex.codigoExcecao = 404;
+        //     ex.problema = 'Oponente nao encontrado';
+        //     throw ex;
+        // }
+        const usuarioInimigoDb = idUsuarioOponente == null ? null : await this._usuarioRepositorio.selectByIdOrDefault(idUsuarioOponente);
+        if (idUsuarioOponente != null && usuarioInimigoDb == null) {
             let ex = new MdExcecao();
             ex.codigoExcecao = 404;
             ex.problema = 'Oponente não encontrado';
             throw ex;
         }
-        const usuarioInimigoDb = await this._usuarioRepositorio.selectByIdOrDefault(idUsuarioOponente);
-        if (usuarioInimigoDb == null) {
-            let ex = new MdExcecao();
-            ex.codigoExcecao = 404;
-            ex.problema = 'Oponente não encontrado';
-            throw ex;
-        }
-        const idTemaInimigo = (await this._compraRepositorio.selectCompraEquipadaByIdUsuarioOrDefault(idUsuarioOponente))?.idTema ?? '';
+        let idTemaInimigo = '';
+        if (idUsuarioOponente != null)
+            idTemaInimigo = (await this._compraRepositorio.selectCompraEquipadaByIdUsuarioOrDefault(idUsuarioOponente))?.idTema ?? '';
         
         let totalJogadores = 0;
         if (salaDb.idPlayer1 != null)
@@ -280,7 +282,7 @@ class FluxoMultiplayerController extends ControllerBase {
         salaDetalhe.totalJogadores = totalJogadores;
         salaDetalhe.oponenteCarregouFluxo = (salaDb.idPlayer1 == idUsuarioLogado) ? salaDb.player2CarregouFluxo : salaDb.player1CarregouFluxo;
         salaDetalhe.idTemaInimigo = idTemaInimigo;
-        salaDetalhe.nomeUsuarioInimigo = usuarioInimigoDb.nome.split(' ')[0];
+        salaDetalhe.nomeUsuarioInimigo = usuarioInimigoDb?.nome.split(' ')[0] ?? 'Inimigo';
         
         return salaDetalhe;
     }

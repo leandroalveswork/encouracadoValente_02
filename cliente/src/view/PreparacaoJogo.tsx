@@ -120,7 +120,9 @@ const PreparacaoJogo = (props: PreparacaoJogoProps) => {
 
     useEffect(() => {
         if (salaJogando != null) {
+            console.log('verify sala...');
             if (salaJogando.totalJogadores < 2) {
+                console.log('quitting OK');
                 setErroOponenteSaiuEstaAberto(_ => true);
                 return;
             }
@@ -132,6 +134,7 @@ const PreparacaoJogo = (props: PreparacaoJogoProps) => {
                     clientRest.callPutAutorizado<undefined>('/api/sala/cancelarProximaSaida', {}, undefined)
                         .then(rCancelarSaida => {
                             if (!rCancelarSaida.eOk) {
+                                console.log('error');
                                 setProblemaErro(_ => rCancelarSaida.problema);
                                 setErroEstaAberto(_ => true);
                                 return;

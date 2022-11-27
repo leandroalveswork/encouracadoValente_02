@@ -57,9 +57,11 @@ const Header = (props: HeaderProps) => {
 
     const definePages = () => {
         if (loggedIn) {
-            return [{label: 'Loja', href: 'loja'}, {label: 'Mochila', href: 'mochila'}, {label: 'Liberação', href: 'liberacao'}];
+            if (userState.localStorageUser?.eSuperuser)
+                return [{label: 'Loja', href: 'loja'}, {label: 'Mochila', href: 'mochila'}, {label: 'Liberação', href: 'liberacao'}];
+            else
+                return [{label: 'Loja', href: 'loja'}, {label: 'Mochila', href: 'mochila'}];
         }
-
         return [];
     }
     const pages = definePages();    

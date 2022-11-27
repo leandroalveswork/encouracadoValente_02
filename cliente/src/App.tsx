@@ -40,8 +40,11 @@ function App() {
           <Route path="/" element={<ProtectedRoute>{salasElement}</ProtectedRoute>} />,
           <Route path="/loja/detalheTema" element={<ProtectedRoute><DetalheTema /></ProtectedRoute>} />,
           <Route path="/mochila" element={<ProtectedRoute><IndexMochila /></ProtectedRoute>} />,
-          <Route path="/liberacao" element={<ProtectedRoute><IndexLiberacao /></ProtectedRoute>} />,
-          <Route path="/liberacao/liberarCreditos" element={<ProtectedRoute><LiberarCreditos /></ProtectedRoute>} />,
+          {(userState.localStorageUser?.eSuperuser ?? true) &&
+          <Route path="/liberacao" element={<ProtectedRoute><IndexLiberacao /></ProtectedRoute>} />},
+          {(userState.localStorageUser?.eSuperuser ?? true) &&
+          <Route path="/liberacao/liberarCreditos" element={<ProtectedRoute><LiberarCreditos /></ProtectedRoute>} />
+          },
           <Route path="/game/play/:roomId" element={<ProtectedRoute><TelaJogo
             tokenAuth={userState.localStorageUser?.token ?? ''}
             rotaWs={(process.env.REACT_APP_url_do_servidor_backend_ws as string) + '/ws'} /></ProtectedRoute>} />,

@@ -13,7 +13,8 @@ import { PutTema } from '../../modelos/importarBack/PutTema';
 import { UtilNumber } from '../../util/UtilNumber';
 import ManterListaNavioTema from './ManterListaNavioTema';
 import MdRespostaApi from '../../modelos/MdRespostaApi';
-import '../css/DetalheTema.css'
+import '../css/DetalheTema.css';
+import FormGroup from '@mui/material/FormGroup';
 
 const EncVnTextField = styled(TextField)({
     '& input + fieldset': {
@@ -157,9 +158,11 @@ const DetalheTema = () => {
                     {eAlteracao && <div className="col-6" style={{marginTop: '10px'}}>
                         <Button size="medium" variant="contained" onClick={() => handleClickSalvar()}>Salvar</Button>
                     </div>}
+                    {(userState.localStorageUser?.eSuperuser ?? true) && <FormGroup>
                     {!eAlteracao && <div className="col-6" style={{marginTop: '10px'}}>
                         <Button size="medium" variant="contained" onClick={() => handleClickAlterar()}>Alterar</Button>
                     </div>}
+                    </FormGroup>}
 
                 </div>
             </Box>

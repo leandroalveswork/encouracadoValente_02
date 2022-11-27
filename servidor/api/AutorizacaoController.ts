@@ -190,6 +190,7 @@ class AutorizacaoController extends ControllerBase {
         usuarioLogado.email = usuarioDb.email;
         usuarioLogado.eSuperuser = usuarioDb.eSuperuser;
         usuarioLogado.eUsuarioGoogle = usuarioDb.eUsuarioGoogle;
+        usuarioLogado.creditos = usuarioDb.creditos ?? 0;
         return usuarioLogado;
     }
 
