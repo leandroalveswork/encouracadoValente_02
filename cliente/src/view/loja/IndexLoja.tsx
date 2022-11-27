@@ -141,10 +141,8 @@ const IndexLoja = () => {
                                     {!iResumoTema.foiCompradoPorUsuarioLogado && <Button size="medium" variant="contained" onClick={() => handleClickComprar(iResumoTema.id)}>{'Comprar - R$ ' + iResumoTema.preco}</Button>}
                                     {iResumoTema.foiCompradoPorUsuarioLogado && <Button size="medium" color="inherit" disabled>Comprado</Button>}
                                     <Button size="medium" onClick={() => navigate('/loja/detalheTema?id=' + iResumoTema.id)}>Ver mais</Button>
-                                    {(userState.localStorageUser?.eSuperuser ?? true) && <FormGroup>
-                                    <Button size="medium" variant="contained" onClick={() => navigate('/loja/detalheTema?id=' + iResumoTema.id + '&eAlteracao=S')}>Alterar</Button>
-                                    <Button size="medium" variant="contained" color="error" onClick={() => handleClickExcluir(iResumoTema.id)}>Excluir</Button>
-                                    </FormGroup>}
+                                    {(userState.localStorageUser?.eSuperuser ?? true) && <Button size="medium" variant="contained" onClick={() => navigate('/loja/detalheTema?id=' + iResumoTema.id + '&eAlteracao=S')}>Alterar</Button>}
+                                    {(userState.localStorageUser?.eSuperuser ?? true) && <Button size="medium" variant="contained" color="error" onClick={() => handleClickExcluir(iResumoTema.id)}>Excluir</Button>}
                                 </CardActions>
                             </Card>
                         </div>)

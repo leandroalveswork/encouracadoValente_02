@@ -51,24 +51,28 @@ const ManterListaNavioTema = (props: ManterListaNavioTemaProps) => {
 
     const handleClickExcluir = (idxNavioTema: number, tamNavio: number): void => {
         props.setLNaviosTema(_ => props.lNaviosTema.filter((el, idxEl) => idxEl != idxNavioTema));
-        updateNaviosAdicionados(arr => arr.filter((item) => item != tamNavio))
+        // updateNaviosAdicionados(arr => arr.filter((item) => item != tamNavio))
     }
 
     const handleSalvarAdicao = (navioTema: MdDetalheNavioTema): void => {
         props.setLNaviosTema(_ => props.lNaviosTema.concat([ navioTema ]));
         setFormNavioTema(_ => 'escondido');
-        updateNaviosAdicionados(arr => [...arr, navioTema.tamnQuadrados])
+        // updateNaviosAdicionados(arr => [...arr, navioTema.tamnQuadrados])
     }
 
     const handleSalvarAlteracao = (navioTema: MdDetalheNavioTema): void => {
         let copiaLNaviosTema = [ ...(props.lNaviosTema) ];
-        if (idxNavioTemaAlteracaoPendente == null) {
+        if (idxNavioTemaAlteracaoPendente == null)
             return;
-        }
+
         copiaLNaviosTema[idxNavioTemaAlteracaoPendente] = navioTema;
         props.setLNaviosTema(_ => copiaLNaviosTema);
         setFormNavioTema(_ => 'escondido');
     }
+    
+    useEffect(() => {
+        updateNaviosAdicionados(_ => props.lNaviosTema.map(x => x.tamnQuadrados));
+    }, [props.lNaviosTema])
 
     return (
         <>
@@ -130,7 +134,11 @@ const ManterListaNavioTema = (props: ManterListaNavioTemaProps) => {
                 <Button size="medium" onClick={() => setFormNavioTema(_ => 'adicionar')}>Adicionar Personalização</Button>
             </div>}
             {formNavioTema == 'adicionar' && <AdicionarNavioTema onCancelar={() => setFormNavioTema(_ => 'escondido')} onSalvar={handleSalvarAdicao} naviosAdicionados={naviosAdicionados} />}
-            {formNavioTema == 'alterar' && <AlterarNavioTema navioTemaInicial={props.lNaviosTema[idxNavioTemaAlteracaoPendente ?? 0]} onCancelar={() => setFormNavioTema(_ => 'escondido')} onSalvar={handleSalvarAlteracao} naviosAdicionados={naviosAdicionados} /> }
+            {formNavioTema == 'alterar' && <AlterarNavioTema
+                navioTemaInicial={props.lNaviosTema[idxNavioTemaAlteracaoPendente ?? 0]}
+                onCancelar={() => setFormNavioTema(_ => 'escondido')}
+                onSalvar={handleSalvarAlteracao}
+                naviosAdicionados={naviosAdicionados.filter(x => x != props.lNaviosTema[idxNavioTemaAlteracaoPendente ?? 0].tamnQuadrados)} /> }
         </>
     )
 }
