@@ -57,9 +57,14 @@ const Header = (props: HeaderProps) => {
 
     const definePages = () => {
         if (loggedIn) {
-            return [{label: 'Home', href: ''}, {label: 'Loja', href: 'loja'}, {label: 'Mochila', href: 'mochila'}, {label: 'Liberação', href: 'liberacao'}, {label: 'Sala de jogo', href: 'game/123'}];
+            if (userState.localStorageUser?.eSuperuser){
+                return [{label: 'Home', href: ''}, {label: 'Loja', href: 'loja'}, {label: 'Mochila', href: 'mochila'}, {label: 'Liberação', href: 'liberacao'}, {label: 'Sala de jogo', href: 'game/123'}];
+                }
+            else {
+                return [{label: 'Home', href: ''}, {label: 'Loja', href: 'loja'}, {label: 'Mochila', href: 'mochila'}, {label: 'Sala de jogo', href: 'game/123'}];
+       
+            }        
         }
-
         return [];
     }
     const pages = definePages();    
