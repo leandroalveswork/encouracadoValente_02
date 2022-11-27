@@ -154,7 +154,7 @@ export default function ListagemSalas(props: ListagemSalasProps) {
           align="center"
           color="black"
         >
-          {estaEsperando ? 'Salas Disponíveis' : 'Esperando Jogador'}
+          Salas Disponíveis
         </Typography>
 
         <Container sx={{ py: 8 }} maxWidth="md">

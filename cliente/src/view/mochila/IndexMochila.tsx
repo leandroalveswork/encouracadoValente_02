@@ -87,7 +87,8 @@ const IndexMochila = () => {
     
     return (
         <div>
-            <h1 style={{color: 'white', fontFamily: 'bungee', textAlign: 'center', marginTop: '16px' }}>Loja</h1>
+            <h1 style={{color: 'white', fontFamily: 'bungee', textAlign: 'center', marginTop: '16px' }}>Mochila de temas</h1>
+            <h5 style={{color: 'white', fontFamily: 'bungee', textAlign: 'center', marginTop: '16px' }}>Aqui você pode equipar os temas que comprou</h5>
             {!carregouTemas && <div className='d-flex justify-content-center w-100'>
                 <CircularProgress />
             </div>}

@@ -22,31 +22,31 @@ import { MdDetalheTema } from "../modelos/importarBack/MdDetalheTema";
 const SEGUNDOS_TIMER = 15;
 
 const CircularProgressWithLabel = (
-  props: CircularProgressProps & { value: number },
+    props: CircularProgressProps & { value: number },
 ) => {
-  return (
-    <Box sx={{ position: 'relative', display: 'inline-flex' }}>
-      <CircularProgress variant="determinate" {...props} />
-      <Box
-        sx={{
-          top: 0,
-          left: 0,
-          bottom: 0,
-          right: 0,
-          position: 'absolute',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-        }}
-      >
-        <Typography
-          variant="caption"
-          component="div"
-          color="text.secondary"
-        >{`${Math.ceil((1 - props.value * 0.01) * SEGUNDOS_TIMER)}s`}</Typography>
-      </Box>
-    </Box>
-  );
+    return (
+        <Box sx={{ position: 'relative', display: 'inline-flex' }}>
+            <CircularProgress variant="determinate" {...props} />
+            <Box
+                sx={{
+                    top: 0,
+                    left: 0,
+                    bottom: 0,
+                    right: 0,
+                    position: 'absolute',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                }}
+            >
+                <Typography
+                    variant="caption"
+                    component="div"
+                    color="text.secondary"
+                >{`${Math.ceil((1 - props.value * 0.01) * SEGUNDOS_TIMER)}s`}</Typography>
+            </Box>
+        </Box>
+    );
 }
 
 export interface TelaJogoProps {
@@ -57,9 +57,11 @@ export interface TelaJogoProps {
 const TelaJogo = (props: TelaJogoProps) => {
 
     const DESTAQUE_FUNDO_VEZ_JOGADOR = "#FBE9E7";
-    
+
     const posicoesJaMarcadas: Array<string> = []
     const musicaJogo = new Audio('/assets/music.mp3')
+    const somAcertouHit = new Audio('/assets/HitExplosion.mp3')
+    const somErrouHit = new Audio('/assets/SplashSound.mp3')
 
     const navigate = useNavigate();
     const { roomId } = useParams()
@@ -81,12 +83,14 @@ const TelaJogo = (props: TelaJogoProps) => {
     const [temaBarcoGrandeSrcInimigo, setTemaBarcoGrandeSrcInimigo] = useState<string>();
     const [temaBarcoGiganteSrcInimigo, setTemaBarcoGiganteSrcInimigo] = useState<string>();
     const [nomeInimigo, setNomeInimigo] = useState('Inimigo');
-    
+
     const [comecoTimerCalculado, setComecoTimerCalculado] = useState((new Date()).getTime());
     const [dateAgoraExato, setDateAgoraExato] = useState(new Date());
     const [progressTimer, setProgressTimer] = useState(0);
 
     const { lastJsonMessage, sendJsonMessage } = useWebSocket(props.rotaWs + '?id=' + roomId);
+    const [tirosDisparadosUsuario, setTirosDisparadosUsuario] = useState<number>(0)
+    const [tirosDisparadosInimigo, setTirosDisparadosInimigo] = useState<number>(0)
 
     const [erroEstaAberto, setErroEstaAberto] = useState(false);
     const [problemaErro, setProblemaErro] = useState('');
@@ -101,11 +105,37 @@ const TelaJogo = (props: TelaJogoProps) => {
         }
     }, [])
 
+    useEffect(() => {
+        if (progressoJogadorLogado && progressoJogadorInimigo) {
+            dispararSonsDeHit(progressoJogadorLogado, tirosDisparadosUsuario)
+            dispararSonsDeHit(progressoJogadorInimigo, tirosDisparadosInimigo)
+
+            if(progressoJogadorLogado!.tiros.length > tirosDisparadosUsuario){
+                setTirosDisparadosUsuario(progressoJogadorLogado.tiros.length)
+            }
+            if(progressoJogadorInimigo!.tiros.length > tirosDisparadosInimigo){
+                setTirosDisparadosInimigo(progressoJogadorInimigo.tiros.length)
+            }
+
+        }
+    }, [progressoJogadorInimigo, progressoJogadorLogado])
+
     const parseCoordenadaAsTiro = (coordenada: number): PostTiroFluxo => {
         let coordAsString: string = coordenada + '';
         if (coordAsString.length == 1)
             coordAsString = '0' + coordAsString;
         return { numeroLinha: parseInt(coordAsString[0]), numeroColuna: parseInt(coordAsString[1]) };
+    }
+
+    const dispararSonsDeHit = (progressoJogador: MdProgressoNaviosJogador | null, tirosDisparados: number) => {
+        if (progressoJogador!.tiros && progressoJogador!.tiros.length > tirosDisparados) {
+            if (progressoJogador!.tiros[progressoJogador!.tiros.length - 1].acertou) {
+                somAcertouHit.play()
+            }
+            else {
+                somErrouHit.play()
+            }
+        }
     }
 
     const handlePosicaoOnClick = (event: any) => {
@@ -140,10 +170,9 @@ const TelaJogo = (props: TelaJogoProps) => {
                 notificarTiro.numeroTipoAtualizacao = LiteralTipoAtualizacao.FluxoJogo;
                 notificarTiro.tokenAuth = props.tokenAuth;
                 sendJsonMessage({ ...notificarTiro });
-
-
                 // sendJsonMessage({ idPosicao: event.currentTarget.id, roomId })
             });
+
     }
 
     const carregarSala = (precisaCarregarTemaInimigo: boolean = false) => {
@@ -185,6 +214,7 @@ const TelaJogo = (props: TelaJogoProps) => {
                 let estaExibindoErro = false;
                 if (rJogadorLogado.eOk) {
                     setProgressoJogadorLogado(_ => rJogadorLogado.body ?? new MdProgressoNaviosJogador());
+
                     if ((rJogadorLogado.body ?? new MdProgressoNaviosJogador()).estaNaVezDoJogador)
                         setEstaEsperandoInimigoAtirar(_ => false);
                     else
@@ -220,20 +250,20 @@ const TelaJogo = (props: TelaJogoProps) => {
 
         carregarSala(true);
         carregarProgressos();
-      
+
         // Preparar o UserWebSocket no WS
         let preparacaoUsuarioLogadoWs = new WsEnvelope();
         preparacaoUsuarioLogadoWs.numeroTipoAtualizacao = LiteralTipoAtualizacao.PrepararUsuarioLogadoWs;
         preparacaoUsuarioLogadoWs.tokenAuth = props.tokenAuth;
         sendJsonMessage({ ...preparacaoUsuarioLogadoWs });
-        
+
         // Timer
         const timer = setInterval(() => {
             setDateAgoraExato(_ => new Date());
         }, 66);
         return () => clearInterval(timer);
     }, []);
-    
+
     // Timer
     useEffect(() => {
         const millisegundosPassados = dateAgoraExato.getTime() - comecoTimerCalculado;
@@ -243,9 +273,9 @@ const TelaJogo = (props: TelaJogoProps) => {
         if (progressTimer === 100) {
             if (estaEsperandoInimigoAtirar)
                 return;
-                
+
             setEstaEsperandoInimigoAtirar(_ => true);
-            
+
             // Enviar tiro que e vez passada (numeroLinha igual a -1)
             const payloadTiro = new PostTiroFluxo();
             payloadTiro.numeroLinha = -1;
@@ -257,9 +287,9 @@ const TelaJogo = (props: TelaJogoProps) => {
                         setErroEstaAberto(_ => true);
                         return;
                     }
-                        
+
                     carregarProgressos();
-                    
+
                     // Notificar outros clients
                     let notificarTiro = new WsEnvelope();
                     notificarTiro.numeroTipoAtualizacao = LiteralTipoAtualizacao.FluxoJogo;
@@ -268,14 +298,15 @@ const TelaJogo = (props: TelaJogoProps) => {
                 });
         }
     }, [progressTimer]);
-    
+
     useEffect(() => {
         if (lastJsonMessage) {
             const pedidoAtualizacao = (lastJsonMessage as unknown) as WsEnvelope;
             if (pedidoAtualizacao.numeroTipoAtualizacao == LiteralTipoAtualizacao.ListagemSalas)
                 carregarSala();
-            if (pedidoAtualizacao.numeroTipoAtualizacao == LiteralTipoAtualizacao.FluxoJogo)
+            if (pedidoAtualizacao.numeroTipoAtualizacao == LiteralTipoAtualizacao.FluxoJogo) {
                 carregarProgressos();
+            }
         }
     }, [lastJsonMessage]);
 
@@ -324,7 +355,7 @@ const TelaJogo = (props: TelaJogoProps) => {
                 <Typography textAlign="center" style={{ fontFamily: "bungee", color: "black" }}>É HORA DO ATAQUE</Typography>
                 <div className="d-flex justify-content-between">
                     <div style={{ backgroundColor: estaEsperandoInimigoAtirar ? 'initial' : DESTAQUE_FUNDO_VEZ_JOGADOR }}>
-                        <Typography textAlign="center" style={{ fontFamily: "bungee", color: "gray" }}>VOCE</Typography>
+                        <Typography textAlign="center" style={{ fontFamily: "bungee", color: "gray" }}>VOCÊ</Typography>
                         <div style={{ position: 'relative' }}>
                             <PosicaoContainer handlePosicaoOnClick={handlePosicaoOnClick} idPrefix='user' clickable={false} />
                             {progressoJogadorLogado != null && progressoJogadorLogado.naviosTotais.map((iNavio, idxNavio) => {

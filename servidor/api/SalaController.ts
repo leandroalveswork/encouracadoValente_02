@@ -142,7 +142,7 @@ class SalaController extends ControllerBase {
         if (salaDb == null) {
             let ex = new MdExcecao();
             ex.codigoExcecao = 400;
-            ex.problema = 'Voce ainda nao entrou em uma sala';
+            ex.problema = 'Você ainda não entrou em uma sala';
             throw ex;
         }
         

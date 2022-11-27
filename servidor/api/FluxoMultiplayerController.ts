@@ -125,7 +125,7 @@ class FluxoMultiplayerController extends ControllerBase {
         if (salaUsuarioLogadoDb == null) {
             let ex = new MdExcecao();
             ex.codigoExcecao = 404;
-            ex.problema = 'Voce ainda nao entrou em uma sala';
+            ex.problema = 'Você ainda não entrou em uma sala';
             throw ex;
         }
         
@@ -250,7 +250,7 @@ class FluxoMultiplayerController extends ControllerBase {
         if (salaDb == null) {
             let ex = new MdExcecao();
             ex.codigoExcecao = 404;
-            ex.problema = 'Voce ainda nao entrou em uma sala';
+            ex.problema = 'Você ainda não entrou em uma sala';
             throw ex;
         }
         const idUsuarioOponente = idUsuarioLogado == salaDb.idPlayer1 ? salaDb.idPlayer2 : salaDb.idPlayer1;
@@ -264,7 +264,7 @@ class FluxoMultiplayerController extends ControllerBase {
         if (idUsuarioOponente != null && usuarioInimigoDb == null) {
             let ex = new MdExcecao();
             ex.codigoExcecao = 404;
-            ex.problema = 'Oponente nao encontrado';
+            ex.problema = 'Oponente não encontrado';
             throw ex;
         }
         let idTemaInimigo = '';
@@ -299,14 +299,14 @@ class FluxoMultiplayerController extends ControllerBase {
         if (salaUsuarioLogadoDb == null) {
             let ex = new MdExcecao();
             ex.codigoExcecao = 404;
-            ex.problema = 'Voce ainda nao entrou em uma sala';
+            ex.problema = 'Você ainda não entrou em uma sala';
             throw ex;
         }
         const idUsuarioOponente = idUsuarioLogado == salaUsuarioLogadoDb.idPlayer1 ? salaUsuarioLogadoDb.idPlayer2 : salaUsuarioLogadoDb.idPlayer1;
         if (idUsuarioOponente == null) {
             let ex = new MdExcecao();
             ex.codigoExcecao = 404;
-            ex.problema = 'Oponente nao encontrado';
+            ex.problema = 'Oponente não encontrado';
             throw ex;
         }
         
@@ -384,14 +384,14 @@ class FluxoMultiplayerController extends ControllerBase {
         if (salaUsuarioLogadoDb == null) {
             let ex = new MdExcecao();
             ex.codigoExcecao = 404;
-            ex.problema = 'Voce ainda nao entrou em uma sala';
+            ex.problema = 'Você ainda nao entrou em uma sala';
             throw ex;
         }
         const idUsuarioOponente = idUsuarioLogado == salaUsuarioLogadoDb.idPlayer1 ? salaUsuarioLogadoDb.idPlayer2 : salaUsuarioLogadoDb.idPlayer1;
         if (idUsuarioOponente == null) {
             let ex = new MdExcecao();
             ex.codigoExcecao = 404;
-            ex.problema = 'Oponente nao encontrado';
+            ex.problema = 'Oponente não encontrado';
             throw ex;
         }
         
@@ -472,14 +472,14 @@ class FluxoMultiplayerController extends ControllerBase {
         if (salaUsuarioLogadoDb == null) {
             let ex = new MdExcecao();
             ex.codigoExcecao = 404;
-            ex.problema = 'Voce ainda nao entrou em uma sala';
+            ex.problema = 'Você ainda nao entrou em uma sala';
             throw ex;
         }
         const idUsuarioOponente = idUsuarioLogado == salaUsuarioLogadoDb.idPlayer1 ? salaUsuarioLogadoDb.idPlayer2 : salaUsuarioLogadoDb.idPlayer1;
         if (idUsuarioOponente == null) {
             let ex = new MdExcecao();
             ex.codigoExcecao = 404;
-            ex.problema = 'Oponente nao encontrado';
+            ex.problema = 'Oponente não encontrado';
             throw ex;
         }
         
