@@ -1,4 +1,4 @@
-import { Button, Typography, Card, CardActions, CardContent } from "@mui/material"
+import { Button, Typography, Card, CardActions, CardContent, Tooltip } from "@mui/material"
 import PosicaoContainer from "../components/PosicaoContainer"
 import './css/TelaJogo.css'
 import React, { useEffect, useMemo, useRef, useState } from "react";
@@ -237,13 +237,13 @@ const PreparacaoJogo = (props: PreparacaoJogoProps) => {
             const ultimaPosicaoMarcada = posicoesJaMarcadasParaOBarcoAtual[posicoesJaMarcadasParaOBarcoAtual.length - 1]
 
             ePosicaoValida =
-                (      idPosicaoSelecionada == ultimaPosicaoMarcada + 1
+                (idPosicaoSelecionada == ultimaPosicaoMarcada + 1
                     || idPosicaoSelecionada == ultimaPosicaoMarcada - 1
                     || idPosicaoSelecionada == ultimaPosicaoMarcada + 10
                     || idPosicaoSelecionada == ultimaPosicaoMarcada - 10)
                 &&
-                (      
-                       idPosicaoSelecionada == posicoesJaMarcadasParaOBarcoAtual[0] + 10
+                (
+                    idPosicaoSelecionada == posicoesJaMarcadasParaOBarcoAtual[0] + 10
                     || idPosicaoSelecionada == posicoesJaMarcadasParaOBarcoAtual[0] + 20
                     || idPosicaoSelecionada == posicoesJaMarcadasParaOBarcoAtual[0] + 30
                     || idPosicaoSelecionada == posicoesJaMarcadasParaOBarcoAtual[0] + 40
@@ -440,72 +440,102 @@ const PreparacaoJogo = (props: PreparacaoJogoProps) => {
             <div className="container-tabuleiros">
                 {!estaEsperando && <>
                     <Typography textAlign="center" style={{ fontFamily: "bungee", color: "black" }}>É HORA DE PREPARAR A SUA ESTRATÉGIA</Typography>
-                    <div style={{ alignContent: 'center', paddingLeft: '5%', display: 'flex', flexDirection: 'row' }}>
-                        <PosicaoContainer handlePosicaoOnClick={handlePosicaoOnClick} idPrefix='user' clickable={podeSelecionarPosicoes} />
+                    <div style={{ alignContent: 'center', paddingLeft: '5%', display: 'flex', flexDirection: 'row', marginTop: '10px' }}>
                         <div>
-                            <img id="barcoPequeno1"
-                                ref={barcoPequenoRef1}
-                                style={{ height: '30px', width: calculaWidth(1), cursor: 'pointer' }}
-                                src={temaBarcoPequenoSrc}
-                                onClick={() => !idBarcosSelecionados.includes('barcoPequeno1') && handleBarcoOnClick(barcoPequenoRef1, 1)} />
+                            <Tooltip title="Barco pequeno - 1 posicão" arrow>
+                                <img id="barcoPequeno1"
+                                    ref={barcoPequenoRef1}
+                                    style={{ height: '30px', width: calculaWidth(1), cursor: 'pointer' }}
+                                    src={temaBarcoPequenoSrc}
+                                    title="Barco Pequeno - 1 posição"
+                                    onClick={() => !idBarcosSelecionados.includes('barcoPequeno1') && handleBarcoOnClick(barcoPequenoRef1, 1)} />
+                            </Tooltip>
 
-                            <img id="barcoPequeno2"
-                                ref={barcoPequenoRef2}
-                                style={{ height: '30px', width: calculaWidth(1), cursor: 'pointer' }}
-                                src={temaBarcoPequenoSrc}
-                                onClick={() => !idBarcosSelecionados.includes('barcoPequeno2') && handleBarcoOnClick(barcoPequenoRef2, 1)} />
+                            <Tooltip title="Barco pequeno - 1 posicão" arrow>
+                                <img id="barcoPequeno2"
+                                    ref={barcoPequenoRef2}
+                                    style={{ height: '30px', width: calculaWidth(1), cursor: 'pointer' }}
+                                    src={temaBarcoPequenoSrc}
+                                    onClick={() => !idBarcosSelecionados.includes('barcoPequeno2') && handleBarcoOnClick(barcoPequenoRef2, 1)} />
+                            </Tooltip>
 
-                            <img id="barcoPequeno3"
-                                ref={barcoPequenoRef3}
-                                style={{ height: '30px', width: calculaWidth(1), cursor: 'pointer' }}
-                                src={temaBarcoPequenoSrc}
-                                onClick={() => !idBarcosSelecionados.includes('barcoPequeno3') && handleBarcoOnClick(barcoPequenoRef3, 1)} />
+                            <Tooltip title="Barco pequeno - 1 posicão" arrow>
+                                <img id="barcoPequeno3"
+                                    ref={barcoPequenoRef3}
+                                    style={{ height: '30px', width: calculaWidth(1), cursor: 'pointer' }}
+                                    src={temaBarcoPequenoSrc}
+                                    onClick={() => !idBarcosSelecionados.includes('barcoPequeno3') && handleBarcoOnClick(barcoPequenoRef3, 1)} />
+                            </Tooltip>
 
-                            <img id="barcoPequeno4"
-                                ref={barcoPequenoRef4}
-                                style={{ height: '30px', width: calculaWidth(1), cursor: 'pointer' }}
-                                src={temaBarcoPequenoSrc}
-                                onClick={() => !idBarcosSelecionados.includes('barcoPequeno4') && handleBarcoOnClick(barcoPequenoRef4, 1)} />
+                            <Tooltip title="Barco pequeno - 1 posicão" arrow>
+                                <img id="barcoPequeno4"
+                                    ref={barcoPequenoRef4}
+                                    style={{ height: '30px', width: calculaWidth(1), cursor: 'pointer' }}
+                                    src={temaBarcoPequenoSrc}
+                                    onClick={() => !idBarcosSelecionados.includes('barcoPequeno4') && handleBarcoOnClick(barcoPequenoRef4, 1)} />
+                            </Tooltip>
 
-                            <img id="barcoMedio1"
-                                ref={barcoMedioRef1}
-                                style={{ height: '30px', width: calculaWidth(2), cursor: 'pointer' }}
-                                src={temaBarcoMedioSrc}
-                                onClick={() => !idBarcosSelecionados.includes('barcoMedio1') && handleBarcoOnClick(barcoMedioRef1, 2)} />
+                            <Tooltip title="Barco médio - 2 posições" arrow>
+                                <img id="barcoMedio1"
+                                    ref={barcoMedioRef1}
+                                    style={{ height: '30px', width: calculaWidth(2), cursor: 'pointer' }}
+                                    src={temaBarcoMedioSrc}
+                                    onClick={() => !idBarcosSelecionados.includes('barcoMedio1') && handleBarcoOnClick(barcoMedioRef1, 2)} />
+                            </Tooltip>
 
-                            <img id="barcoMedio2"
-                                ref={barcoMedioRef2}
-                                style={{ height: '30px', width: calculaWidth(2), cursor: 'pointer' }}
-                                src={temaBarcoMedioSrc}
-                                onClick={() => !idBarcosSelecionados.includes('barcoMedio2') && handleBarcoOnClick(barcoMedioRef2, 2)} />
+                            <Tooltip title="Barco médio - 2 posições" arrow>
+                                <img id="barcoMedio2"
+                                    ref={barcoMedioRef2}
+                                    style={{ height: '30px', width: calculaWidth(2), cursor: 'pointer' }}
+                                    src={temaBarcoMedioSrc}
+                                    onClick={() => !idBarcosSelecionados.includes('barcoMedio2') && handleBarcoOnClick(barcoMedioRef2, 2)} />
+                            </Tooltip>
 
-                            <img id="barcoMedio3"
-                                ref={barcoMedioRef3}
-                                style={{ height: '30px', width: calculaWidth(2), cursor: 'pointer' }}
-                                src={temaBarcoMedioSrc}
-                                onClick={() => !idBarcosSelecionados.includes('barcoMedio3') && handleBarcoOnClick(barcoMedioRef3, 2)} />
+                            <Tooltip title="Barco médio - 2 posições" arrow>
+                                <img id="barcoMedio3"
+                                    ref={barcoMedioRef3}
+                                    style={{ height: '30px', width: calculaWidth(2), cursor: 'pointer' }}
+                                    src={temaBarcoMedioSrc}
+                                    onClick={() => !idBarcosSelecionados.includes('barcoMedio3') && handleBarcoOnClick(barcoMedioRef3, 2)} />
+                            </Tooltip>
 
-                            <img id="barcoGrande1"
-                                ref={barcoGrandeRef1}
-                                style={{ height: '30px', width: calculaWidth(3), cursor: 'pointer' }}
-                                src={temaBarcoGrandeSrc}
-                                onClick={() => !idBarcosSelecionados.includes('barcoGrande1') && handleBarcoOnClick(barcoGrandeRef1, 3)} />
+                            <Tooltip title="Barco grande - 3 posições" arrow>
+                                <img id="barcoGrande1"
+                                    ref={barcoGrandeRef1}
+                                    style={{ height: '30px', width: calculaWidth(3), cursor: 'pointer' }}
+                                    src={temaBarcoGrandeSrc}
+                                    onClick={() => !idBarcosSelecionados.includes('barcoGrande1') && handleBarcoOnClick(barcoGrandeRef1, 3)} />
+                            </Tooltip>
 
-                            <img id="barcoGrande2"
-                                ref={barcoGrandeRef2}
-                                style={{ height: '30px', width: calculaWidth(3), cursor: 'pointer' }}
-                                src={temaBarcoGrandeSrc}
-                                onClick={() => !idBarcosSelecionados.includes('barcoGrande2') && handleBarcoOnClick(barcoGrandeRef2, 3)} />
+                            <Tooltip title="Barco grande - 3 posições" arrow>
+                                <img id="barcoGrande2"
+                                    ref={barcoGrandeRef2}
+                                    style={{ height: '30px', width: calculaWidth(3), cursor: 'pointer' }}
+                                    src={temaBarcoGrandeSrc}
+                                    onClick={() => !idBarcosSelecionados.includes('barcoGrande2') && handleBarcoOnClick(barcoGrandeRef2, 3)} />
+                            </Tooltip>
 
-                            <img id="barcoGigante"
-                                ref={barcoGiganteRef1}
-                                style={{ height: '30px', width: calculaWidth(4), cursor: 'pointer' }}
-                                src={temaBarcoGiganteSrc}
-                                onClick={() => !idBarcosSelecionados.includes('barcoGigante') && handleBarcoOnClick(barcoGiganteRef1, 4)} />
+                            <Tooltip title="Barco gigante - 4 posições" arrow>
+                                <img id="barcoGigante"
+                                    ref={barcoGiganteRef1}
+                                    style={{ height: '30px', width: calculaWidth(4), cursor: 'pointer' }}
+                                    src={temaBarcoGiganteSrc}
+                                    onClick={() => !idBarcosSelecionados.includes('barcoGigante') && handleBarcoOnClick(barcoGiganteRef1, 4)} />
+                            </Tooltip>
+
+                            <Typography textAlign="center" style={{ fontFamily: "bungee", color: "black", marginTop: '20px' }}>INSTRUÇÕES PARA JOGAR</Typography>
+                            <Typography textAlign="center" style={{ fontFamily: "bungee", marginTop: '20px', fontSize: '9pt', color: 'gray' }}>1° - Selecione um navio dos disponíveis acima </Typography>
+                            <Typography textAlign="center" style={{ fontFamily: "bungee", marginTop: '20px', fontSize: '9pt', color: 'gray' }}>2° - Marque as posições que ele deve ocupar no tabuleiro (Deve-se marcar todas) </Typography>
+                            <Typography textAlign="center" style={{ fontFamily: "bungee", marginTop: '20px', fontSize: '9pt', color: 'gray' }}>3° - Clique em enviar navio para a posição </Typography>
+                            <Typography textAlign="center" style={{ fontFamily: "bungee", marginTop: '20px', fontSize: '9pt', color: 'gray' }}>4° - Caso deseje reposicionar um navio, <br /> basta selecioná-lo no tabuleiro e escolher a nova posição </Typography>
+                            <Typography textAlign="center" style={{ fontFamily: "bungee", marginTop: '20px', fontSize: '9pt', color: 'gray' }}>5° - Quando posicionar os dez navios, clique em Salvar Estratégia</Typography>
+                        </div>
+                        <div style={{ marginLeft: '10px' }}>
+                            <PosicaoContainer handlePosicaoOnClick={handlePosicaoOnClick} idPrefix='user' clickable={podeSelecionarPosicoes} />
                         </div>
                     </div>
 
-                    <Card sx={{ textAlign: 'center' }}>
+                    <Card sx={{ textAlign: 'center', marginTop: '20px' }}>
                         <Button disabled={!podeSelecionarPosicoes} onClick={handleEnviarNavioOnClick} sx={{ marginRight: '32px' }}> Enviar navio para a posição </Button>
                         <Button disabled={!podeEnviarEstrategia} onClick={handleSalvarEstrategiaOnClick} variant="contained"> Salvar Estrategia </Button>
                     </Card>
