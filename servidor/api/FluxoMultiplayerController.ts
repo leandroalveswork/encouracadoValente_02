@@ -36,6 +36,7 @@ import { MdTiro } from "../modelos/MdTiro";
 import { MdProgressoNaviosJogador } from "../modelos/MdProgressoNaviosJogador";
 import { MdSalaDetalhada } from "../modelos/MdSalaDetalhada";
 import { PostTiroFluxo } from "../modelos/PostTiroFluxo";
+import { CompraRepositorio } from "../repositorio/CompraRepositorio";
 
 @injectable()
 class FluxoMultiplayerController extends ControllerBase {
@@ -45,6 +46,7 @@ class FluxoMultiplayerController extends ControllerBase {
     private _salaFluxoRepositorio: SalaFluxoRepositorio
     private _posicaoFluxoRepositorio: PosicaoFluxoRepositorio
     private _tiroFluxoRepositorio: TiroFluxoRepositorio
+    private _compraRepositorio: CompraRepositorio
     constructor(
         @inject(LiteralServico.ConfigBack) configBack: ConfigBack,
         @inject(LiteralServico.TemaRepositorio) temaRepositorio: TemaRepositorio,
@@ -52,7 +54,8 @@ class FluxoMultiplayerController extends ControllerBase {
         @inject(LiteralServico.UsuarioRepositorio) usuarioRepositorio: UsuarioRepositorio,
         @inject(LiteralServico.SalaFluxoRepositorio) salaFluxoRepositorio: SalaFluxoRepositorio,
         @inject(LiteralServico.PosicaoFluxoRepositorio) posicaoFluxoRepositorio: PosicaoFluxoRepositorio,
-        @inject(LiteralServico.TiroFluxoRepositorio) tiroFluxoRepositorio: TiroFluxoRepositorio
+        @inject(LiteralServico.TiroFluxoRepositorio) tiroFluxoRepositorio: TiroFluxoRepositorio,
+        @inject(LiteralServico.CompraRepositorio) compraRepositorio: CompraRepositorio
     ) {
         super(configBack);
         this._configBack = configBack;
@@ -62,6 +65,7 @@ class FluxoMultiplayerController extends ControllerBase {
         this._salaFluxoRepositorio = salaFluxoRepositorio;
         this._posicaoFluxoRepositorio = posicaoFluxoRepositorio;
         this._tiroFluxoRepositorio = tiroFluxoRepositorio;
+        this._compraRepositorio = compraRepositorio;
         this.router = Router();
         this.router.put('/atualizarEstrategias', async (req, res) => {
             try {
@@ -150,7 +154,7 @@ class FluxoMultiplayerController extends ControllerBase {
         
         // Salvar no mongodb
         await this._salaFluxoRepositorio.updatePorOperador(salaUsuarioAtual, idUsuarioLogado);
-        await this._posicaoFluxoRepositorio.updateByNumeroRecuperacaoUrlSala(salaUsuarioLogadoDb.numeroRecuperacaoUrl, posicoesFluxo, idUsuarioLogado);
+        await this._posicaoFluxoRepositorio.updateByNumeroRecuperacaoUrlSalaQueTenhaIdUsuario(salaUsuarioLogadoDb.numeroRecuperacaoUrl, idUsuarioLogado, posicoesFluxo, idUsuarioLogado);
     }
     
     private eTiroAcertado = (tiro: DbTiroFluxo, estrategias: DbPosicaoFluxo[]): boolean => {
@@ -249,6 +253,14 @@ class FluxoMultiplayerController extends ControllerBase {
             ex.problema = 'Voce ainda nao entrou em uma sala';
             throw ex;
         }
+        const idUsuarioOponente = idUsuarioLogado == salaDb.idPlayer1 ? salaDb.idPlayer2 : salaDb.idPlayer1;
+        if (idUsuarioOponente == null) {
+            let ex = new MdExcecao();
+            ex.codigoExcecao = 404;
+            ex.problema = 'Oponente nao encontrado';
+            throw ex;
+        }
+        const idTemaInimigo = (await this._compraRepositorio.selectCompraEquipadaByIdUsuarioOrDefault(idUsuarioOponente))?.idTema ?? '';
         
         let totalJogadores = 0;
         if (salaDb.idPlayer1 != null)
@@ -257,9 +269,9 @@ class FluxoMultiplayerController extends ControllerBase {
             totalJogadores++;
             
         if (salaDb.idPlayer1 == idUsuarioLogado)
-            return { numeroRecuperacaoUrl: salaDb.numeroRecuperacaoUrl, totalJogadores: totalJogadores, oponenteCarregouFluxo: salaDb.player2CarregouFluxo };
+            return { numeroRecuperacaoUrl: salaDb.numeroRecuperacaoUrl, totalJogadores: totalJogadores, oponenteCarregouFluxo: salaDb.player2CarregouFluxo, idTemaInimigo: idTemaInimigo };
         else
-            return { numeroRecuperacaoUrl: salaDb.numeroRecuperacaoUrl, totalJogadores: totalJogadores, oponenteCarregouFluxo: salaDb.player1CarregouFluxo };
+            return { numeroRecuperacaoUrl: salaDb.numeroRecuperacaoUrl, totalJogadores: totalJogadores, oponenteCarregouFluxo: salaDb.player1CarregouFluxo, idTemaInimigo: idTemaInimigo };
     }
     
     // autorizado
@@ -289,6 +301,22 @@ class FluxoMultiplayerController extends ControllerBase {
         progressoJogadorLogado.tiros = tirosFluxoDb.map(iTiroFluxo => {
             return { numeroLinha: iTiroFluxo.numeroLinha, numeroColuna: iTiroFluxo.numeroColuna, acertou: this.eTiroAcertado(iTiroFluxo, posicoesFluxoDb) };
         });
+        
+        // Calcular o jogador alvo mais recente
+        if (tirosFluxoDb.length == 0) {
+            progressoJogadorLogado.estaNaVezDoJogador = salaUsuarioLogadoDb.idPlayer1 == idUsuarioLogado;
+        } else {
+            let idJogadorAlvoTiroMaisRecente = '';
+            let horaMaisRecente = Number.MIN_SAFE_INTEGER;
+            for (let iTiro of tirosFluxoDb) {
+                if (horaMaisRecente < iTiro.horaInclusao.getTime()) {
+                    idJogadorAlvoTiroMaisRecente = iTiro.idUsuarioAlvo;
+                    horaMaisRecente = iTiro.horaInclusao.getTime();
+                }
+            }
+            progressoJogadorLogado.estaNaVezDoJogador = idJogadorAlvoTiroMaisRecente == idUsuarioLogado;
+        }
+        
         return progressoJogadorLogado;
     }
     
@@ -328,6 +356,22 @@ class FluxoMultiplayerController extends ControllerBase {
         progressoJogadorLogado.tiros = tirosFluxoDb.map(iTiroFluxo => {
             return { numeroLinha: iTiroFluxo.numeroLinha, numeroColuna: iTiroFluxo.numeroColuna, acertou: this.eTiroAcertado(iTiroFluxo, posicoesFluxoDb) };
         });
+        
+        // Calcular o jogador alvo mais recente
+        if (tirosFluxoDb.length == 0) {
+            progressoJogadorLogado.estaNaVezDoJogador = salaUsuarioLogadoDb.idPlayer1 != idUsuarioLogado;
+        } else {
+            let idJogadorAlvoTiroMaisRecente = '';
+            let horaMaisRecente = Number.MIN_SAFE_INTEGER;
+            for (let iTiro of tirosFluxoDb) {
+                if (horaMaisRecente < iTiro.horaInclusao.getTime()) {
+                    idJogadorAlvoTiroMaisRecente = iTiro.idUsuarioAlvo;
+                    horaMaisRecente = iTiro.horaInclusao.getTime();
+                }
+            }
+            progressoJogadorLogado.estaNaVezDoJogador = idJogadorAlvoTiroMaisRecente != idUsuarioLogado;
+        }
+        
         return progressoJogadorLogado;
     }
     

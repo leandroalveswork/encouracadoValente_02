@@ -16,6 +16,8 @@ import { LiteralOrientacao } from '../modelos/LiteralOrientacao';
 import ImgNavioVertical from '../components/imagem/ImgNavioVertical';
 import ErroModal from '../components/erroModal/ErroModal';
 import ImgNavioHorizontal from '../components/imagem/ImgNavioHorizontal';
+import { PostTiroFluxo } from "../modelos/importarBack/PostTiroFluxo";
+import { MdDetalheTema } from "../modelos/importarBack/MdDetalheTema";
 
 export interface TelaJogoProps {
     tokenAuth: string;
@@ -34,31 +36,87 @@ const TelaJogo = (props: TelaJogoProps) => {
     const [salaJogando, setSalaJogando] = useState<MdSalaDetalhada | null>(null);
     const [progressoJogadorLogado, setProgressoJogadorLogado] = useState<MdProgressoNaviosJogador | null>(null);
     const [progressoJogadorInimigo, setProgressoJogadorInimigo] = useState<MdProgressoNaviosJogador | null>(null);
+    const [estaEsperandoInimigoAtirar, setEstaEsperandoInimigoAtirar] = useState(false);
 
     const [temaBarcoPequenoSrc, setTemaBarcoPequenoSrc] = useState<string>();
     const [temaBarcoMedioSrc, setTemaBarcoMedioSrc] = useState<string>();
     const [temaBarcoGrandeSrc, setTemaBarcoGrandeSrc] = useState<string>();
     const [temaBarcoGiganteSrc, setTemaBarcoGiganteSrc] = useState<string>();
+    
+    const [temaBarcoPequenoSrcInimigo, setTemaBarcoPequenoSrcInimigo] = useState<string>();
+    const [temaBarcoMedioSrcInimigo, setTemaBarcoMedioSrcInimigo] = useState<string>();
+    const [temaBarcoGrandeSrcInimigo, setTemaBarcoGrandeSrcInimigo] = useState<string>();
+    const [temaBarcoGiganteSrcInimigo, setTemaBarcoGiganteSrcInimigo] = useState<string>();
 
     const { lastJsonMessage, sendJsonMessage } = useWebSocket(props.rotaWs + '?id=' + roomId);
 
     const [erroEstaAberto, setErroEstaAberto] = useState(false);
     const [problemaErro, setProblemaErro] = useState('');
     const [erroOponenteSaiuEstaAberto, setErroOponenteSaiuEstaAberto] = useState(false);
+    
+    const parseCoordenadaAsTiro = (coordenada: number): PostTiroFluxo => {
+        let coordAsString: string = coordenada + '';
+        if (coordAsString.length == 1)
+            coordAsString = '0' + coordAsString;
+        return { numeroLinha: parseInt(coordAsString[0]), numeroColuna: parseInt(coordAsString[1]) };
+    }
 
     const handlePosicaoOnClick = (event: any) => {
-        if (!posicoesJaMarcadas.includes(event.currentTarget.id)) {
-            event.currentTarget.style.backgroundColor = 'black'
-            posicoesJaMarcadas.push(event.currentTarget.id)
-            sendJsonMessage({ idPosicao: event.currentTarget.id, roomId })
-        }
+        if (isNaN(Number(event.currentTarget.id.replace("opponent-", ""))))
+            return;
+        if (posicoesJaMarcadas.includes(event.currentTarget.id))
+            return;
+            
+        setEstaEsperandoInimigoAtirar(_ => true);
+        // Estilizaçao
+        event.currentTarget.style.opacity = 0.2;
+        
+        posicoesJaMarcadas.push(event.currentTarget.id);
+            
+        // Enviar para Api
+        const coordenadaSelecionada = Number(event.currentTarget.id.replace("opponent-", ""));
+        // console.log(event.currentTarget.id);
+        // console.log(coordenadaSelecionada);
+        const payloadTiro = parseCoordenadaAsTiro(coordenadaSelecionada);
+        clientRest.callPostAutorizado<string>('/api/fluxoMultiplayer/adicionarTiro', payloadTiro, '')
+            .then(rTiro => {
+                if (!rTiro.eOk) {
+                    setProblemaErro(_ => rTiro.problema);
+                    setErroEstaAberto(_ => true);
+                    return;
+                }
+                     
+                carregarProgressos();
+                
+                // Notificar outros clients
+                let notificarTiro = new WsEnvelope();
+                notificarTiro.numeroTipoAtualizacao = LiteralTipoAtualizacao.FluxoJogo;
+                notificarTiro.tokenAuth = props.tokenAuth;
+                sendJsonMessage({ ...notificarTiro });
+                
+                // sendJsonMessage({ idPosicao: event.currentTarget.id, roomId })
+            });
     }
     
-    const carregarSala = () => {
+    const carregarSala = (precisaCarregarTemaInimigo: boolean = false) => {
         clientRest.callGetAutorizado<MdSalaDetalhada>('/api/fluxoMultiplayer/detalharSala', new MdSalaDetalhada())
-            .then(rSala => {
+            .then(async (rSala) => {
                 if (rSala.eOk) {
                     setSalaJogando(_ => rSala.body ?? new MdSalaDetalhada());
+                    if (precisaCarregarTemaInimigo) {
+                        const temaInimigo = (await clientRest.callGetAutorizado<MdDetalheTema>('/api/tema/detalharPorId?id=' + (rSala.body?.idTemaInimigo ?? ''), new MdDetalheTema()))?.body;
+                        if (temaInimigo == undefined || temaInimigo == null) {
+                            setTemaBarcoPequenoSrcInimigo(_ => temaBarcoPequenoSrc);
+                            setTemaBarcoMedioSrcInimigo(_ => temaBarcoMedioSrc);
+                            setTemaBarcoGrandeSrcInimigo(_ => temaBarcoGrandeSrc);
+                            setTemaBarcoGiganteSrcInimigo(_ => temaBarcoGiganteSrc);
+                            return;
+                        }
+                        setTemaBarcoPequenoSrcInimigo("data:image/*;base64," + temaInimigo.naviosTema.find(x => x.tamnQuadrados == 1)?.arquivoImagemNavio?.dadosBase64)
+                        setTemaBarcoMedioSrcInimigo("data:image/*;base64," + temaInimigo.naviosTema.find(x => x.tamnQuadrados == 2)?.arquivoImagemNavio?.dadosBase64)
+                        setTemaBarcoGrandeSrcInimigo("data:image/*;base64," + temaInimigo.naviosTema.find(x => x.tamnQuadrados == 3)?.arquivoImagemNavio?.dadosBase64)
+                        setTemaBarcoGiganteSrcInimigo("data:image/*;base64," + temaInimigo.naviosTema.find(x => x.tamnQuadrados == 4)?.arquivoImagemNavio?.dadosBase64)
+                    }
                 } else {
                     setProblemaErro(_ => rSala.problema);
                     setErroEstaAberto(_ => true);
@@ -76,15 +134,17 @@ const TelaJogo = (props: TelaJogoProps) => {
         carregarCallbacksProgressos()
             .then(([rJogadorLogado, rJogadorOponente]) => {
                 let estaExibindoErro = false;
-                console.table(rJogadorLogado);
                 if (rJogadorLogado.eOk) {
                     setProgressoJogadorLogado(_ => rJogadorLogado.body ?? new MdProgressoNaviosJogador());
+                    if ((rJogadorLogado.body ?? new MdProgressoNaviosJogador()).estaNaVezDoJogador)
+                        setEstaEsperandoInimigoAtirar(_ => false);
+                    else
+                        setEstaEsperandoInimigoAtirar(_ => true);
                 } else {
                     setProblemaErro(_ => rJogadorLogado.problema);
                     setErroEstaAberto(_ => true);
                     estaExibindoErro = true;
                 }
-                console.table(rJogadorOponente);
                 if (rJogadorOponente.eOk) {
                     setProgressoJogadorInimigo(_ => rJogadorOponente.body ?? new MdProgressoNaviosJogador());
                 } else {
@@ -107,7 +167,7 @@ const TelaJogo = (props: TelaJogoProps) => {
             setTemaBarcoGiganteSrc("data:image/*;base64," + temaEquipado?.previas.find(x => x.tamanhoQuadrados == 4)?.arquivo?.dadosBase64)
         });
 
-        carregarSala();
+        carregarSala(true);
         carregarProgressos();
       
         // Preparar o UserWebSocket no WS
@@ -127,6 +187,13 @@ const TelaJogo = (props: TelaJogoProps) => {
         }
     }, [lastJsonMessage]);
     
+    useEffect(() => {
+        if (salaJogando != null) {
+            if (salaJogando.totalJogadores < 2)
+                setErroOponenteSaiuEstaAberto(_ => true);
+        }
+    }, [salaJogando]);
+    
     const calcularSrc = (tamanhoQuadrados: number): string => {
         if (tamanhoQuadrados == 1)
             return temaBarcoPequenoSrc ?? '';
@@ -136,6 +203,18 @@ const TelaJogo = (props: TelaJogoProps) => {
             return temaBarcoGrandeSrc ?? '';
         if (tamanhoQuadrados == 4)
             return temaBarcoGiganteSrc ?? '';
+        return '';
+    }
+    
+    const calcularSrcInimigo = (tamanhoQuadrados: number): string => {
+        if (tamanhoQuadrados == 1)
+            return temaBarcoPequenoSrcInimigo ?? '';
+        if (tamanhoQuadrados == 2)
+            return temaBarcoMedioSrcInimigo ?? '';
+        if (tamanhoQuadrados == 3)
+            return temaBarcoGrandeSrcInimigo ?? '';
+        if (tamanhoQuadrados == 4)
+            return temaBarcoGiganteSrcInimigo ?? '';
         return '';
     }
     
@@ -185,11 +264,11 @@ const TelaJogo = (props: TelaJogoProps) => {
                                 }
                             })}
                             {progressoJogadorLogado != null && progressoJogadorLogado.tiros.map((iNavio, idxNavio) => (
-                                iNavio.acertou ? <CloseOutlinedIcon color="error"
+                                iNavio.acertou ? <CloseOutlinedIcon color="error" key={idxNavio}
                                     sx={{ top: (iNavio.numeroLinha*30) + 'px',
                                         left: (iNavio.numeroColuna*30) + 'px',
                                         position: 'absolute',
-                                        fontSize: '30px' }} /> : <CircleOutlinedIcon color="error" 
+                                        fontSize: '30px' }} /> : <CircleOutlinedIcon color="error" key={idxNavio} 
                                     sx={{ top: (iNavio.numeroLinha*30) + 'px',
                                         left: (iNavio.numeroColuna*30) + 'px',
                                         position: 'absolute',
@@ -199,7 +278,48 @@ const TelaJogo = (props: TelaJogoProps) => {
                     </div>
                     <div>
                         <Typography textAlign="center" style={{ fontFamily: "bungee", color: "gray" }}>INIMIGO</Typography>
-                        <PosicaoContainer handlePosicaoOnClick={handlePosicaoOnClick} idPrefix='opponent' clickable={true} backgroundColor="#EBEBEB" />
+                        <div style={{ position: 'relative' }}>
+                            <PosicaoContainer handlePosicaoOnClick={handlePosicaoOnClick} idPrefix='opponent' clickable={!estaEsperandoInimigoAtirar} backgroundColor="#EBEBEB" />
+                            {progressoJogadorInimigo != null && progressoJogadorInimigo.naviosTotais.map((iNavio, idxNavio) => {
+                                if (iNavio.orientacao == LiteralOrientacao.Baixo) {
+                                    return (<div key={idxNavio} className='d-inline'>
+                                        <ImgNavioVertical
+                                            dadosBase64=''
+                                            eSrcBase64={false}
+                                            srcImagem={calcularSrcInimigo(iNavio.tamanhoQuadradosNavio)}
+                                            tamanhoQuadrados={iNavio.tamanhoQuadradosNavio}
+                                            altImagem='navio inimigo'
+                                            ePositionAbsolute={true}
+                                            cssLeftAsPx={(iNavio.numeroColuna)*30}
+                                            cssTopAsPx={(iNavio.numeroLinha)*30} />
+                                    </div>);
+                                }
+                                if (iNavio.orientacao == LiteralOrientacao.Direita) {
+                                    return (<div key={idxNavio} className='d-inline'>
+                                        <ImgNavioHorizontal
+                                            dadosBase64=''
+                                            eSrcBase64={false}
+                                            srcImagem={calcularSrcInimigo(iNavio.tamanhoQuadradosNavio)}
+                                            tamanhoQuadrados={iNavio.tamanhoQuadradosNavio}
+                                            altImagem='navio inimigo'
+                                            ePositionAbsolute={true}
+                                            cssLeftAsPx={(iNavio.numeroColuna)*30}
+                                            cssTopAsPx={(iNavio.numeroLinha)*30} />
+                                    </div>);
+                                }
+                            })}
+                            {progressoJogadorInimigo != null && progressoJogadorInimigo.tiros.map((iNavio, idxNavio) => (
+                                iNavio.acertou ? <CloseOutlinedIcon color="error" key={idxNavio}
+                                    sx={{ top: (iNavio.numeroLinha*30) + 'px',
+                                        left: (iNavio.numeroColuna*30) + 'px',
+                                        position: 'absolute',
+                                        fontSize: '30px' }} /> : <CircleOutlinedIcon color="error" key={idxNavio} 
+                                    sx={{ top: (iNavio.numeroLinha*30) + 'px',
+                                        left: (iNavio.numeroColuna*30) + 'px',
+                                        position: 'absolute',
+                                        fontSize: '30px' }} /> 
+                            ))}
+                        </div>
                     </div>
                 </div>
             </div>

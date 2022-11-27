@@ -32,6 +32,10 @@ class TiroFluxoRepositorio extends RepositorioCrud<DbTiroFluxo> {
         let query = this._modelMongo.find({ numeroRecuperacaoUrlSalaFluxo: numeroRecuperacaoUrlSalaFluxo, idUsuarioAlvo: idUsuarioLogado });
         return query;
     }
+    
+    deleteMuitosByNumeroRecuperacaoUrl = async (numeroRecuperacaoUrl: number): Promise<void> => {
+        await this._modelMongo.deleteMany({ numeroRecuperacaoUrlSalaFluxo: numeroRecuperacaoUrl });
+    }
 }
 
 export { TiroFluxoRepositorio };

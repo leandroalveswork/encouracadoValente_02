@@ -32,8 +32,8 @@ class PosicaoFluxoRepositorio extends RepositorioCrud<DbPosicaoFluxo> {
         this.inicializarMongo('PosicaoFluxo', schema);
     }
     
-    updateByNumeroRecuperacaoUrlSala = async (numeroRecuperacaoUrlSala: number, posicoesEstrategia: DbPosicaoFluxo[], idUsuarioOperador: string): Promise<void> => {
-        await this._modelMongo.deleteMany({ numeroRecuperacaoUrlSalaFluxo: numeroRecuperacaoUrlSala });
+    updateByNumeroRecuperacaoUrlSalaQueTenhaIdUsuario = async (numeroRecuperacaoUrlSala: number, idUsuarioFiltro: string, posicoesEstrategia: DbPosicaoFluxo[], idUsuarioOperador: string): Promise<void> => {
+        await this._modelMongo.deleteMany({ numeroRecuperacaoUrlSalaFluxo: numeroRecuperacaoUrlSala, idUsuarioEnviador: idUsuarioFiltro });
         await this.insertMuitosPorOperador(posicoesEstrategia, idUsuarioOperador);
     }
 
