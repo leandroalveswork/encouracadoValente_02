@@ -8,6 +8,7 @@ import { MdResumoTema } from "../modelos/importarBack/MdResumoTema";
 import { MdSalaDetalhada } from "../modelos/importarBack/MdSalaDetalhada";
 import { PutPosicaoEstrategia } from "../modelos/importarBack/PutPosicaoEstrategia";
 import { MdTiro } from "../modelos/importarBack/MdTiro";
+import { MdDetalheTema } from "../modelos/importarBack/MdDetalheTema";
 import { LiteralTipoAtualizacao } from '../modelos/LiteralTipoAtualizacao';
 import { LiteralOrientacao } from '../modelos/LiteralOrientacao';
 import useWebSocket from "react-use-websocket";
@@ -41,7 +42,7 @@ const PreparacaoJogo = (props: PreparacaoJogoProps) => {
     const barcoGrandeRef2 = useRef<any>()
     const barcoGiganteRef1 = useRef<any>()
 
-    const QUANTIDADE_ESTRATEGIAS_PARA_SALVAR = 2;
+    const QUANTIDADE_ESTRATEGIAS_PARA_SALVAR = 10;
     const BORDA_NAVIO_SELECIONADO = "1px solid red"
 
     const { roomId } = useParams()
@@ -61,6 +62,10 @@ const PreparacaoJogo = (props: PreparacaoJogoProps) => {
     const [temaBarcoMedioSrc, setTemaBarcoMedioSrc] = useState<string>();
     const [temaBarcoGrandeSrc, setTemaBarcoGrandeSrc] = useState<string>();
     const [temaBarcoGiganteSrc, setTemaBarcoGiganteSrc] = useState<string>();
+    const [tooltipTamn1, setTooltipTamn1] = useState('');
+    const [tooltipTamn2, setTooltipTamn2] = useState('');
+    const [tooltipTamn3, setTooltipTamn3] = useState('');
+    const [tooltipTamn4, setTooltipTamn4] = useState('');
 
     const fundoDefault = "#DFF4FF"
     const clientRest = new ClientRest();
@@ -90,15 +95,20 @@ const PreparacaoJogo = (props: PreparacaoJogoProps) => {
             });
     }
 
-    useEffect(() => { //TODO: Tratar para criar endpoint que busque somente o tema a partir do ID
-        clientRest.callGetAutorizado<MdResumoTema[]>('/api/compra/listarPorIdUsuarioLogado', []).then(async (response) => {
-            const idTemaEquipado = await clientRest.callGetAutorizado<string>('/api/compra/obterIdTemaEquipadoUsuarioLogadoOrDefault', '');
-            const temaEquipado = response.body!.find(x => x.id == idTemaEquipado.body)
+    useEffect(() => {
+        
+        clientRest.callGetAutorizado<string>('/api/compra/obterIdTemaEquipadoUsuarioLogadoOrDefault', '').then(async (response) => {
+            const rTemaEquipado = await clientRest.callGetAutorizado<MdDetalheTema>('/api/tema/detalharPorId?id=' + response!.body, new MdDetalheTema());
+            const temaEquipado = rTemaEquipado.body ?? new MdDetalheTema();
 
-            setTemaBarcoPequenoSrc("data:image/*;base64," + temaEquipado?.previas.find(x => x.tamanhoQuadrados == 1)?.arquivo?.dadosBase64)
-            setTemaBarcoMedioSrc("data:image/*;base64," + temaEquipado?.previas.find(x => x.tamanhoQuadrados == 2)?.arquivo?.dadosBase64)
-            setTemaBarcoGrandeSrc("data:image/*;base64," + temaEquipado?.previas.find(x => x.tamanhoQuadrados == 3)?.arquivo?.dadosBase64)
-            setTemaBarcoGiganteSrc("data:image/*;base64," + temaEquipado?.previas.find(x => x.tamanhoQuadrados == 4)?.arquivo?.dadosBase64)
+            setTemaBarcoPequenoSrc("data:image/*;base64," + temaEquipado.naviosTema.find(x => x.tamnQuadrados == 1)?.arquivoImagemNavio?.dadosBase64)
+            setTemaBarcoMedioSrc("data:image/*;base64," + temaEquipado.naviosTema.find(x => x.tamnQuadrados == 2)?.arquivoImagemNavio?.dadosBase64)
+            setTemaBarcoGrandeSrc("data:image/*;base64," + temaEquipado.naviosTema.find(x => x.tamnQuadrados == 3)?.arquivoImagemNavio?.dadosBase64)
+            setTemaBarcoGiganteSrc("data:image/*;base64," + temaEquipado.naviosTema.find(x => x.tamnQuadrados == 4)?.arquivoImagemNavio?.dadosBase64)
+            setTooltipTamn1(_ => temaEquipado.naviosTema.find(x => x.tamnQuadrados == 1)?.nomePersonalizado ?? '');
+            setTooltipTamn2(_ => temaEquipado.naviosTema.find(x => x.tamnQuadrados == 2)?.nomePersonalizado ?? '');
+            setTooltipTamn3(_ => temaEquipado.naviosTema.find(x => x.tamnQuadrados == 3)?.nomePersonalizado ?? '');
+            setTooltipTamn4(_ => temaEquipado.naviosTema.find(x => x.tamnQuadrados == 4)?.nomePersonalizado ?? '');
         });
 
         carregarSala();
@@ -442,7 +452,7 @@ const PreparacaoJogo = (props: PreparacaoJogoProps) => {
                     <Typography textAlign="center" style={{ fontFamily: "bungee", color: "black" }}>É HORA DE PREPARAR A SUA ESTRATÉGIA</Typography>
                     <div style={{ alignContent: 'center', paddingLeft: '5%', display: 'flex', flexDirection: 'row', marginTop: '10px' }}>
                         <div>
-                            <Tooltip title="Barco pequeno - 1 posicão" arrow>
+                            <Tooltip title={tooltipTamn1 + " - 1 posição"} arrow>
                                 <img id="barcoPequeno1"
                                     ref={barcoPequenoRef1}
                                     style={{ height: '30px', width: calculaWidth(1), cursor: 'pointer' }}
@@ -451,7 +461,7 @@ const PreparacaoJogo = (props: PreparacaoJogoProps) => {
                                     onClick={() => !idBarcosSelecionados.includes('barcoPequeno1') && handleBarcoOnClick(barcoPequenoRef1, 1)} />
                             </Tooltip>
 
-                            <Tooltip title="Barco pequeno - 1 posicão" arrow>
+                            <Tooltip title={tooltipTamn1 + " - 1 posição"} arrow>
                                 <img id="barcoPequeno2"
                                     ref={barcoPequenoRef2}
                                     style={{ height: '30px', width: calculaWidth(1), cursor: 'pointer' }}
@@ -459,7 +469,7 @@ const PreparacaoJogo = (props: PreparacaoJogoProps) => {
                                     onClick={() => !idBarcosSelecionados.includes('barcoPequeno2') && handleBarcoOnClick(barcoPequenoRef2, 1)} />
                             </Tooltip>
 
-                            <Tooltip title="Barco pequeno - 1 posicão" arrow>
+                            <Tooltip title={tooltipTamn1 + " - 1 posição"} arrow>
                                 <img id="barcoPequeno3"
                                     ref={barcoPequenoRef3}
                                     style={{ height: '30px', width: calculaWidth(1), cursor: 'pointer' }}
@@ -467,7 +477,7 @@ const PreparacaoJogo = (props: PreparacaoJogoProps) => {
                                     onClick={() => !idBarcosSelecionados.includes('barcoPequeno3') && handleBarcoOnClick(barcoPequenoRef3, 1)} />
                             </Tooltip>
 
-                            <Tooltip title="Barco pequeno - 1 posicão" arrow>
+                            <Tooltip title={tooltipTamn1 + " - 1 posição"} arrow>
                                 <img id="barcoPequeno4"
                                     ref={barcoPequenoRef4}
                                     style={{ height: '30px', width: calculaWidth(1), cursor: 'pointer' }}
@@ -475,7 +485,7 @@ const PreparacaoJogo = (props: PreparacaoJogoProps) => {
                                     onClick={() => !idBarcosSelecionados.includes('barcoPequeno4') && handleBarcoOnClick(barcoPequenoRef4, 1)} />
                             </Tooltip>
 
-                            <Tooltip title="Barco médio - 2 posições" arrow>
+                            <Tooltip title={tooltipTamn2 + " - 2 posições"} arrow>
                                 <img id="barcoMedio1"
                                     ref={barcoMedioRef1}
                                     style={{ height: '30px', width: calculaWidth(2), cursor: 'pointer' }}
@@ -483,7 +493,7 @@ const PreparacaoJogo = (props: PreparacaoJogoProps) => {
                                     onClick={() => !idBarcosSelecionados.includes('barcoMedio1') && handleBarcoOnClick(barcoMedioRef1, 2)} />
                             </Tooltip>
 
-                            <Tooltip title="Barco médio - 2 posições" arrow>
+                            <Tooltip title={tooltipTamn2 + " - 2 posições"} arrow>
                                 <img id="barcoMedio2"
                                     ref={barcoMedioRef2}
                                     style={{ height: '30px', width: calculaWidth(2), cursor: 'pointer' }}
@@ -491,7 +501,7 @@ const PreparacaoJogo = (props: PreparacaoJogoProps) => {
                                     onClick={() => !idBarcosSelecionados.includes('barcoMedio2') && handleBarcoOnClick(barcoMedioRef2, 2)} />
                             </Tooltip>
 
-                            <Tooltip title="Barco médio - 2 posições" arrow>
+                            <Tooltip title={tooltipTamn2 + " - 2 posições"} arrow>
                                 <img id="barcoMedio3"
                                     ref={barcoMedioRef3}
                                     style={{ height: '30px', width: calculaWidth(2), cursor: 'pointer' }}
@@ -499,7 +509,7 @@ const PreparacaoJogo = (props: PreparacaoJogoProps) => {
                                     onClick={() => !idBarcosSelecionados.includes('barcoMedio3') && handleBarcoOnClick(barcoMedioRef3, 2)} />
                             </Tooltip>
 
-                            <Tooltip title="Barco grande - 3 posições" arrow>
+                            <Tooltip title={tooltipTamn3 + " - 3 posições"} arrow>
                                 <img id="barcoGrande1"
                                     ref={barcoGrandeRef1}
                                     style={{ height: '30px', width: calculaWidth(3), cursor: 'pointer' }}
@@ -507,7 +517,7 @@ const PreparacaoJogo = (props: PreparacaoJogoProps) => {
                                     onClick={() => !idBarcosSelecionados.includes('barcoGrande1') && handleBarcoOnClick(barcoGrandeRef1, 3)} />
                             </Tooltip>
 
-                            <Tooltip title="Barco grande - 3 posições" arrow>
+                            <Tooltip title={tooltipTamn3 + " - 3 posições"} arrow>
                                 <img id="barcoGrande2"
                                     ref={barcoGrandeRef2}
                                     style={{ height: '30px', width: calculaWidth(3), cursor: 'pointer' }}
@@ -515,7 +525,7 @@ const PreparacaoJogo = (props: PreparacaoJogoProps) => {
                                     onClick={() => !idBarcosSelecionados.includes('barcoGrande2') && handleBarcoOnClick(barcoGrandeRef2, 3)} />
                             </Tooltip>
 
-                            <Tooltip title="Barco gigante - 4 posições" arrow>
+                            <Tooltip title={tooltipTamn4 + " - 4 posições"} arrow>
                                 <img id="barcoGigante"
                                     ref={barcoGiganteRef1}
                                     style={{ height: '30px', width: calculaWidth(4), cursor: 'pointer' }}
