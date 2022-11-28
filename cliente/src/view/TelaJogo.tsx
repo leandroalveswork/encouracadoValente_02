@@ -1,6 +1,6 @@
 import { CircularProgressProps, Typography, Box, CircularProgress } from "@mui/material"
-import CircleOutlinedIcon from '@mui/icons-material/CircleOutlined';
-import CloseOutlinedIcon from '@mui/icons-material/CloseOutlined';
+import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked';
+import CloseIcon from '@mui/icons-material/Close';
 import { useEffect, useState } from "react"
 import { useParams, useNavigate } from "react-router"
 import useWebSocket from "react-use-websocket"
@@ -404,18 +404,18 @@ const TelaJogo = (props: TelaJogoProps) => {
                                 }
                             })}
                             {progressoJogadorLogado != null && progressoJogadorLogado.tiros.map((iNavio, idxNavio) => (
-                                iNavio.acertou ? <CloseOutlinedIcon color="error" key={idxNavio}
+                                iNavio.acertou ? <CloseIcon color="error" key={idxNavio}
                                     sx={{
                                         top: (iNavio.numeroLinha * 30) + 'px',
                                         left: (iNavio.numeroColuna * 30) + 'px',
                                         position: 'absolute',
                                         fontSize: '30px'
-                                    }} /> : <CircleOutlinedIcon color="error" key={idxNavio}
+                                    }} /> : <RadioButtonUncheckedIcon color="error" key={idxNavio}
                                         sx={{
-                                            top: (iNavio.numeroLinha * 30) + 'px',
-                                            left: (iNavio.numeroColuna * 30) + 'px',
+                                            top: (iNavio.numeroLinha * 30 + 3) + 'px',
+                                            left: (iNavio.numeroColuna * 30 + 3) + 'px',
                                             position: 'absolute',
-                                            fontSize: '30px'
+                                            fontSize: '24px'
                                         }} />
                             ))}
                         </div>
@@ -458,18 +458,18 @@ const TelaJogo = (props: TelaJogoProps) => {
                                 }
                             })}
                             {progressoJogadorInimigo != null && progressoJogadorInimigo.tiros.map((iNavio, idxNavio) => (
-                                iNavio.acertou ? <CloseOutlinedIcon color="error" key={idxNavio}
+                                iNavio.acertou ? <CloseIcon color="error" key={idxNavio}
                                     sx={{
                                         top: (iNavio.numeroLinha * 30) + 'px',
                                         left: (iNavio.numeroColuna * 30) + 'px',
                                         position: 'absolute',
                                         fontSize: '30px'
-                                    }} /> : <CircleOutlinedIcon color="error" key={idxNavio}
+                                    }} /> : <RadioButtonUncheckedIcon color="error" key={idxNavio}
                                         sx={{
-                                            top: (iNavio.numeroLinha * 30) + 'px',
-                                            left: (iNavio.numeroColuna * 30) + 'px',
+                                            top: (iNavio.numeroLinha * 30 + 3) + 'px',
+                                            left: (iNavio.numeroColuna * 30 + 3) + 'px',
                                             position: 'absolute',
-                                            fontSize: '30px'
+                                            fontSize: '24px'
                                         }} />
                             ))}
                         </div>
