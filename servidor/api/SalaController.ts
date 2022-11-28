@@ -60,10 +60,8 @@ class SalaController extends ControllerBase {
     // autorizado
     // get
     listarDisponiveis = async (idUsuarioLogado: string): Promise<MdSalaDisponivel[]> => {
-        // await this._salaFluxoRepositorio.consertarDb(idUsuarioLogado);
+        await this._salaFluxoRepositorio.consertarDb(idUsuarioLogado);
         const salasDb = await this._salaFluxoRepositorio.selectAll();
-        // if (salasDb.length === 0)
-        //     await this.retificarSalas(idUsuarioLogado);
         let salasDisponiveis: MdSalaDisponivel[] = [];
         for (let iSalaDb of salasDb) {
             if (iSalaDb.idPlayer1 != null && iSalaDb.idPlayer2 != null)

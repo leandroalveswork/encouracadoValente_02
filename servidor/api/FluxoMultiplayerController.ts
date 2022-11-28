@@ -328,12 +328,13 @@ class FluxoMultiplayerController extends ControllerBase {
         
         // Calcular de quem e a vez
         let idTiroDbMaisRecente = '';
-        if ([...tirosFluxoDb, ...tirosFluxoDbInimigo].length == 0) {
+        const tirosDosDoisJogadores = [...tirosFluxoDb, ...tirosFluxoDbInimigo];
+        if (tirosDosDoisJogadores.length == 0) {
             progressoJogadorLogado.estaNaVezDoJogador = salaUsuarioLogadoDb.idPlayer1 == idUsuarioLogado;
         } else {
             let idJogadorAlvoTiroMaisRecente = '';
             let horaMaisRecente = Number.MIN_SAFE_INTEGER;
-            for (let iTiro of [...tirosFluxoDb, ...tirosFluxoDbInimigo]) {
+            for (let iTiro of tirosDosDoisJogadores) {
                 if (horaMaisRecente < iTiro.horaInclusao.getTime()) {
                     idJogadorAlvoTiroMaisRecente = iTiro.idUsuarioAlvo;
                     idTiroDbMaisRecente = iTiro.id;
@@ -343,25 +344,23 @@ class FluxoMultiplayerController extends ControllerBase {
             progressoJogadorLogado.estaNaVezDoJogador = idJogadorAlvoTiroMaisRecente == idUsuarioLogado;
         }
         
-        if ([...tirosFluxoDb, ...tirosFluxoDbInimigo].length > 0) {
+        if (tirosDosDoisJogadores.length > 0) {
             
+            const ultimoTiroDb = tirosDosDoisJogadores.find(x => x.id == idTiroDbMaisRecente);
             // Verificar se foi um tiro certeiro - se sim, inveter o valor logico pois assim continua na vez de quem atirou
             if (progressoJogadorLogado.estaNaVezDoJogador) {
                 
                 // Ultimo tiro foi do inimigo, entao verificar entre os navios do jogador logado
-                const ultimoTiroDbInimigo = [...tirosFluxoDb, ...tirosFluxoDbInimigo].find(x => x.id == idTiroDbMaisRecente);
-                if (ultimoTiroDbInimigo != undefined && this.eTiroAcertado(ultimoTiroDbInimigo, posicoesFluxoDb))
+                if (ultimoTiroDb != undefined && this.eTiroAcertado(ultimoTiroDb, posicoesFluxoDb))
                     progressoJogadorLogado.estaNaVezDoJogador = !progressoJogadorLogado.estaNaVezDoJogador;
             } else {
                 
                 // Ultimo tiro foi do jogador logado, entao verificar entre os navios do inimigo
-                const ultimoTiroDbJogadorLogado = [...tirosFluxoDb, ...tirosFluxoDbInimigo].find(x => x.id == idTiroDbMaisRecente);
-                if (ultimoTiroDbJogadorLogado != undefined && this.eTiroAcertado(ultimoTiroDbJogadorLogado, posicoesFluxoDbInimigo))
+                if (ultimoTiroDb != undefined && this.eTiroAcertado(ultimoTiroDb, posicoesFluxoDbInimigo))
                     progressoJogadorLogado.estaNaVezDoJogador = !progressoJogadorLogado.estaNaVezDoJogador;
             }
             
             // Marcar a partir de qual instante o timer precisa contar quando for no Front com a hora do ultimo tiro
-            const ultimoTiroDb = [...tirosFluxoDb, ...tirosFluxoDbInimigo].find(x => x.id == idTiroDbMaisRecente);
             progressoJogadorLogado.horaRecomecoTimer = ultimoTiroDb?.horaInclusao ?? new Date();                
         } else {
             
