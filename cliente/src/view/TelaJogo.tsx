@@ -203,10 +203,10 @@ const TelaJogo = (props: TelaJogoProps) => {
     }
 
     const carregarCallbacksProgressos = async () => {
-        return [
+        return Promise.all([
             await clientRest.callGetAutorizado<MdProgressoNaviosJogador>('/api/fluxoMultiplayer/detalharProgressoJogadorLogado', new MdProgressoNaviosJogador()),
             await clientRest.callGetAutorizado<MdProgressoNaviosJogador>('/api/fluxoMultiplayer/detalharProgressoJogadorOponente', new MdProgressoNaviosJogador())
-        ];
+        ]);
     }
     const carregarProgressos = () => {
         carregarCallbacksProgressos()
@@ -276,7 +276,7 @@ const TelaJogo = (props: TelaJogoProps) => {
         // Timer
         const timer = setInterval(() => {
             setDateAgoraExato(_ => new Date());
-        }, 66);
+        }, 200);
         return () => clearInterval(timer);
     }, []);
 
