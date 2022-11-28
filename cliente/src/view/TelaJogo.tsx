@@ -1,7 +1,7 @@
 import { CircularProgressProps, Typography, Box, CircularProgress } from "@mui/material"
 import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked';
 import CloseIcon from '@mui/icons-material/Close';
-import { useEffect, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { useParams, useNavigate } from "react-router"
 import useWebSocket from "react-use-websocket"
 import ClientRest from "../integracao/ClientRest"
@@ -59,9 +59,9 @@ const TelaJogo = (props: TelaJogoProps) => {
     const DESTAQUE_FUNDO_VEZ_JOGADOR = "#FBE9E7";
 
     const posicoesJaMarcadas: Array<string> = []
-    const musicaJogo = new Audio('/assets/music.mp3')
-    const somAcertouHit = new Audio('/assets/HitExplosion.mp3')
-    const somErrouHit = new Audio('/assets/SplashSound.mp3')
+    const musicaJogo = useMemo(() => new Audio('/assets/music.mp3'), [])
+    const somAcertouHit = useMemo(() => new Audio('/assets/HitExplosion.mp3'), [])
+    const somErrouHit = useMemo(() => new Audio('/assets/SplashSound.mp3'), [])
 
     const navigate = useNavigate();
     const { roomId } = useParams()
