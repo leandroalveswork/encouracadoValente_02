@@ -29,7 +29,7 @@ function App() {
   const salasElement = <ListagemSalas tokenAuth={userState.localStorageUser?.token ?? ''}
     rotaWs={(process.env.REACT_APP_url_do_servidor_backend_ws as string) + '/ws'} />
 
-  //TODO: Não disponibilizar chaves sensíveis no arquivo .env quando commitar o código . Sofrerão replace no processo de CI
+  //TODO: Não disponibilizar chaves sensíveis no arquivo .env quando commitar o código . Sofrerão replace no processo de CIA
   return (
     <>
       <Header username={username} />
