@@ -87,6 +87,7 @@ const TelaJogo = (props: TelaJogoProps) => {
     const [comecoTimerCalculado, setComecoTimerCalculado] = useState((new Date()).getTime());
     const [dateAgoraExato, setDateAgoraExato] = useState(new Date());
     const [progressTimer, setProgressTimer] = useState(0);
+    const [jaMostrouAnimacao, setJaMostrouAnimacao] = useState<any>(null)
 
     const { lastJsonMessage, sendJsonMessage } = useWebSocket(props.rotaWs + '?id=' + roomId);
     const [tirosDisparadosUsuario, setTirosDisparadosUsuario] = useState<number>(0)
@@ -95,6 +96,33 @@ const TelaJogo = (props: TelaJogoProps) => {
     const [erroEstaAberto, setErroEstaAberto] = useState(false);
     const [problemaErro, setProblemaErro] = useState('');
     const [erroOponenteSaiuEstaAberto, setErroOponenteSaiuEstaAberto] = useState(false);
+
+    const gerarAnimacaoDeHit = (progressoJogador: MdProgressoNaviosJogador, prefixPosicao: string, gifAcertoSrc: string, gifErroSrc: string) => {
+        const coordenadaUltimoTiro = progressoJogador.tiros[progressoJogador.tiros.length - 1]
+        const ultimaPosicaoMarcada = document.getElementById(`${prefixPosicao}-${coordenadaUltimoTiro.numeroLinha}${coordenadaUltimoTiro.numeroColuna}`)
+
+        const gifHit = document.createElement('img')
+        gifHit.style.opacity = '1'
+
+        if (coordenadaUltimoTiro.acertou) {
+            gifHit.src = gifAcertoSrc
+            gifHit.style.width = '100%'
+            gifHit.style.marginBottom = '10px'
+            gifHit.style.height = '100%'
+        }
+        else {
+            gifHit.src = gifErroSrc
+            gifHit.style.width = '100%'
+            gifHit.style.height = '100%'
+        }
+
+        ultimaPosicaoMarcada?.appendChild(gifHit)
+
+        setTimeout(() => {
+            gifHit.remove()
+            setJaMostrouAnimacao(true)
+        }, 900)
+    }
 
 
     useEffect(() => {
@@ -110,11 +138,15 @@ const TelaJogo = (props: TelaJogoProps) => {
             dispararSonsDeHit(progressoJogadorLogado, tirosDisparadosUsuario)
             dispararSonsDeHit(progressoJogadorInimigo, tirosDisparadosInimigo)
 
-            if(progressoJogadorLogado!.tiros.length > tirosDisparadosUsuario){
+            if (progressoJogadorLogado!.tiros.length > tirosDisparadosUsuario) {
                 setTirosDisparadosUsuario(progressoJogadorLogado.tiros.length)
+                gerarAnimacaoDeHit(progressoJogadorLogado, 'user', '/assets/OnHitAnimation.gif', '/assets/HitAnimationAgua.gif')
+                setJaMostrouAnimacao(false)
             }
-            if(progressoJogadorInimigo!.tiros.length > tirosDisparadosInimigo){
+            if (progressoJogadorInimigo!.tiros.length > tirosDisparadosInimigo) {
                 setTirosDisparadosInimigo(progressoJogadorInimigo.tiros.length)
+                gerarAnimacaoDeHit(progressoJogadorInimigo, 'opponent', '/assets/OnHitAnimation.gif', '/assets/HitAnimationAgua.gif')
+                setJaMostrouAnimacao(false)
             }
 
         }
@@ -127,13 +159,15 @@ const TelaJogo = (props: TelaJogoProps) => {
         return { numeroLinha: parseInt(coordAsString[0]), numeroColuna: parseInt(coordAsString[1]) };
     }
 
-    const dispararSonsDeHit = (progressoJogador: MdProgressoNaviosJogador | null, tirosDisparados: number) => {
+    const dispararSonsDeHit = async (progressoJogador: MdProgressoNaviosJogador | null, tirosDisparados: number) => {
         if (progressoJogador!.tiros && progressoJogador!.tiros.length > tirosDisparados) {
             if (progressoJogador!.tiros[progressoJogador!.tiros.length - 1].acertou) {
-                somAcertouHit.play()
+                somAcertouHit.load()
+                await somAcertouHit.play()
             }
             else {
-                somErrouHit.play()
+                somErrouHit.load()
+                await somErrouHit.play()
             }
         }
     }
@@ -223,17 +257,17 @@ const TelaJogo = (props: TelaJogoProps) => {
                         notificarVitoria.numeroTipoAtualizacao = LiteralTipoAtualizacao.GanharJogo;
                         notificarVitoria.tokenAuth = props.tokenAuth;
                         sendJsonMessage({ ...notificarVitoria });
-                        
+
                         navigate('/game/end/N');
                         return;
                     }
-                    
+
                     // Atualizar bloqueio/desbloqueio para atirar no inimigo
                     if ((rJogadorLogado.body ?? new MdProgressoNaviosJogador()).estaNaVezDoJogador)
                         setEstaEsperandoInimigoAtirar(_ => false);
                     else
                         setEstaEsperandoInimigoAtirar(_ => true);
-                        
+
                     // Atualizar Timer
                     const horaRecomecoAsDate = new Date((rJogadorLogado.body ?? new MdProgressoNaviosJogador()).horaRecomecoTimer);
                     setComecoTimerCalculado(_ => horaRecomecoAsDate.getTime());
@@ -293,6 +327,7 @@ const TelaJogo = (props: TelaJogoProps) => {
             setEstaEsperandoInimigoAtirar(_ => true);
 
             // Enviar tiro que e vez passada (numeroLinha igual a -1)
+            setJaMostrouAnimacao(null)
             const payloadTiro = new PostTiroFluxo();
             payloadTiro.numeroLinha = -1;
             payloadTiro.numeroColuna = 0;
@@ -404,19 +439,20 @@ const TelaJogo = (props: TelaJogoProps) => {
                                 }
                             })}
                             {progressoJogadorLogado != null && progressoJogadorLogado.tiros.map((iNavio, idxNavio) => (
-                                iNavio.acertou ? <CloseIcon color="error" key={idxNavio}
-                                    sx={{
-                                        top: (iNavio.numeroLinha * 30) + 'px',
-                                        left: (iNavio.numeroColuna * 30) + 'px',
-                                        position: 'absolute',
-                                        fontSize: '30px'
-                                    }} /> : <RadioButtonUncheckedIcon color="error" key={idxNavio}
+                                (jaMostrouAnimacao || jaMostrouAnimacao == null) && (
+                                    iNavio.acertou ? <CloseIcon color="error" key={idxNavio}
                                         sx={{
-                                            top: (iNavio.numeroLinha * 30 + 3) + 'px',
-                                            left: (iNavio.numeroColuna * 30 + 3) + 'px',
+                                            top: (iNavio.numeroLinha * 30) + 'px',
+                                            left: (iNavio.numeroColuna * 30) + 'px',
                                             position: 'absolute',
-                                            fontSize: '24px'
-                                        }} />
+                                            fontSize: '30px'
+                                        }} /> : <RadioButtonUncheckedIcon color="error" key={idxNavio}
+                                            sx={{
+                                                top: (iNavio.numeroLinha * 30 + 3) + 'px',
+                                                left: (iNavio.numeroColuna * 30 + 3) + 'px',
+                                                position: 'absolute',
+                                                fontSize: '24px'
+                                            }} />)
                             ))}
                         </div>
                     </div>
@@ -458,19 +494,20 @@ const TelaJogo = (props: TelaJogoProps) => {
                                 }
                             })}
                             {progressoJogadorInimigo != null && progressoJogadorInimigo.tiros.map((iNavio, idxNavio) => (
-                                iNavio.acertou ? <CloseIcon color="error" key={idxNavio}
-                                    sx={{
-                                        top: (iNavio.numeroLinha * 30) + 'px',
-                                        left: (iNavio.numeroColuna * 30) + 'px',
-                                        position: 'absolute',
-                                        fontSize: '30px'
-                                    }} /> : <RadioButtonUncheckedIcon color="error" key={idxNavio}
+                                (jaMostrouAnimacao || jaMostrouAnimacao == null) && (
+                                    iNavio.acertou ? <CloseIcon color="error" key={idxNavio}
                                         sx={{
-                                            top: (iNavio.numeroLinha * 30 + 3) + 'px',
-                                            left: (iNavio.numeroColuna * 30 + 3) + 'px',
+                                            top: (iNavio.numeroLinha * 30) + 'px',
+                                            left: (iNavio.numeroColuna * 30) + 'px',
                                             position: 'absolute',
-                                            fontSize: '24px'
-                                        }} />
+                                            fontSize: '30px'
+                                        }} /> : <RadioButtonUncheckedIcon color="error" key={idxNavio}
+                                            sx={{
+                                                top: (iNavio.numeroLinha * 30 + 3) + 'px',
+                                                left: (iNavio.numeroColuna * 30 + 3) + 'px',
+                                                position: 'absolute',
+                                                fontSize: '24px'
+                                            }} />)
                             ))}
                         </div>
                     </div>

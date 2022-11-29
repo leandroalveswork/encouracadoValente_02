@@ -457,7 +457,6 @@ const PreparacaoJogo = (props: PreparacaoJogoProps) => {
                                     ref={barcoPequenoRef1}
                                     style={{ height: '30px', width: calculaWidth(1), cursor: 'pointer' }}
                                     src={temaBarcoPequenoSrc}
-                                    title="Barco Pequeno - 1 posição"
                                     onClick={() => !idBarcosSelecionados.includes('barcoPequeno1') && handleBarcoOnClick(barcoPequenoRef1, 1)} />
                             </Tooltip>
 
