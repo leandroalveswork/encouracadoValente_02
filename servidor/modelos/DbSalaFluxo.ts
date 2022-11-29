@@ -8,4 +8,6 @@ export class DbSalaFluxo extends DbEncVn {
     player2CarregouFluxo: boolean = false;
     horaCancelamentoSaidaPlayer1: Date | null = null;
     horaCancelamentoSaidaPlayer2: Date | null = null;
+    horaUltimaConexaoPlayer1: Date | undefined = undefined;
+    horaUltimaConexaoPlayer2: Date | undefined = undefined;
 }

@@ -31,6 +31,7 @@ class MediadorWs {
             ws.roomId = '';
         }
     }
+    
     reencaminharOutroClient = (wsServer: WebSocketServer, ws: UserWebSocket, req: IncomingMessage, dados: RawData, naoEBinario: boolean) => {
         
         // Extrair WsEnvelope
@@ -42,7 +43,19 @@ class MediadorWs {
         if (idUsuarioLogado == null || idUsuarioLogado == null || idUsuarioLogado == '')
             return;
         if (ws.idUsuarioLogado == undefined || ws.idUsuarioLogado == null || ws.idUsuarioLogado == '')
-            ws.idUsuarioLogado = idUsuarioLogado; 
+            ws.idUsuarioLogado = idUsuarioLogado;
+            
+        // Realimentar timestamp da ultima conexao
+        this._salaFluxoRepositorio.selectByUsuarioJogandoOrDefault(idUsuarioLogado).then(async (salaDb) => {
+            if (salaDb == null)
+                return;
+            if (salaDb.idPlayer1 == idUsuarioLogado)
+                salaDb.horaUltimaConexaoPlayer1 = new Date();
+            else
+                salaDb.horaUltimaConexaoPlayer2 = new Date();
+            await this._salaFluxoRepositorio.updatePorOperador(salaDb, idUsuarioLogado);
+        });
+        
         // console.log('ws.idUsuarioLogado = ' + ws.idUsuarioLogado);
         if (payloadWs.numeroTipoAtualizacao == LiteralTipoAtualizacao.PrepararUsuarioLogadoWs)
             return;

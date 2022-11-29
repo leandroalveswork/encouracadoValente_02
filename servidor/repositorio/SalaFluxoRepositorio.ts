@@ -28,7 +28,9 @@ class SalaFluxoRepositorio extends RepositorioCrud<DbSalaFluxo> {
             player1CarregouFluxo: { type: Boolean, required: true },
             player2CarregouFluxo: { type: Boolean, required: true },
             horaCancelamentoSaidaPlayer1: Date,
-            horaCancelamentoSaidaPlayer2: Date
+            horaCancelamentoSaidaPlayer2: Date,
+            horaUltimaConexaoPlayer1: Date,
+            horaUltimaConexaoPlayer2: Date,
         });
         this.inicializarMongo('SalaFluxo', schema);
     }
@@ -77,18 +79,55 @@ class SalaFluxoRepositorio extends RepositorioCrud<DbSalaFluxo> {
         // Remover presença das salas atualizadas mais antigas
         let registrosMarcados: HydratedDocument<DbSalaFluxo, {}, unknown>[] = [];
         for (let iJogadorRelacionado of dicionarioJogadores) {
-            if (iJogadorRelacionado.registrosRelacionados.length < 2)
-                continue;
-            const registroMaisRecente = iJogadorRelacionado.registrosRelacionados.sort((a, b) => b.horaUltimaAtualizacao?.getTime() ?? 0 - (a.horaUltimaAtualizacao?.getTime() ?? 0))[0];
-            for (let iRegistroParaMarcar of iJogadorRelacionado.registrosRelacionados.filter(x => x.id.toString() != registroMaisRecente.id.toString())) {
-                if (iRegistroParaMarcar.idPlayer1 == iJogadorRelacionado.idJogador)
-                    iRegistroParaMarcar.idPlayer1 = null;
-                else
-                    iRegistroParaMarcar.idPlayer2 = null;
-                iRegistroParaMarcar.idUsuarioFezUltimaAtualizacao = idUsuarioOperador;
-                iRegistroParaMarcar.horaUltimaAtualizacao = new Date();
-                registrosMarcados.push(new this._modelMongo(iRegistroParaMarcar));
+            if (iJogadorRelacionado.registrosRelacionados.length >= 2) {
+                const registroMaisRecente = iJogadorRelacionado.registrosRelacionados.sort((a, b) => b.horaUltimaAtualizacao?.getTime() ?? 0 - (a.horaUltimaAtualizacao?.getTime() ?? 0))[0];
+                for (let iRegistroParaMarcar of iJogadorRelacionado.registrosRelacionados.filter(x => x.id.toString() != registroMaisRecente.id.toString())) {
+                    if (iRegistroParaMarcar.idPlayer1 == iJogadorRelacionado.idJogador)
+                        iRegistroParaMarcar.idPlayer1 = null;
+                    else
+                        iRegistroParaMarcar.idPlayer2 = null;
+                    iRegistroParaMarcar.idUsuarioFezUltimaAtualizacao = idUsuarioOperador;
+                    iRegistroParaMarcar.horaUltimaAtualizacao = new Date();
+                    registrosMarcados.push(new this._modelMongo(iRegistroParaMarcar));
+                }
+                
+                // Validar se o usuario nao esta inativo por mais de 10 min
+                if (registroMaisRecente.idPlayer1 == iJogadorRelacionado.idJogador) {
+                    if (registroMaisRecente.horaUltimaConexaoPlayer1 == null || new Date().getTime() - registroMaisRecente.horaUltimaConexaoPlayer1.getTime() > 10 * 60 * 1000) {
+                        registroMaisRecente.idPlayer1 = null;   
+                        registroMaisRecente.idUsuarioFezUltimaAtualizacao = idUsuarioOperador;
+                        registroMaisRecente.horaUltimaAtualizacao = new Date();
+                        registrosMarcados.push(new this._modelMongo(registroMaisRecente));                 
+                    }
+                } else {
+                    if (registroMaisRecente.horaUltimaConexaoPlayer2 == null || new Date().getTime() - registroMaisRecente.horaUltimaConexaoPlayer2.getTime() > 10 * 60 * 1000) {
+                        registroMaisRecente.idPlayer2 = null;                    
+                        registroMaisRecente.idUsuarioFezUltimaAtualizacao = idUsuarioOperador;
+                        registroMaisRecente.horaUltimaAtualizacao = new Date();
+                        registrosMarcados.push(new this._modelMongo(registroMaisRecente));
+                    }
+                }
+            } else {
+                
+                // Validar se o usuario nao esta inativo por mais de 10 min
+                const registroUnico = iJogadorRelacionado.registrosRelacionados[0];
+                if (registroUnico.idPlayer1 == iJogadorRelacionado.idJogador) {
+                    if (registroUnico.horaUltimaConexaoPlayer1 == null || new Date().getTime() - registroUnico.horaUltimaConexaoPlayer1.getTime() > 10 * 60 * 1000) {
+                        registroUnico.idPlayer1 = null;   
+                        registroUnico.idUsuarioFezUltimaAtualizacao = idUsuarioOperador;
+                        registroUnico.horaUltimaAtualizacao = new Date();
+                        registrosMarcados.push(new this._modelMongo(registroUnico));                 
+                    }
+                } else {
+                    if (registroUnico.horaUltimaConexaoPlayer2 == null || new Date().getTime() - registroUnico.horaUltimaConexaoPlayer2.getTime() > 10 * 60 * 1000) {
+                        registroUnico.idPlayer2 = null;                    
+                        registroUnico.idUsuarioFezUltimaAtualizacao = idUsuarioOperador;
+                        registroUnico.horaUltimaAtualizacao = new Date();
+                        registrosMarcados.push(new this._modelMongo(registroUnico));
+                    }
+                }
             }
+            
         }
         
         // Salvar

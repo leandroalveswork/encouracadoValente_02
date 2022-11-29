@@ -115,6 +115,7 @@ class SalaController extends ControllerBase {
             salaAtualP2.horaCancelamentoSaidaPlayer2 = null;
             salaAtualP2.player1CarregouFluxo = false;
             salaAtualP2.player2CarregouFluxo = false;
+            salaAtualP2.horaUltimaConexaoPlayer2 = new Date();
             await this._tiroFluxoRepositorio.deleteMuitosByNumeroRecuperacaoUrl(salaDb.numeroRecuperacaoUrl);
             await this._salaFluxoRepositorio.updatePorOperador(salaAtualP2, idUsuarioLogado);
             return;
@@ -128,6 +129,7 @@ class SalaController extends ControllerBase {
         salaAtualP1 = salaDb;
         salaAtualP1.idPlayer1 = idUsuarioLogado;
         salaAtualP1.horaCancelamentoSaidaPlayer1 = null;
+        salaAtualP1.horaUltimaConexaoPlayer1 = new Date();
         await this._salaFluxoRepositorio.updatePorOperador(salaAtualP1, idUsuarioLogado);
     }
     
