@@ -130,9 +130,9 @@ const PreparacaoJogo = (props: PreparacaoJogoProps) => {
 
     useEffect(() => {
         if (salaJogando != null) {
-            console.log('verify sala...');
+            // console.log('verify sala...');
             if (salaJogando.totalJogadores < 2) {
-                console.log('quitting OK');
+                // console.log('quitting OK');
                 setErroOponenteSaiuEstaAberto(_ => true);
                 return;
             }
