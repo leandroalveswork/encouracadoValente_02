@@ -203,7 +203,7 @@ const TelaJogo = (props: TelaJogoProps) => {
     }
 
     const carregarCallbacksProgressos = async () => {
-        return Promise.all([
+        return await Promise.all([
             clientRest.callGetAutorizado<MdProgressoNaviosJogador>('/api/fluxoMultiplayer/detalharProgressoJogadorLogado', new MdProgressoNaviosJogador()),
             clientRest.callGetAutorizado<MdProgressoNaviosJogador>('/api/fluxoMultiplayer/detalharProgressoJogadorOponente', new MdProgressoNaviosJogador())
         ]);

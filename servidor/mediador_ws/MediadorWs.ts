@@ -44,17 +44,20 @@ class MediadorWs {
             return;
         if (ws.idUsuarioLogado == undefined || ws.idUsuarioLogado == null || ws.idUsuarioLogado == '')
             ws.idUsuarioLogado = idUsuarioLogado;
-            
-        // Realimentar timestamp da ultima conexao
-        this._salaFluxoRepositorio.selectByUsuarioJogandoOrDefault(idUsuarioLogado).then(async (salaDb) => {
-            if (salaDb == null)
-                return;
-            if (salaDb.idPlayer1 == idUsuarioLogado)
-                salaDb.horaUltimaConexaoPlayer1 = new Date();
-            else
-                salaDb.horaUltimaConexaoPlayer2 = new Date();
-            await this._salaFluxoRepositorio.updatePorOperador(salaDb, idUsuarioLogado);
-        });
+        
+        if (payloadWs.numeroTipoAtualizacao == LiteralTipoAtualizacao.FluxoJogo) {
+            // Realimentar timestamp da ultima conexao
+            this._salaFluxoRepositorio.selectByUsuarioJogandoOrDefault(idUsuarioLogado).then(async (salaDb) => {
+                // console.log('execcing salafluxoRepo');
+                if (salaDb == null)
+                    return;
+                if (salaDb.idPlayer1 == idUsuarioLogado)
+                    salaDb.horaUltimaConexaoPlayer1 = new Date();
+                else
+                    salaDb.horaUltimaConexaoPlayer2 = new Date();
+                await this._salaFluxoRepositorio.updatePorOperador(salaDb, idUsuarioLogado);
+            });
+        }
         
         // console.log('ws.idUsuarioLogado = ' + ws.idUsuarioLogado);
         if (payloadWs.numeroTipoAtualizacao == LiteralTipoAtualizacao.PrepararUsuarioLogadoWs)

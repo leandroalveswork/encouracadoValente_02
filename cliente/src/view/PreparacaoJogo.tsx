@@ -144,7 +144,7 @@ const PreparacaoJogo = (props: PreparacaoJogoProps) => {
                     clientRest.callPutAutorizado<undefined>('/api/sala/cancelarProximaSaida', {}, undefined)
                         .then(rCancelarSaida => {
                             if (!rCancelarSaida.eOk) {
-                                console.log('error');
+                                // console.log('error');
                                 setProblemaErro(_ => rCancelarSaida.problema);
                                 setErroEstaAberto(_ => true);
                                 return;
